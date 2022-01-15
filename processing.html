@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Processing login information...</title>
+
+    <script src="https://unpkg.com/axios/dist/axios.min.js">
+	  </script>
+  </head>
+  <body>
+    <p id="statusLabel">Processing login information...</p>
+  
+    <script>
+    axios({
+      method: 'post',
+      url: 'https://access.drakonzai.repl.co/getToken',
+      headers: {
+        'Content-Type': 'application/json',
+        'AccessCode': 'hiHannah690'
+      },
+      data: {}
+    }).then(response => {
+      if (response.data == 'No valid active auth tokens available.' || response.data == 'Invalid request. Please try again.') {
+        document.getElementById('statusLabel').innerHTML = 'Login failed! Please try again!!'
+        return
+      } else if (response.data == 'Login Certificate Identity is expired. You cannot access the information anymore.') {
+        document.getElementById('statusLabel').innerHTML = 'Could not log you in! Your login certificate has expired and the information is locked down. Please renew your certificate!'
+        return
+      }
+      const authToken = response.data
+      setTimeout(() => {
+        document.getElementById('statusLabel').innerHTML = 'Authenticating with login certificate...'
+      }, 1000)
+      setTimeout(() => {
+        document.getElementById('statusLabel').innerHTML = 'Establishing secure connection with servers...'
+      }, 2000)
+      setTimeout(() => {
+        document.getElementById('statusLabel').innerHTML = 'Connection successful!'
+        document.location = 'https://access.drakonzai.repl.co/data/' + authToken
+      }, 3000)
+    })
+    </script>
+  </body>
+</html>
