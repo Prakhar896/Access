@@ -139,11 +139,3 @@ class CAError(Exception):
             return True
         else:
             return False
-
-
-cert = CertAuthority.issueCertificate('prakhar')
-time.sleep(5)
-CertAuthority.revokeCertificate('prakhar', cert["certificate"], "i wanted to")
-print(CertAuthority.checkCertificateSecurity(cert))
-time.sleep(2)
-print(CertAuthority.revokedCertificates)

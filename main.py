@@ -35,6 +35,8 @@ def checkIfPastExpiryDate(givenDatetime):
 def home():
   return fileContent('homepage.html')
 
+
+
 @app.route('/clearTokens')
 def clearTokens():
   global validAuthTokens
