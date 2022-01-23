@@ -2,11 +2,6 @@ from flask import Flask, request
 from flask_cors import CORS
 import json, random, time, sys, subprocess, os, shutil
 import datetime
-msUsername = os.environ['msUsername']
-msPassword = os.environ['msPassword']
-loginUsername = os.environ['loginUsername']
-loginPassword = os.environ['loginPassword']
-accessCode = os.environ['accessCode']
 
 app = Flask(__name__)
 CORS(app)
