@@ -1,2 +1,4 @@
 virt/
 validAuthTokens.txt
+.env
+__pycache__/

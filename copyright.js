@@ -1,3 +1,3 @@
 document.write(`
-  <p>© 2021 Prakhar Trivedi</p>
+  <p>© 2022 Prakhar Trivedi</p>
 `)
