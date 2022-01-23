@@ -2,3 +2,6 @@ virt/
 validAuthTokens.txt
 .env
 __pycache__/
+certificates.txt
+accessIdentities.txt
+AccessFolders/

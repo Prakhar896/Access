@@ -1,7 +1,7 @@
 ## This is a certificate authority that issues and revokes digital access certificates.
 from operator import index
 import random, base64
-import datetime, time
+import datetime, time, json, os, shutil, subprocess
 
 class CertAuthority:
     registeredCertificates = []
@@ -78,12 +78,16 @@ class CertAuthority:
         # This method issues a certificate to a user.
         # The certificate is added to the list of valid certificates.
         # The certificate is returned to the user.
-
         # Generate an expiry date string of 30 days from now
+        certIDOptions = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+        certIDString = ''
+        for i in range(20):
+            certIDString += random.choice(certIDOptions)
         expiryDate = datetime.datetime.now() + datetime.timedelta(days=30)
         expiryDateString = expiryDate.strftime('%Y-%m-%d %H:%M:%S')
         cert = {
             'user': user,
+            'certID': certIDString,
             'certificate': CertAuthority.generateCertHash(user),
             'expiryDate': expiryDateString,
             'revoked': False,
@@ -110,6 +114,18 @@ class CertAuthority:
                 return cert
         return None
 
+    @staticmethod
+    def loadCertificatesFromFile(fileObject):
+        try:
+            allCerts = json.load(fileObject)
+            regCerts = allCerts['registeredCertificates']
+            revokedCerts = allCerts['revokedCertificates']
+            CertAuthority.registeredCertificates = regCerts
+            CertAuthority.revokedCertificates = revokedCerts
+            return "Successfully loaded certificates!"
+        except:
+            return CAError.loadingCertsFailed
+
 class CAError(Exception):
     def __init__(self, message):
         self.message = message
@@ -120,6 +136,7 @@ class CAError(Exception):
     expiredCertAndValid = "This certificate has expired but it is signed by this Certificate Authority."
     notFoundAndInvalid = "This certificate was not found and was not signed by this Certificate Authority."
     validCertNotValid = "This certificate is registered but it is not signed by this Certificate Authority."
+    loadingCertsFailed = "There was an error in loading the certificates from the file provided."
 
 
     ## SuccessMessage
@@ -133,7 +150,8 @@ class CAError(Exception):
             CAError.invalidCert,
             CAError.expiredCertAndValid,
             CAError.notFoundAndInvalid,
-            CAError.validCertNotValid
+            CAError.validCertNotValid,
+            CAError.loadingCertsFailed
         ]
         if msg in arrayOfMsgs:
             return True
