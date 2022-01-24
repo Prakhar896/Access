@@ -4,6 +4,8 @@ import json, random, time, sys, subprocess, os, shutil
 import datetime
 from models import *
 from certAuthority import *
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
@@ -26,6 +28,9 @@ def homepage():
 @app.route('/identity/create')
 def createIdentityPage():
   return render_template('createIdentity.html')
+
+# API
+from api import *
 
 # Assets
 from assets import *
