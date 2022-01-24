@@ -99,13 +99,13 @@ class CertAuthority:
         return cert
     
     @staticmethod
-    def revokeCertificate(user, certHash, reason):
+    def revokeCertificate(user, certificateID, reason):
         # This method revokes a certificate.
         # The certificate is added to the list of revoked certificates.
         # The certificate is removed from the list of valid certificates.
         # The certificate is returned to the user.
         for cert in CertAuthority.registeredCertificates:
-            if cert['certificate'] == certHash and cert['user'] == user:
+            if cert['certID'] == certificateID and cert['user'] == user:
                 cert['revoked'] = True
                 cert['revocationReason'] = reason
                 cert['revocationDate'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
