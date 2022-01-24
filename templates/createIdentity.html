@@ -8,6 +8,7 @@
         padding-top: 10px;
     }
 </style>
+<link rel="stylesheet" href="/assets/fancyButtons">
 {% endblock %}
 
 {% block body %}
@@ -20,4 +21,15 @@
 <p>This login certificate expires after 30 days which means that you will have to renew your certificate with a renewal code.</p>
 <br>
 <p>For now, enter some account details to get your first Access account!</p>
+<br>
+
+<form>
+    <label for="username">Enter a username:</label><br>
+    <input type="text" id="usernameField" value=""><br>
+    <br>
+    <label for="pass">Enter a password (must have at least 1 special character and 1 numeric digit)</label><br>
+    <input type="password" id="passwordField" value="">
+</form>
+<br>
+<button class="fancyButtons">Create Access Identity</button>
 {% endblock %}
