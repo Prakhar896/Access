@@ -59,18 +59,20 @@
 <p>For now, enter some account details to get your first Access account!</p>
 <br>
 <p id="statusLabel">Processing...</p>
-<form>
-    <label for="username">Enter a username:</label><br>
-    <input type="text" id="usernameField" value=""><br>
+<div id="accountDetailsSection">
+    <form>
+        <label for="username">Enter a username:</label><br>
+        <input type="text" id="usernameField" value=""><br>
+        <br>
+        <label for="email">Enter your email:</label><br>
+        <input type="email" id="emailField" value=""><br>
+        <br>
+        <label for="pass">Enter a password (must have at least 1 special character and 1 numeric digit)</label><br>
+        <input type="password" id="passwordField" value="">
+    </form>
     <br>
-    <label for="email">Enter your email:</label><br>
-    <input type="email" id="emailField" value=""><br>
-    <br>
-    <label for="pass">Enter a password (must have at least 1 special character and 1 numeric digit)</label><br>
-    <input type="password" id="passwordField" value="">
-</form>
-<br>
-<button class="fancyButtons" onclick="sendOTP()" id="createIDButton">Create Access Identity</button>
+    <button class="fancyButtons" onclick="sendOTP()" id="createIDButton">Create Access Identity</button>
+</div>
 <br>
 <div id="otpEnteringSection">
     <p>Enter the OTP code that was sent to your email address.</p>

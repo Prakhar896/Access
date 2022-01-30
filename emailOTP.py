@@ -9,11 +9,19 @@ def sendEmailWithOTP(destEmail, otp):
     receiver_email = destEmail
     password = os.environ['AccessEmailPassword']
     message = """\
-    Subject: OTP for Access Portal
-    \n
-    Your OTP is: {}
-    """.format(otp)
-    context = ssl.create_default_context()
+Subject: OTP for Access Portal
+    
+This is a message delivered by the Access Portal. Thank you for signing up for a new Access Identity. To finish up your sign-up process, enter the OTP (one-time password) below onto the website.
+
+
+Your OTP is: {}
+
+If you do not recognize this email, please ignore it.
+
+THIS IS AN AUTOMATED MESSAGE FROM THE ACCESS PORTAL. DO NOT REPLY TO THIS MESSAGE.
+
+Copyright 2022 Prakhar Trivedi and the Access Team.""".format(otp)
+    context = ssl._create_unverified_context()
     with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
         server.login(sender_email, password)
         server.sendmail(sender_email, receiver_email, message)
