@@ -36,8 +36,8 @@ def makeAnIdentity():
             'password': request.json['password'],
             'email': request.json['email'],
             'otpCode': request.json['otpCode'],
-            'sign-up-date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'last-login-date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'sign-up-date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'last-login-date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             'associatedCertID': CertAuthority.issueCertificate(request.json['username'])['certID']
         }
 

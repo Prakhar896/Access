@@ -86,7 +86,6 @@ class CertAuthority:
         expiryDate = datetime.datetime.now() + datetime.timedelta(days=30)
         expiryDateString = expiryDate.strftime('%Y-%m-%d %H:%M:%S')
         cert = {
-            'user': user,
             'certID': certIDString,
             'certificate': CertAuthority.generateCertHash(user),
             'expiryDate': expiryDateString,
@@ -95,7 +94,7 @@ class CertAuthority:
             'revocationDate': None,
             'issueDate': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
-        CertAuthority.registeredCertificates.append(cert)
+        CertAuthority.registeredCertificates[user] = cert
         return cert
     
     @staticmethod
@@ -109,8 +108,8 @@ class CertAuthority:
                 cert['revoked'] = True
                 cert['revocationReason'] = reason
                 cert['revocationDate'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                CertAuthority.revokedCertificates.append(cert)
-                CertAuthority.registeredCertificates.remove(cert)
+                CertAuthority.revokedCertificates[user] = cert
+                CertAuthority.registeredCertificates.pop(user)
                 return cert
         return None
 
