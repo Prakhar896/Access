@@ -7,3 +7,7 @@ def copyright():
 @app.route('/assets/fancyButtons')
 def fancyButtonsCSS():
   return fileContent('fancyButtonStyle.css')
+
+@app.route('/assets/createIDJS')
+def createIDJS():
+  return fileContent('supportJSFiles/createID.js')

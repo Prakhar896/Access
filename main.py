@@ -32,6 +32,9 @@ def createIdentityPage():
 # API
 from api import *
 
+# Email OTP Service
+from emailOTP import *
+
 # Assets
 from assets import *
 

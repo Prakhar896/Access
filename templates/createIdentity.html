@@ -7,8 +7,43 @@
         text-align: center;
         padding-top: 10px;
     }
+
+    .fancyButtons:hover {
+        background-color: #000000;
+        color: white;
+        stroke: green;
+        stroke-width: 3px;
+        stroke-dashoffset: 15px;
+    }
+
+    .fancyButtons {
+        border: none;
+        color: white;
+        padding: 14px 18px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 13px;
+        margin: 4px 2px;
+        transition-duration: 0.5s;
+        cursor: pointer;
+        background-color: darkslategray;
+        border-radius: 10px;
+    }
+
+    #statusLabel {
+        font-size: 20px;
+        font-weight: bold;
+        color: #000000;
+        visibility: hidden;
+    }
+
+    #otpEnteringSection {
+        visibility: hidden;
+    }
 </style>
-<link rel="stylesheet" href="/assets/fancyButtons">
+<!-- <link rel="stylesheet" href="/assets/fancyButtons"> -->
+<script src="/assets/createIDJS"></script>
 {% endblock %}
 
 {% block body %}
@@ -18,18 +53,31 @@
 <p>It allows you to have your own Access Folder which is securely encrypted for you to store data.</p>
 <br>
 <p>Each Access Identity is attached to a automatically generated login certificate.</p>
-<p>This login certificate expires after 30 days which means that you will have to renew your certificate with a renewal code.</p>
+<p>This login certificate expires after 30 days which means that you will have to renew your certificate with a renewal
+    code.</p>
 <br>
 <p>For now, enter some account details to get your first Access account!</p>
 <br>
-
+<p id="statusLabel">Processing...</p>
 <form>
     <label for="username">Enter a username:</label><br>
     <input type="text" id="usernameField" value=""><br>
+    <br>
+    <label for="email">Enter your email:</label><br>
+    <input type="email" id="emailField" value=""><br>
     <br>
     <label for="pass">Enter a password (must have at least 1 special character and 1 numeric digit)</label><br>
     <input type="password" id="passwordField" value="">
 </form>
 <br>
-<button class="fancyButtons">Create Access Identity</button>
+<button class="fancyButtons" onclick="sendOTP()" id="createIDButton">Create Access Identity</button>
+<br>
+<div id="otpEnteringSection">
+    <p>Enter the OTP code that was sent to your email address.</p>
+    <br>
+    <label for="otp">OTP Code:</label><br>
+    <input type="text" id="otpField" value=""><br>
+    <br>
+    <button id="otpSubmitButton" class="fancyButtons">Submit</button>
+</div>
 {% endblock %}
