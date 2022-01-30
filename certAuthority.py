@@ -126,6 +126,18 @@ class CertAuthority:
         except:
             return CAError.loadingCertsFailed
 
+    @staticmethod
+    def saveCertificatesToFile(fileObject):
+        try:
+            allCerts = {
+                'registeredCertificates': CertAuthority.registeredCertificates,
+                'revokedCertificates': CertAuthority.revokedCertificates
+            }
+            json.dump(allCerts, fileObject)
+            return "Successfully saved certificates!"
+        except:
+            return CAError.savingCertsFailed
+
 class CAError(Exception):
     def __init__(self, message):
         self.message = message
@@ -137,6 +149,7 @@ class CAError(Exception):
     notFoundAndInvalid = "This certificate was not found and was not signed by this Certificate Authority."
     validCertNotValid = "This certificate is registered but it is not signed by this Certificate Authority."
     loadingCertsFailed = "There was an error in loading the certificates from the file provided."
+    savingCertsFailed = "There was an error in saving certificate data to the file provided."
 
 
     ## SuccessMessage
@@ -151,7 +164,8 @@ class CAError(Exception):
             CAError.expiredCertAndValid,
             CAError.notFoundAndInvalid,
             CAError.validCertNotValid,
-            CAError.loadingCertsFailed
+            CAError.loadingCertsFailed,
+            CAError.savingCertsFailed
         ]
         if msg in arrayOfMsgs:
             return True

@@ -16,10 +16,25 @@ if not os.path.isfile('accessIdentities.txt'):
 
 accessIdentities = json.load(open('accessIdentities.txt', 'r'))
 
+# Identity format:
+# username: {
+#   "password": "",
+#   "email": "",
+#   "sign-up-date": "",
+#   "last-login-date": "",
+#   "associatedCertID": ""
+# }
+
 if not os.path.isfile('certificates.txt'):
   with open('certificates.txt', 'w') as f:
     f_content = """{ "registeredCertificates": {}, "revokedCertificates": {}}"""
     f.write(f_content)
+
+if not os.path.isfile('validOTPCodes.txt'):
+  with open('validOTPCodes.txt', 'w') as f:
+    f.write("{}")
+
+validOTPCodes = json.load(open('validOTPCodes.txt', 'r'))
 
 @app.route('/')
 def homepage():

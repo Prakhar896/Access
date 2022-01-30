@@ -48,7 +48,7 @@
 
 {% block body %}
 <h1>Create a New Access Identity</h1>
-
+<div id="information">
 <p>An Access Identity is basically an account that you have to make on this portal.</p>
 <p>It allows you to have your own Access Folder which is securely encrypted for you to store data.</p>
 <br>
@@ -57,6 +57,7 @@
     code.</p>
 <br>
 <p>For now, enter some account details to get your first Access account!</p>
+</div>
 <br>
 <p id="statusLabel">Processing...</p>
 <div id="accountDetailsSection">
@@ -80,6 +81,6 @@
     <label for="otp">OTP Code:</label><br>
     <input type="text" id="otpField" value=""><br>
     <br>
-    <button id="otpSubmitButton" class="fancyButtons">Submit</button>
+    <button id="otpSubmitButton" class="fancyButtons" onclick="makeIdentity()">Submit</button>
 </div>
 {% endblock %}

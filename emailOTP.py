@@ -66,4 +66,7 @@ def sendOTP():
     otp = ''.join(random.choice(numbers) for i in range(6))
     sendEmailWithOTP(email, otp)
 
+    validOTPCodes[email] = str(otp)
+    json.dump(validOTPCodes, open('validOTPCodes.txt', 'w'))
+
     return "OTP sent to {}".format(email)
