@@ -1,4 +1,5 @@
-import json, os, shutil, subprocess
+import json, os, shutil, subprocess, random
+
 def fileContent(fileName):
   with open(fileName, 'r') as f:
     f_content = f.read()
@@ -10,3 +11,11 @@ def generateAuthToken():
   while len(authTokenString) < 10:
     authTokenString += random.choice(letters_lst)
   return authTokenString
+
+def obtainTargetIdentity(email, accessIdentities):
+  targetIdentity = {}
+  for username in accessIdentities:
+    if accessIdentities[username]['email'] == email:
+      targetIdentity = accessIdentities[username]
+      targetIdentity["username"] = username
+  return targetIdentity

@@ -22,7 +22,8 @@ accessIdentities = json.load(open('accessIdentities.txt', 'r'))
 #   "email": "",
 #   "sign-up-date": "",
 #   "last-login-date": "",
-#   "associatedCertID": ""
+#   "associatedCertID": "",
+#   "loggedInAuthToken": "" (only present if user is logged in)
 # }
 
 if not os.path.isfile('certificates.txt'):

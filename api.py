@@ -1,4 +1,5 @@
 from main import *
+from models import *
 
 @app.route('/api/createIdentity', methods=['POST'])
 def makeAnIdentity():
@@ -68,11 +69,7 @@ def loginIdentity():
     if 'password' not in request.json:
         return "ERROR: password field not present in body. Request failed."
 
-    targetIdentity = {}
-    for username in accessIdentities:
-        if accessIdentities[username]['email'] == request.json['email']:
-            targetIdentity = accessIdentities[username]
-            targetIdentity["username"] = username
+    targetIdentity = obtainTargetIdentity(request.json['email'], accessIdentities)
     
     if targetIdentity == {}:
         return "UERROR: Email not associated with any Access Identity."
@@ -91,8 +88,8 @@ def loginIdentity():
         
     if CAError.checkIfErrorMessage(CertAuthority.checkCertificateSecurity(identityCertificate)):
         return { "userMessage": "UERROR: The certificate associated with this identity has failed security checks. Authorisation failed.", "errorMessage": CertAuthority.checkCertificateSecurity(identityCertificate) }
-    
 
     accessIdentities[targetIdentity['username']]['last-login-date'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    accessIdentities[targetIdentity['username']]['loggedInAuthToken'] = generateAuthToken()
     json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
-    return "SUCCESS: Identity logged in."
+    return "SUCCESS: Identity logged in. Temp auth token: {}".format(accessIdentities[targetIdentity['username']]['loggedInAuthToken'])
