@@ -91,7 +91,7 @@ function makeIdentity() {
                         statusLabel.innerHTML = "Creating Identity..."
                         setTimeout(() => {
                             statusLabel.innerHTML = "Identity created! Redirecting to login site..."
-                            location = `${origin}/login/${usernameField.value}`
+                            location = `${origin}/identity/login/?email=${emailField.value}`
                         }, 2000)
                     } else {
                         statusLabel.style.visibility = 'hidden'

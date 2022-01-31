@@ -1,15 +1,15 @@
 {% extends "baseXNav.html" %}
-{% block tabTitle %}{% endblock %}
+{% block tabTitle %}Login to Access{% endblock %}
 
 {% block head %}
 <style>
-    .bd-placeholder-img {
+    /* .bd-placeholder-img {
         font-size: 1.125rem;
         text-anchor: middle;
         -webkit-user-select: none;
         -moz-user-select: none;
         user-select: none;
-    }
+    } */
 
     @media (min-width: 768px) {
         .bd-placeholder-img-lg {
@@ -25,6 +25,7 @@
     body {
         display: flex;
         align-items: center;
+        text-align: center;
         padding-top: 40px;
         padding-bottom: 40px;
         background-color: #f5f5f5;
@@ -95,15 +96,14 @@
         <h1 class="h3 mb-3 fw-normal">Please sign in to Access</h1>
         <h4 id="statusLabel">Processing...</h4>
         <div class="form-floating">
-            <input type="email" class="form-control" id="floatingEmail" placeholder="name@example.com" value={{ email
-                }}>
+            <input type="email" class="form-control" id="floatingEmail" placeholder="name@example.com" value={{ email }}>
             <label for="floatingInput">Email address</label>
         </div>
         <div class="form-floating">
             <input type="password" class="form-control" id="floatingPassword" placeholder="Password">
             <label for="floatingPassword">Password</label>
         </div>
-        <button class="w-100 btn btn-lg btn-primary" type="submit" onclick="signin()">Sign in</button>
+        <button class="w-100 btn btn-lg btn-primary" onclick="signin()">Sign in</button>
     </form>
     <br>
     <br>

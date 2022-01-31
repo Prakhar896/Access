@@ -92,4 +92,4 @@ def loginIdentity():
     accessIdentities[targetIdentity['username']]['last-login-date'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     accessIdentities[targetIdentity['username']]['loggedInAuthToken'] = generateAuthToken()
     json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
-    return "SUCCESS: Identity logged in. Temp auth token: {}".format(accessIdentities[targetIdentity['username']]['loggedInAuthToken'])
+    return "SUCCESS: Identity logged in. Auth Session Data: {}-{}".format(accessIdentities[targetIdentity['username']]['loggedInAuthToken'], targetIdentity['associatedCertID'])

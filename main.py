@@ -45,7 +45,7 @@ def homepage():
 def createIdentityPage():
   return render_template('createIdentity.html')
 
-@app.route('/identity/login')
+@app.route('/identity/login/')
 def loginIdentityPage():
   if 'email' not in request.args:
     return render_template('loginIdentity.html', email="")
