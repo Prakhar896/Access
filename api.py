@@ -2,7 +2,7 @@ from main import *
 
 @app.route('/api/createIdentity', methods=['POST'])
 def makeAnIdentity():
-    if 'Content-Type' not in request.headers and 'AccessAPIKey' not in request.headers:
+    if 'Content-Type' not in request.headers or 'AccessAPIKey' not in request.headers:
         return "ERROR: One or more headers were not present in the API request. Request failed."
     if request.headers['Content-Type'] == 'application/json' and request.headers['AccessAPIKey'] == os.environ['AccessAPIKey']:
         if 'username' not in request.json:
@@ -48,3 +48,47 @@ def makeAnIdentity():
         return "SUCCESS: Identity created."
     else:
         return "ERROR: One or more of the request headers had incorrect values for this request. Request failed."
+
+@app.route('/api/loginIdentity', methods=['POST'])
+def loginIdentity():
+    if 'Content-Type' not in request.headers:
+        return "ERROR: Content-Type header not present in API request. Request failed."
+    if 'AccessAPIKey' not in request.headers:
+        return "ERROR: AccessAPIKey header not present in API request. Request failed."
+    if request.headers['Content-Type'] != 'application/json':
+        return "ERROR: Content-Type header had incorrect value for this API request (expected application/json). Request failed."
+    if request.headers['AccessAPIKey'] != os.environ['AccessAPIKey']:
+        return "ERROR: Incorrect AccessAPIKey value for this API request. Request failed."
+
+    if 'email' not in request.json:
+        return "ERROR: email field not present in body. Request failed."
+    if 'password' not in request.json:
+        return "ERROR: password field not present in body. Request failed."
+
+    targetIdentity = {}
+    for username in accessIdentities:
+        if accessIdentities[username]['email'] == request.json['email']:
+            targetIdentity = accessIdentities[username]
+            targetIdentity["username"] = username
+    
+    if targetIdentity == {}:
+        return "UERROR: Email not associated with any Access Identity."
+    
+    if CertAuthority.decodeFromB64(targetIdentity["password"]) != request.json['password']:
+        return "UERROR: Password is incorrect."
+    
+    identityCertificate = CertAuthority.getCertificate(targetIdentity['associatedCertID'])
+    if identityCertificate is None:
+        return "UERROR: Could not find certificate associated with this identity. Authorisation failed."
+    if identityCertificate['revoked'] == True:
+        return "UERROR: The certificate associated with this identity has been revoked. Authorisation failed."
+    if identityCertificate['expiryDate'] < datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"):
+        CertAuthority.revokeCertificate(accessIdentities[request.json['email']]['name'])
+        return "UERROR: The certificate associated with this identity has expired. Authorisation failed."
+    if CAError.checkIfErrorMessage(CertAuthority.checkCertificateSecurity(identityCertificate)):
+        return { "userMessage": "UERROR: The certificate associated with this identity has failed security checks. Authorisation failed.", "errorMessage": CertAuthority.checkCertificateSecurity(identityCertificate) }
+    
+
+    accessIdentities[targetIdentity['username']]['last-login-date'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+    return "SUCCESS: Identity logged in."

@@ -46,7 +46,10 @@ def createIdentityPage():
 
 @app.route('/identity/login')
 def loginIdentityPage():
-  return render_template('loginIdentity.html')
+  if 'email' not in request.args:
+    return render_template('loginIdentity.html', email="")
+  else:
+    return render_template('loginIdentity.html', email=request.args['email'])
 
 # API
 from api import *

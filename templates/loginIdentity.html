@@ -80,6 +80,10 @@
         background-color: darkslategray;
         border-radius: 10px;
     }
+
+    #statusLabel {
+        visibility: hidden;
+    }
 </style>
 <script src="/assets/signinJS"></script>
 {% endblock %}
@@ -89,16 +93,17 @@
     <form>
         <img class="mb-4" src="/assets/accessLogo" alt="" width="200" height="57">
         <h1 class="h3 mb-3 fw-normal">Please sign in to Access</h1>
-
+        <h4 id="statusLabel">Processing...</h4>
         <div class="form-floating">
-            <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com">
+            <input type="email" class="form-control" id="floatingEmail" placeholder="name@example.com" value={{ email
+                }}>
             <label for="floatingInput">Email address</label>
         </div>
         <div class="form-floating">
             <input type="password" class="form-control" id="floatingPassword" placeholder="Password">
             <label for="floatingPassword">Password</label>
         </div>
-        <button class="w-100 btn btn-lg btn-primary" type="submit">Sign in</button>
+        <button class="w-100 btn btn-lg btn-primary" type="submit" onclick="signin()">Sign in</button>
     </form>
     <br>
     <br>

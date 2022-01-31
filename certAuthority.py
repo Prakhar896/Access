@@ -114,6 +114,23 @@ class CertAuthority:
         return None
 
     @staticmethod
+    def getCertificate(certID):
+        # This method returns a certificate based on the certificate ID.
+        for user in CertAuthority.registeredCertificates:
+            if CertAuthority.registeredCertificates[user]['certID'] == certID:
+                withUserField = CertAuthority.registeredCertificates[user]
+                withUserField['user'] = user
+                return withUserField
+        
+        for user in CertAuthority.revokedCertificates:
+            if CertAuthority.revokedCertificates[user]['certID'] == certID:
+                withUserField = CertAuthority.revokedCertificates[user]
+                withUserField['user'] = user
+                return withUserField
+                
+        return None
+
+    @staticmethod
     def loadCertificatesFromFile(fileObject):
         try:
             allCerts = json.load(fileObject)
