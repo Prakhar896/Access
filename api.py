@@ -33,7 +33,7 @@ def makeAnIdentity():
 
         # Create new identity
         accessIdentities[request.json['username']] = {
-            'password': request.json['password'],
+            'password': CertAuthority.encodeToB64(request.json['password']),
             'email': request.json['email'],
             'otpCode': request.json['otpCode'],
             'sign-up-date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),

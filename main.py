@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, send_file
 from flask_cors import CORS
 import json, random, time, sys, subprocess, os, shutil
 import datetime
@@ -43,6 +43,10 @@ def homepage():
 @app.route('/identity/create')
 def createIdentityPage():
   return render_template('createIdentity.html')
+
+@app.route('/identity/login')
+def loginIdentityPage():
+  return render_template('loginIdentity.html')
 
 # API
 from api import *

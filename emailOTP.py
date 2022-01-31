@@ -27,7 +27,7 @@ If you do not recognize this email, please ignore it.
 
 THIS IS AN AUTOMATED MESSAGE FROM THE ACCESS PORTAL. DO NOT REPLY TO THIS MESSAGE.
 
-Copyright 2022 Prakhar Trivedi and the Access Team.""".format(otp)
+Copyright 2022 Prakhar Trivedi.""".format(otp)
 
     html = render_template('otpEmail.html', otpCode=otp)
 
