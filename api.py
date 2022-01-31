@@ -51,6 +51,9 @@ def makeAnIdentity():
 
 @app.route('/api/loginIdentity', methods=['POST'])
 def loginIdentity():
+    CertAuthority.expireOldCertificatesAndSaveToFile()
+    CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
+
     if 'Content-Type' not in request.headers:
         return "ERROR: Content-Type header not present in API request. Request failed."
     if 'AccessAPIKey' not in request.headers:
@@ -81,10 +84,11 @@ def loginIdentity():
     if identityCertificate is None:
         return "UERROR: Could not find certificate associated with this identity. Authorisation failed."
     if identityCertificate['revoked'] == True:
-        return "UERROR: The certificate associated with this identity has been revoked. Authorisation failed."
-    if identityCertificate['expiryDate'] < datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"):
-        CertAuthority.revokeCertificate(accessIdentities[request.json['email']]['name'])
-        return "UERROR: The certificate associated with this identity has expired. Authorisation failed."
+        if identityCertificate['revocationReason'] == 'This certificate is expired.':
+            return "UERROR: The certificate associated with this identity has expired. Authorisation failed."
+        else:
+            return "UERROR: The certificate associated with this identity has been revoked. Authorisation failed."
+        
     if CAError.checkIfErrorMessage(CertAuthority.checkCertificateSecurity(identityCertificate)):
         return { "userMessage": "UERROR: The certificate associated with this identity has failed security checks. Authorisation failed.", "errorMessage": CertAuthority.checkCertificateSecurity(identityCertificate) }
     

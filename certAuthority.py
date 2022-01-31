@@ -55,18 +55,22 @@ class CertAuthority:
     @staticmethod
     def checkCertificateSecurity(cert):
         def checkValidity():
-            if (len(CertAuthority.decodeFromB64(cert["certificate"])) != 1002) or ('"{}"'.format(cert["user"][0]) not in CertAuthority.decodeFromB64(cert["certificate"])) or (len([i for i in list(CertAuthority.decodeFromB64(cert["certificate"])) if i == '0' or i == '1']) != 512):
+            try:
+                if (len(CertAuthority.decodeFromB64(cert["certificate"])) != 1002) or ('"{}"'.format(cert["user"][0]) not in CertAuthority.decodeFromB64(cert["certificate"])) or (len([i for i in list(CertAuthority.decodeFromB64(cert["certificate"])) if i == '0' or i == '1']) != 512):
+                    return False
+                else:
+                    return True
+            except:
+                print("There was an error checking the certificate's security. Defaulting to failed security check return...")
                 return False
-            else:
-                return True
 
         # Check is certificate is registered, signed by the CA, and has not been revoked
-        if cert in CertAuthority.registeredCertificates and cert not in CertAuthority.revokedCertificates:
+        if cert['user'] in CertAuthority.registeredCertificates and cert['user'] not in CertAuthority.revokedCertificates:
             if checkValidity():
                 return CAError.validCert
             else:
                 return CAError.invalidCert
-        elif cert in CertAuthority.revokedCertificates:
+        elif cert['user'] in CertAuthority.revokedCertificates:
             if checkValidity():
                 return CAError.revokedCertAndValid
             else:
@@ -103,14 +107,14 @@ class CertAuthority:
         # The certificate is added to the list of revoked certificates.
         # The certificate is removed from the list of valid certificates.
         # The certificate is returned to the user.
-        for cert in CertAuthority.registeredCertificates:
-            if cert['certID'] == certificateID and cert['user'] == user:
-                cert['revoked'] = True
-                cert['revocationReason'] = reason
-                cert['revocationDate'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                CertAuthority.revokedCertificates[user] = cert
+        for username in CertAuthority.registeredCertificates:
+            if CertAuthority.registeredCertificates[username]['certID'] == certificateID and username == user:
+                CertAuthority.registeredCertificates[username]['revoked'] = True
+                CertAuthority.registeredCertificates[username]['revocationReason'] = reason
+                CertAuthority.registeredCertificates[username]['revocationDate'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                CertAuthority.revokedCertificates[user] = CertAuthority.registeredCertificates[username]
                 CertAuthority.registeredCertificates.pop(user)
-                return cert
+                return CertAuthority.revokedCertificates[user]
         return None
 
     @staticmethod
@@ -127,8 +131,18 @@ class CertAuthority:
                 withUserField = CertAuthority.revokedCertificates[user]
                 withUserField['user'] = user
                 return withUserField
-                
+
         return None
+
+    @staticmethod
+    def expireOldCertificatesAndSaveToFile():
+        expiredCounter = 0
+        for username in CertAuthority.registeredCertificates.copy():
+            if datetime.datetime.strptime(CertAuthority.registeredCertificates[username]['expiryDate'], '%Y-%m-%d %H:%M:%S') < datetime.datetime.now():
+                CertAuthority.revokeCertificate(username, CertAuthority.registeredCertificates[username]['certID'], 'This certificate is expired.')
+                expiredCounter += 1
+
+        print("CA: Expired {} certificates.".format(expiredCounter))
 
     @staticmethod
     def loadCertificatesFromFile(fileObject):
