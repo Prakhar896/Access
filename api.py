@@ -92,4 +92,23 @@ def loginIdentity():
     accessIdentities[targetIdentity['username']]['last-login-date'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     accessIdentities[targetIdentity['username']]['loggedInAuthToken'] = generateAuthToken()
     json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+
+    text = """
+    Hi {},
+    
+    You have successfully logged in to the Access Identity System. If you do not recognise this login, please logout immediately at the link below or change the password.
+    This login alert is automatically delivered to you by the Access System; if you wish not to receive these emails any further, please change your Access Identity email preferences in the Access Portal.
+
+    Logout Link: {}
+
+    THIS IS AN AUTOMATED MESSAGE DELIVERED TO YOU BY THE ACCESS PORTAL. DO NOT REPLY TO THIS EMAIL.
+
+    Kind Regards,
+    The Access Team
+    """.format(targetIdentity['username'], request.host_url + '/identity/logout?authToken=' + accessIdentities[targetIdentity['username']]['loggedInAuthToken'])
+
+    html = render_template("loginEmail.html", userName=targetIdentity['username'], datetime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' UTC' + time.strftime('%z'), logoutLink=(request.host_url + '/identity/logout?authToken=' + accessIdentities[targetIdentity['username']]['loggedInAuthToken']))
+
+    Emailer.sendEmail(targetIdentity['email'], "Access Identity Login Alert", text, html)
+
     return "SUCCESS: Identity logged in. Auth Session Data: {}-{}".format(accessIdentities[targetIdentity['username']]['loggedInAuthToken'], targetIdentity['associatedCertID'])

@@ -4,6 +4,7 @@ import json, random, time, sys, subprocess, os, shutil
 import datetime
 from models import *
 from certAuthority import *
+from emailer import *
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -57,6 +58,9 @@ from api import *
 
 # Email OTP Service
 from emailOTP import *
+
+# Portal Service
+from portal import *
 
 # Assets
 from assets import *

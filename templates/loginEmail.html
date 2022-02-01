@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Access Identity Login Alert</title>
+    </head>
+    <body>
+        <h1>Access Identity Login Alert</h1>
+        <p>Dear {{ userName }},</p>
+        <p>You have successfully logged in to Access Portal as of {{ datetime }}</p>
+        <p>If you did not just login to the portal, please logout at the the link below immediately or change your password in the Access Portal.</p>
+        <br>
+        <p>Logout Link: {{ logoutLink }}</p>
+        <p>Kind regards, The Access Team</p>
+        <br>
+        <p>THIS IS AN AUTOMATED MESSAGE DELIVERED TO YOU BY THE ACCESS PORTAL. DO NOT REPLY TO THIS EMAIL.</p>
+        <p>Copyright 2022 Prakhar Trivedi</p>
+    </body>
+</html>
