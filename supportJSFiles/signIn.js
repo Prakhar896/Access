@@ -1,6 +1,6 @@
 function signin() {
-    const emailField = document.getElementById("floatingEmail")
-    const passwordField = document.getElementById("floatingPassword")
+    const emailField = document.getElementById("emailField")
+    const passwordField = document.getElementById("passwordField")
     const statusLabel = document.getElementById("statusLabel")
 
     if (!emailField.value || emailField.value == "" || !passwordField.value || passwordField.value == "") {
