@@ -1,0 +1,18 @@
+{% extends "baseXNav.html" %}
+
+{% block tabTitle %}Access Unauthorised Error{% endblock %}
+{% block head %}
+<style>
+    body {
+        margin-top: 200px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<h1>Access Unauthorised</h1>
+<br>
+<h3>{{ message }}</h3>
+<h6>You have been re-directed to this webpage due to incomplete or failed security checks by the Access system. See the above message to see what went wrong.</h5>
+<script src="/assets/copyright"></script>
+{% endblock %}

@@ -52,7 +52,7 @@ def makeAnIdentity():
 
 @app.route('/api/loginIdentity', methods=['POST'])
 def loginIdentity():
-    CertAuthority.expireOldCertificatesAndSaveToFile()
+    CertAuthority.expireOldCertificates()
     CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
 
     if 'Content-Type' not in request.headers:

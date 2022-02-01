@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, send_file
+from flask import Flask, request, render_template, send_file, redirect, url_for
 from flask_cors import CORS
 import json, random, time, sys, subprocess, os, shutil
 import datetime
@@ -52,6 +52,10 @@ def loginIdentityPage():
     return render_template('loginIdentity.html', email="")
   else:
     return render_template('loginIdentity.html', email=request.args['email'])
+
+@app.route('/security/unauthorised')
+def unauthorizedPage():
+  return render_template('unauthorised.html', message=request.args['error'])
 
 # API
 from api import *

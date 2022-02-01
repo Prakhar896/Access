@@ -135,7 +135,7 @@ class CertAuthority:
         return None
 
     @staticmethod
-    def expireOldCertificatesAndSaveToFile():
+    def expireOldCertificates():
         expiredCounter = 0
         for username in CertAuthority.registeredCertificates.copy():
             if datetime.datetime.strptime(CertAuthority.registeredCertificates[username]['expiryDate'], '%Y-%m-%d %H:%M:%S') < datetime.datetime.now():
