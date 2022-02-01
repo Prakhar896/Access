@@ -9,6 +9,7 @@ function signin() {
     }
 
     statusLabel.style.visibility = 'visible'
+    statusLabel.innerHTML = "Processing..."
     axios({
         method: 'post',
         url: `${origin}/api/loginIdentity`,
