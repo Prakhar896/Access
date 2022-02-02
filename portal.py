@@ -1,10 +1,14 @@
-from flask import redirect, url_for
 from main import *
 
 
 def checkSessionCredentials(certID, authToken):
+    global accessIdentities
     CertAuthority.expireOldCertificates()
     CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
+    tempIdentities = accessIdentities
+    accessIdentities = expireAuthTokens(tempIdentities)
+    json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+
     for username in accessIdentities:
         if accessIdentities[username]['associatedCertID'] == certID:
             targetCertificate = CertAuthority.getCertificate(certID)

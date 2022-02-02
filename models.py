@@ -1,4 +1,4 @@
-import json, os, shutil, subprocess, random
+import json, os, shutil, subprocess, random, datetime
 
 def fileContent(fileName):
   with open(fileName, 'r') as f:
@@ -19,3 +19,9 @@ def obtainTargetIdentity(email, accessIdentities):
       targetIdentity = accessIdentities[username]
       targetIdentity["username"] = username
   return targetIdentity
+
+def expireAuthTokens(accessIdentities):
+  for username in accessIdentities:
+    if (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['last-login-date'], '%Y-%m-%d %H:%M:%S')).total_seconds() >= 10800:
+      del accessIdentities[username]['loggedInAuthToken']
+  return accessIdentities

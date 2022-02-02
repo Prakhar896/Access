@@ -77,4 +77,10 @@ if __name__ == "__main__":
   else:
     print(response)
   
+
+  CertAuthority.expireOldCertificates()
+  CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
+  tempIdentities = accessIdentities
+  accessIdentities = expireAuthTokens(tempIdentities)
+  json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
   app.run(host='0.0.0.0', port=8000)

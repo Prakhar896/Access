@@ -3,9 +3,22 @@
 {% block tabTitle %}Access Portal Home{% endblock %}
 
 {% block head %}
+<style>
+    #content {
+        text-align: left;
+        margin-left: 20px;
+    }
+    #greeting {
+        text-align: center;
+        margin-top: 10px;
+    }
+</style>
 <script src="/assets/portalHomeJS"></script>
 {% endblock %}
 
 {% block body %}
-<h1>Welcome, {{ username }}</h1>
+<h1 id="greeting">Welcome,  {{ username }}</h1>
+<div id="content">
+
+</div>
 {% endblock %}
