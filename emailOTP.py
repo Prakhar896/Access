@@ -29,7 +29,7 @@ THIS IS AN AUTOMATED MESSAGE FROM THE ACCESS PORTAL. DO NOT REPLY TO THIS MESSAG
 
 Copyright 2022 Prakhar Trivedi.""".format(otp)
 
-    html = render_template('otpEmail.html', otpCode=otp)
+    html = render_template('emails/otpEmail.html', otpCode=otp)
 
     part1 = MIMEText(text, "plain")
     part2 = MIMEText(html, "html")
