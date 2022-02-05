@@ -20,3 +20,7 @@ def accessLogoIMG():
 @app.route('/assets/signinJS')
 def signinJS():
   return fileContent('supportJSFiles/signIn.js')
+
+@app.route('/assets/portalHomeJS')
+def portalHomeJS():
+  return fileContent('supportJSFiles/portalHome.js')

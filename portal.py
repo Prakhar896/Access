@@ -34,6 +34,20 @@ def checkSessionCredentials(certID, authToken):
 def portalHome(certID, authToken):
     check = checkSessionCredentials(certID, authToken)
     if isinstance(check, list) and check[0]:
-        return render_template('portal/portalHome.html', username=check[1])
+        timeLeft = ""
+        for username in accessIdentities:
+            if accessIdentities[username]['loggedInAuthToken'] == authToken:
+                numberOfMins = (10400 - (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['last-login-date'], '%Y-%m-%d %H:%M:%S')).total_seconds()) / 60
+                numHours = int(numberOfMins / 60)
+                numMinutes = numberOfMins - (60 * numHours)
+                timeLeft = "{} Hours and {} Minutes Left".format(str(numHours), str(int(numMinutes)))
+                break
+
+        sessionDetails = {
+            "logoutLink": request.host_url + "identity/logout?={}".format(authToken),
+            "timeLeft": timeLeft,
+            "currentToken": authToken
+        }
+        return render_template('portal/portalHome.html', username=check[1], sessionDetails=sessionDetails)
     else:
         return check

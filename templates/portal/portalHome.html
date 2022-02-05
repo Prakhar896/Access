@@ -18,8 +18,23 @@
 
 {% block body %}
 <h1 id="greeting">Welcome,  {{ username }}</h1>
+<br>
 <div id="content">
-    <p class="font-weight-bold">Welcome to the Access Portal.</p>
+    <h4>Welcome to the Access Portal.</h4>
     <p>This is a place where you can manage your Access Identity and upload important files to your Access Folder (you can only upload upto 3 files) amongst other things.</p>
+    <br>
+    <br>
+    <div class="card" style="width: 25rem;">
+        <div class="card-body">
+          <h5 class="card-title">Your Auth Session</h5>
+          <h6 class="card-subtitle mb-2 text-muted">More information about your current sign-in session</h6>
+          <p class="card-text">
+            Time Left: {{ sessionDetails['timeLeft'] }}
+            <br>
+            Current Auth Token: {{ sessionDetails['currentToken'] }}
+          </p>
+          <a href={{ sessionDetails['logoutLink'] }} class="card-link">Logout Now</a>
+        </div>
+    </div>
 </div>
 {% endblock %}
