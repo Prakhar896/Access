@@ -37,7 +37,7 @@ def portalHome(certID, authToken):
         timeLeft = ""
         for username in accessIdentities:
             if accessIdentities[username]['loggedInAuthToken'] == authToken:
-                numberOfMins = (10400 - (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['last-login-date'], '%Y-%m-%d %H:%M:%S')).total_seconds()) / 60
+                numberOfMins = (10800 - (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['last-login-date'], '%Y-%m-%d %H:%M:%S')).total_seconds()) / 60
                 numHours = int(numberOfMins / 60)
                 numMinutes = numberOfMins - (60 * numHours)
                 timeLeft = "{} Hours and {} Minutes Left".format(str(numHours), str(int(numMinutes)))
