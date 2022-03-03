@@ -3,6 +3,8 @@ from models import *
 
 @app.route('/api/createIdentity', methods=['POST'])
 def makeAnIdentity():
+    global validOTPCodes
+    global accessIdentities
     if 'Content-Type' not in request.headers or 'AccessAPIKey' not in request.headers:
         return "ERROR: One or more headers were not present in the API request. Request failed."
     if request.headers['Content-Type'] == 'application/json' and request.headers['AccessAPIKey'] == os.environ['AccessAPIKey']:
@@ -52,6 +54,7 @@ def makeAnIdentity():
 
 @app.route('/api/loginIdentity', methods=['POST'])
 def loginIdentity():
+    global accessIdentities
     CertAuthority.expireOldCertificates()
     CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
 
