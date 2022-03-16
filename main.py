@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, send_file, redirect, url_for
+from flask import Flask, request, render_template, send_file, redirect, url_for, flash, send_from_directory
 from flask_cors import CORS
 import json, random, time, sys, subprocess, os, shutil
 import datetime
@@ -8,8 +8,20 @@ from emailer import *
 from dotenv import load_dotenv
 load_dotenv()
 
+### APP CONFIG
+UPLOAD_FOLDER = os.path.join(os.getcwd(), 'Uploads')
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+
 app = Flask(__name__)
 CORS(app)
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
+
+def allowed_file(filename):
+  return ('.' in filename) and (filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS)
+
+### Variable Creation
 
 if not os.path.isfile('accessIdentities.txt'):
   with open('accessIdentities.txt', 'w') as f:
