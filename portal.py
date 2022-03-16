@@ -3,6 +3,7 @@ from main import *
 
 def checkSessionCredentials(certID, authToken):
     global accessIdentities
+    print(accessIdentities)
     CertAuthority.expireOldCertificates()
     CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
     tempIdentities = accessIdentities
@@ -64,6 +65,6 @@ def portalFolder(certID, authToken):
                 slotsAvailable = 3 - len(filenames)
                 return render_template('portal/portalFolder.html', slotsAvailable=slotsAvailable, files=filenames, url=request.url, username=check[1])
         else:
-            return "Your folder is not registered yet."
+            return render_template("")
     else:
         return check

@@ -23,5 +23,9 @@ def obtainTargetIdentity(email, accessIdentities):
 def expireAuthTokens(accessIdentities):
   for username in accessIdentities:
     if (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['last-login-date'], '%Y-%m-%d %H:%M:%S')).total_seconds() >= 10800:
-      del accessIdentities[username]['loggedInAuthToken']
+      try:
+        del accessIdentities[username]['loggedInAuthToken']
+        print("Models: Expired auth token for username {}".format(username))
+      except Exception as e:
+        print("Models: Failed to expire auth token. {}".format(e))
   return accessIdentities

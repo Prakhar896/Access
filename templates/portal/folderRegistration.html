@@ -1,0 +1,35 @@
+{% extends "baseXNav.html" %}
+
+{% block tabTitle %}Folder Registration | Access Portal{% endblock %}
+
+{% block head %}
+<style>
+    #content {
+        text-align: left;
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+    #heading {
+        text-align: center;
+        margin-top: 10px;
+    }
+    #statusLabel {
+        visibility: hidden;
+    }
+</style>
+<script src="/assets/folderRegistrationJS"></script>
+{% endblock %}
+
+{% block body %}
+<h1 id="heading">Folder Registration</h1>
+<br>
+<p>Welcome to the Access Folder Registration process!</p>
+<br>
+<p>Your Access Folder has a maximum of 3 file slots in which you can upload any file that has an allowed file extension.</p>
+<p>Each upload can only be a maximum of 16MB in size and can have any of the following allowed file extensions below:</p>
+<br>
+<p>.txt, .pdf, .png, .jpg, .jpeg, .gif</p>
+<br>
+<br>
+<h5 id="statusLabel">Registering folder for {{ username }}...</h5>
+<button type="button" class="btn btn-primary">Register</button>

@@ -24,3 +24,7 @@ def signinJS():
 @app.route('/assets/portalHomeJS')
 def portalHomeJS():
   return fileContent('supportJSFiles/portalHome.js')
+
+@app.route('/assets/folderRegistrationJS')
+def folderRegistrationJS():
+  return fileContent('/assets/folderRegistration.js')
