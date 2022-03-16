@@ -115,3 +115,4 @@ def loginIdentity():
     Emailer.sendEmail(targetIdentity['email'], "Access Identity Login Alert", text, html)
 
     return "SUCCESS: Identity logged in. Auth Session Data: {}-{}".format(accessIdentities[targetIdentity['username']]['loggedInAuthToken'], targetIdentity['associatedCertID'])
+    

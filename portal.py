@@ -44,7 +44,7 @@ def portalHome(certID, authToken):
                 break
 
         sessionDetails = {
-            "logoutLink": request.host_url + "identity/logout?={}".format(authToken),
+            "logoutLink": request.host_url + "identity/logout?authToken={}".format(authToken),
             "timeLeft": timeLeft,
             "currentToken": authToken
         }
