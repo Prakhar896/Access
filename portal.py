@@ -48,6 +48,22 @@ def portalHome(certID, authToken):
             "timeLeft": timeLeft,
             "currentToken": authToken
         }
-        return render_template('portal/portalHome.html', username=check[1], sessionDetails=sessionDetails)
+        return render_template('portal/portalHome.html', username=check[1], sessionDetails=sessionDetails, url=request.url)
+    else:
+        return check
+
+@app.route('/portal/session/<certID>/<authToken>/folder')
+def portalFolder(certID, authToken):
+    check = checkSessionCredentials(certID, authToken)
+    if isinstance(check, list) and check[0]:
+        if AFManager.checkIfFolderIsRegistered(username=check[1]):
+            filenames = AFManager.getFilenames(check[1])
+            if filenames == None:
+                return render_template('portal/portalFolder.html', slotsAvailable=3, files=None, username=check[1])
+            else:
+                slotsAvailable = 3 - len(filenames)
+                return render_template('portal/portalFolder.html', slotsAvailable=slotsAvailable, files=filenames, url=request.url, username=check[1])
+        else:
+            return "Your folder is not registered yet."
     else:
         return check

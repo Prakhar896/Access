@@ -1,0 +1,52 @@
+{% extends "baseNav.html" %}
+
+{% block tabTitle %}My Folder | Access Portal{% endblock %}
+
+{% block head %}
+<style>
+    #content {
+        text-align: left;
+        margin-left: 20px;
+        margin-right: 20px;
+        
+    }
+
+    #heading {
+        text-align: center;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<h1 id="heading">My Folder</h1>
+<br>
+<div id="content">
+    <h4>Welcome back to your Access Folder. You have {{ slotsAvailable }} file slots available.</h4>
+    <p>Here, you can upload files to your folder, delete them or anything else.</p>
+    <br>
+    <br>
+    {% if files != None %}
+        <table class="table table-dark rounded">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">File Name</th>
+                    <th scope="col">File Extension</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in files %}
+                <tr>
+                    <th scope="row">{{ loop.index }}</th>
+                    <td>{{ file.split('.')[0] }}</td>
+                    <td>{{ file.split('.')[1] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <h4>You have no files in your folder.</h4>
+    {% endif %}
+</div>
+{% endblock %}

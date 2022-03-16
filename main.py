@@ -4,6 +4,7 @@ import json, random, time, sys, subprocess, os, shutil
 import datetime
 from models import *
 from certAuthority import *
+from AFManager import *
 from emailer import *
 from dotenv import load_dotenv
 load_dotenv()

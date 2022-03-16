@@ -27,14 +27,22 @@ class AFManager:
 
         if os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders', username)):
             try:
-                os.rmdir(os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders', username)))
+                os.rmdir(os.path.join(os.getcwd(), 'AccessFolders', username))
             except Exception as e:
                 print("AFMError: {}".format(e))
                 return AFMError.unknownError
         else:
             return AFMError.folderDoesNotExist
 
-    
+    @staticmethod
+    def getFilenames(username):
+        if os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders', username)):
+            filenames = [f for f in os.listdir(os.path.join(os.getcwd(), 'AccessFolders', username)) if os.path.isfile(os.path.join(os.path.join(os.getcwd(), 'AccessFolders', username), f))]
+            if filenames == []:
+                filenames = None
+            return filenames
+        else:
+            return AFMError.folderDoesNotExist
 
 class AFMError(Exception):
     def __init__(self, message):
