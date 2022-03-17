@@ -17,7 +17,6 @@
         visibility: hidden;
     }
 </style>
-<script src="/assets/folderRegistrationJS"></script>
 {% endblock %}
 
 {% block body %}
@@ -32,4 +31,6 @@
 <br>
 <br>
 <h5 id="statusLabel">Registering folder for {{ username }}...</h5>
-<button type="button" class="btn btn-primary">Register</button>
+<button type="button" class="btn btn-primary" onclick="registerClicked()">Register</button>
+<script src="/assets/folderRegistrationJS"></script>
+{% endblock %}

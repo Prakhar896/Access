@@ -116,3 +116,53 @@ def loginIdentity():
 
     return "SUCCESS: Identity logged in. Auth Session Data: {}-{}".format(accessIdentities[targetIdentity['username']]['loggedInAuthToken'], targetIdentity['associatedCertID'])
     
+@app.route('/api/registerFolder', methods=['POST'])
+def registerFolder():
+    global accessIdentities
+
+    ## Headers check
+    if 'Content-Type' not in request.headers:
+        return "ERROR: Content-Type header not present in API request. Request failed."
+    if 'AccessAPIKey' not in request.headers:
+        return "ERROR: AccessAPIKey header not present in API request. Request failed."
+    if request.headers['Content-Type'] != 'application/json':
+        return "ERROR: Content-Type header had incorrect value for this API request (expected application/json). Request failed."
+    if request.headers['AccessAPIKey'] != os.environ['AccessAPIKey']:
+        return "ERROR: Incorrect AccessAPIKey value for this API request. Request failed."
+
+    # Data body check
+    if 'username' not in request.json:
+        return "ERROR: Username field not present in JSON body of request."
+    if request.json['username'] not in accessIdentities:
+        return "ERROR: Username not associated with any Access Identity."
+    
+    ## Folder already exists check
+    if AFManager.checkIfFolderIsRegistered(request.json['username']):
+        return "ERROR: Folder for the Access Identity is already registered."
+    
+    ## Checks completed
+
+    ## Register folder under username
+    AFManager.registerFolder(request.json['username'])
+
+    ## Send email
+
+    text = """
+    Hi {},
+
+    Congratulations on registering your Access Folder! You can now upload upto a maximum of 3 files, each not bigger than 16MB in size that have the following allowed file extensions:
+    .txt, .pdf, .png, .jpg, .jpeg, .gif
+
+    Kind Regards,
+    The Access Team
+
+    THIS IS AN AUTOMATED MESSAGE DELIVERED TO YOU BY THE ACCESS PORTAL. DO NOT REPLY TO THIS EMAIL.
+    Copyright 2022 Prakhar Trivedi
+    """
+
+    html = render_template('emails/folderRegistered.html', username=request.json['username'])
+
+    Emailer.sendEmail(accessIdentities[request.json['username']]['email'], "Access Folder Registered!", text, html)
+
+    return "SUCCESS: Access Folder for {} registered!".format(request.json['username'])
+

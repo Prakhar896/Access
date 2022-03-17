@@ -1,3 +1,6 @@
 const statusLabel = document.getElementById("statusLabel")
-var username = statusLabel.innerText.substring("Registering folder for ".length, statusLabel.innerText.length - "...".length)
-console.log(username)
+var username = statusLabel.innerHTML.substring("Registering folder for ".length, statusLabel.innerHTML.length - "...".length)
+
+function registerClicked() {
+    
+}

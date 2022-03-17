@@ -27,4 +27,4 @@ def portalHomeJS():
 
 @app.route('/assets/folderRegistrationJS')
 def folderRegistrationJS():
-  return fileContent('/assets/folderRegistration.js')
+  return fileContent('supportJSFiles/folderRegistration.js')

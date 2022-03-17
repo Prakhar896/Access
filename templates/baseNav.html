@@ -24,7 +24,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="#">Home</a>
+                        <a class="nav-link active" aria-current="page" href="#" id="homeLink">Home</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#" id="myFolderLink">My Folder</a>
@@ -38,7 +38,7 @@
                             Settings
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                            <a class="dropdown-item" href="#">Emails</a>
+                            <a class="dropdown-item" href="#" id="emailsLink">Emails</a>
                             <a class="dropdown-item" href="#">Certificate Status</a>
                             <a class="dropdown-item" href="#">Identity Info & Management</a>
                         </div>
@@ -65,14 +65,24 @@
         crossorigin="anonymous"></script>
 
     <script>
-    myFolderLink = document.getElementById("myFolderLink");
+    // My folder nav link
+    var myFolderLink = document.getElementById("myFolderLink");
 
-    url = "{{ url }}"
-    arrayURL = url.split("/");
+    const url = "{{ url }}"
+    var arrayURL = url.split("/");
     arrayURL.pop(9)
     arrayURL = arrayURL.join('/') + "/folder"
 
     myFolderLink.href = arrayURL;
+
+    // Home nav link
+    var homeLink = document.getElementById("homeLink");
+
+    arrayURL = url.split("/");
+    arrayURL.pop(9)
+    arrayURL = arrayURL.join('/') + "/home"
+
+    homeLink.href = arrayURL;
     </script>
 </body>
 
