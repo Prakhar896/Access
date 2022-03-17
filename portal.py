@@ -59,7 +59,7 @@ def portalFolder(certID, authToken):
         if AFManager.checkIfFolderIsRegistered(username=check[1]):
             filenames = AFManager.getFilenames(check[1])
             if filenames == None:
-                return render_template('portal/portalFolder.html', slotsAvailable=3, files=None, username=check[1])
+                return render_template('portal/portalFolder.html', slotsAvailable=3, files=None, username=check[1], url=request.url)
             else:
                 slotsAvailable = 3 - len(filenames)
                 return render_template('portal/portalFolder.html', slotsAvailable=slotsAvailable, files=filenames, url=request.url, username=check[1])

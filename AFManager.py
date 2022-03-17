@@ -9,7 +9,7 @@ class AFManager:
         
         try:
             os.mkdir(os.path.join(os.getcwd(), 'AccessFolders', username))
-            print("AFM: User {} registered an Access Folder.")
+            print("AFM: User {} registered an Access Folder.".format(username))
         except Exception as e:
             print("AFMError: {}".format(e))
             return AFMError.unknownError
