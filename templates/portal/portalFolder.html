@@ -11,15 +11,33 @@
         
     }
 
+    #headingAndButton {
+        text-align: center;
+        margin-top: 20px;
+    }
+
     #heading {
         text-align: center;
-        margin-top: 10px;
+        display: inline-block;
+    }
+
+    #uploadButton {
+        float: right;
+        margin-right: 10px;
     }
 </style>
 {% endblock %}
 
 {% block body %}
-<h1 id="heading">My Folder</h1>
+{% if slotsAvailable == 0 %}
+<div id="headingAndButton">
+    <h1 id="heading">My Folder</h1>
+</div>
+{% else %}
+<div id="headingAndButton">
+    <h1 id="heading">My Folder</h1><button type="button" class="btn btn-outline-primary" id="uploadButton">Upload File</button>
+</div>
+{% endif %}
 <br>
 <div id="content">
     <h4>Welcome back to your Access Folder. You have {{ slotsAvailable }} file slots available.</h4>
