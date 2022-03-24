@@ -35,7 +35,7 @@
 </div>
 {% else %}
 <div id="headingAndButton">
-    <h1 id="heading">My Folder</h1><button type="button" class="btn btn-outline-primary" id="uploadButton">Upload File</button>
+    <h1 id="heading">My Folder</h1><a href="#" id="uploadHREF"><button type="button" class="btn btn-outline-primary" id="uploadButton">Upload File</button></a>
 </div>
 {% endif %}
 <br>
@@ -57,7 +57,7 @@
                 {% for file in files %}
                 <tr>
                     <th scope="row">{{ loop.index }}</th>
-                    <td>{{ file.split('.')[0] }}</td>
+                    <td><a href="folder/uploads/{{ file }}"><p>{{ file.split('.')[0] }}</p></a></td>
                     <td>{{ file.split('.')[1] }}</td>
                 </tr>
                 {% endfor %}
@@ -67,4 +67,8 @@
         <h5>You have no files in your folder.</h5>
     {% endif %}
 </div>
+<script>
+const uploadButton = document.getElementById("uploadHREF")
+uploadButton.href = document.URL + "/newUpload"
+</script>
 {% endblock %}

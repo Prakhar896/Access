@@ -39,7 +39,7 @@ class AFManager:
         if os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders', username)):
             filenames = [f for f in os.listdir(os.path.join(os.getcwd(), 'AccessFolders', username)) if os.path.isfile(os.path.join(os.path.join(os.getcwd(), 'AccessFolders', username), f))]
             if filenames == []:
-                filenames = None
+                filenames = []
             return filenames
         else:
             return AFMError.folderDoesNotExist

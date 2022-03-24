@@ -1,0 +1,51 @@
+{% extends "baseXNav.html" %}
+
+{% block tabTitle %}New Upload | Access Portal{% endblock %}
+
+{% block head %}
+<style>
+    #content {
+        text-align: left;
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+
+    #heading {
+        text-align: center;
+        margin-top: 10px;
+    }
+    
+    #uploadForm {
+        align-content: center;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div id="content">
+    <h1 id="heading">Upload A New File</h1>
+    <br>
+    <br>
+    <button type="button" class="btn btn-primary" onclick="backToPortal()">< Back to Portal</button>
+    <br>
+    <br>
+    <p>Allowed file extensions: txt, pdf, png, jpg, jpeg, gif</p>
+    <p>File slots available: {{ slotsAvailable }}</p>
+    <br>
+    <br>
+    <form method=post enctype=multipart/form-data id="uploadForm">
+        <input type=file name=file>
+        <br>
+        <br>
+        <input type=submit value=Upload>
+    </form>
+</div>
+<script>
+    function backToPortal() {
+        var splitArray = document.URL.split('/')
+        splitArray.pop(9)
+        splitArray = splitArray.join('/')
+        window.location.href = splitArray
+    }
+</script>
+{% endblock %}
