@@ -8,36 +8,47 @@
         text-align: left;
         margin-left: 20px;
         margin-right: 20px;
-        
-    }
 
-    #headingAndButton {
-        text-align: center;
-        margin-top: 20px;
     }
 
     #heading {
+        margin-top: 20px;
         text-align: center;
-        display: inline-block;
     }
 
-    #uploadButton {
-        float: right;
-        margin-right: 10px;
+    #actionButtons {
+        text-align: center;
+    }
+
+    .fancyButtons:hover {
+        background-color: #000000;
+        color: white;
+        stroke: green;
+        stroke-width: 3px;
+        stroke-dashoffset: 15px;
+    }
+
+    .fancyButtons {
+        border: none;
+        color: white;
+        padding: 14px 18px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 13px;
+        margin: 4px 2px;
+        transition-duration: 0.5s;
+        cursor: pointer;
+        background-color: darkslategray;
+        border-radius: 10px;
     }
 </style>
 {% endblock %}
 
 {% block body %}
-{% if slotsAvailable == 0 %}
-<div id="headingAndButton">
+<div id="heading">
     <h1 id="heading">My Folder</h1>
 </div>
-{% else %}
-<div id="headingAndButton">
-    <h1 id="heading">My Folder</h1><a href="#" id="uploadHREF"><button type="button" class="btn btn-outline-primary" id="uploadButton">Upload File</button></a>
-</div>
-{% endif %}
 <br>
 <div id="content">
     <h4>Welcome back to your Access Folder. You have {{ slotsAvailable }} file slots available.</h4>
@@ -45,30 +56,40 @@
     <br>
     <br>
     {% if files != None %}
-        <table class="table table-dark rounded">
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">File Name</th>
-                    <th scope="col">File Extension</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for file in files %}
-                <tr>
-                    <th scope="row">{{ loop.index }}</th>
-                    <td><a href="folder/uploads/{{ file }}"><p>{{ file.split('.')[0] }}</p></a></td>
-                    <td>{{ file.split('.')[1] }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    {% if slotsAvailable == 0 %}
+    <div id="actionButtons">
+        <a href="#" id="deleteHREF"><button type="button" class="btn btn-outline-danger">Delete File</button></a>
+    </div>
     {% else %}
-        <h5>You have no files in your folder.</h5>
+    <div id="actionButtons">
+        <a href="#" id="uploadHREF"><button type="button" class="btn btn-outline-primary" id="uploadButton">Upload File</button></a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#" id="deleteHREF"><button type="button" class="btn btn-outline-danger">Delete File</button></a>
+    </div>
+    {% endif %}
+    <br>
+    <table class="table table-dark rounded">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">File Name</th>
+                <th scope="col">File Extension</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for file in files %}
+            <tr>
+                <th scope="row">{{ loop.index }}</th>
+                <td><a href="folder/uploads/{{ file }}"><p>{{ file.split('.')[0] }}</p></a></td>
+                <td>{{ file.split('.')[1] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <h5>You have no files in your folder.</h5>
     {% endif %}
 </div>
 <script>
-const uploadButton = document.getElementById("uploadHREF")
-uploadButton.href = document.URL + "/newUpload"
+    const uploadButton = document.getElementById("uploadHREF")
+    uploadButton.href = document.URL + "/newUpload"
 </script>
 {% endblock %}
