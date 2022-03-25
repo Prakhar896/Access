@@ -120,3 +120,21 @@ def download_file(certID, authToken, name):
             return redirect(url_for('portalFolder', certID=certID, authToken=authToken))
     else:
         return check
+
+@app.route('/portal/session/<certID>/<authToken>/folder/deleteListing')
+def deleteListing(certID, authToken):
+    check = checkSessionCredentials(certID, authToken)
+
+    if isinstance(check, list) and check[0]:
+        if AFManager.checkIfFolderIsRegistered(username=check[1]):
+            filenames = AFManager.getFilenames(username=check[1])
+
+            if filenames == []:
+                filenames = None
+                return redirect(url_for('portalFolder', certID=certID, authToken=authToken))
+
+            return render_template('portal/deleteListing.html', files=filenames)
+        else:
+            return redirect(url_for('portalFolder', certID=certID, authToken=authToken))
+    else:
+        return check
