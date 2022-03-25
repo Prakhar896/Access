@@ -92,9 +92,18 @@
     {% endif %}
 </div>
 <script>
-    const uploadButton = document.getElementById("uploadHREF")
-    uploadButton.href = document.URL + "/newUpload"
-    const deleteButton = document.getElementById("deleteHREF")
-    deleteButton.href = document.URL + "/deleteListing"
+    try {
+        const uploadButton = document.getElementById("uploadHREF")
+        uploadButton.href = document.URL + "/newUpload"
+    } catch(error) {
+        console.log(error)
+    }
+
+    try {
+        const deleteButton = document.getElementById("deleteHREF")
+        deleteButton.href = document.URL + "/deleteListing"
+    } catch(error) {
+        console.log(error)
+    }
 </script>
 {% endblock %}
