@@ -32,10 +32,14 @@ def checkSessionCredentials(certID, authToken):
 
 @app.route('/portal/session/<certID>/<authToken>/home')
 def portalHome(certID, authToken):
+    global accessIdentities
+
     check = checkSessionCredentials(certID, authToken)
     if isinstance(check, list) and check[0]:
         timeLeft = ""
         for username in accessIdentities:
+            if 'loggedInAuthToken' not in accessIdentities[username]:
+                continue
             if accessIdentities[username]['loggedInAuthToken'] == authToken:
                 numberOfMins = (10800 - (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['last-login-date'], '%Y-%m-%d %H:%M:%S')).total_seconds()) / 60
                 numHours = int(numberOfMins / 60)
