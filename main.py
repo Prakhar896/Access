@@ -70,7 +70,6 @@ def loginIdentityPage():
 
 @app.route('/identity/logout/')
 def logout():
-  print(request.args)
   if 'username' not in request.args:
     flash('Username was not provided for identity logout. Failed to perform identity logout.')
     return redirect(url_for('processError'))

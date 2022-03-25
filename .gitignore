@@ -6,3 +6,4 @@ certificates.txt
 accessIdentities.txt
 AccessFolders/
 validOTPCodes.txt
+templates/.DS_Store
