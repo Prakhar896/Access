@@ -1,6 +1,19 @@
 from main import *
 from models import *
 
+def headersCheck(headers):
+    ## Headers check
+    if 'Content-Type' not in headers:
+        return "ERROR: Content-Type header not present in API request. Request failed."
+    if 'AccessAPIKey' not in headers:
+        return "ERROR: AccessAPIKey header not present in API request. Request failed."
+    if headers['Content-Type'] != 'application/json':
+        return "ERROR: Content-Type header had incorrect value for this API request (expected application/json). Request failed."
+    if headers['AccessAPIKey'] != os.environ['AccessAPIKey']:
+        return "ERROR: Incorrect AccessAPIKey value for this API request. Request failed."
+    
+    return True
+
 @app.route('/api/createIdentity', methods=['POST'])
 def makeAnIdentity():
     global validOTPCodes
@@ -58,14 +71,9 @@ def loginIdentity():
     CertAuthority.expireOldCertificates()
     CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
 
-    if 'Content-Type' not in request.headers:
-        return "ERROR: Content-Type header not present in API request. Request failed."
-    if 'AccessAPIKey' not in request.headers:
-        return "ERROR: AccessAPIKey header not present in API request. Request failed."
-    if request.headers['Content-Type'] != 'application/json':
-        return "ERROR: Content-Type header had incorrect value for this API request (expected application/json). Request failed."
-    if request.headers['AccessAPIKey'] != os.environ['AccessAPIKey']:
-        return "ERROR: Incorrect AccessAPIKey value for this API request. Request failed."
+    check = headersCheck(headers=request.headers)
+    if check != True:
+        return check
 
     if 'email' not in request.json:
         return "ERROR: email field not present in body. Request failed."
@@ -121,14 +129,9 @@ def registerFolder():
     global accessIdentities
 
     ## Headers check
-    if 'Content-Type' not in request.headers:
-        return "ERROR: Content-Type header not present in API request. Request failed."
-    if 'AccessAPIKey' not in request.headers:
-        return "ERROR: AccessAPIKey header not present in API request. Request failed."
-    if request.headers['Content-Type'] != 'application/json':
-        return "ERROR: Content-Type header had incorrect value for this API request (expected application/json). Request failed."
-    if request.headers['AccessAPIKey'] != os.environ['AccessAPIKey']:
-        return "ERROR: Incorrect AccessAPIKey value for this API request. Request failed."
+    check = headersCheck(headers=request.headers)
+    if check != True:
+        return check
 
     # Data body check
     if 'username' not in request.json:
@@ -166,3 +169,33 @@ def registerFolder():
 
     return "SUCCESS: Access Folder for {} registered!".format(request.json['username'])
 
+@app.route('/api/logoutIdentity', methods=['POST'])
+def logoutIdentity():
+    global accessIdentities
+
+    # Headers Check
+    check = headersCheck(headers=request.headers)
+    if check != True:
+        return check
+    
+    # Body check
+    if 'username' not in request.json:
+        return "ERROR: Username field not present in request body."
+    if 'authToken' not in request.json:
+        return "ERROR: Auth Token field not present in request body."
+    if request.json['username'] not in accessIdentities:
+        return "UERROR: Given username is not associated with any Access Identity."
+    if 'loggedInAuthToken' not in accessIdentities[request.json['username']]:
+        return "UERROR: Access Identity is not logged in. Only logged in identities can be logged out."
+    if request.json['authToken'] != accessIdentities[request.json['username']]['loggedInAuthToken']:
+        return "UERROR: Auth token does not match with the one associated with the logged in identity."
+    
+    # Logout process
+    try:
+        del accessIdentities[request.json['username']]['loggedInAuthToken']
+        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+    except Exception as e:
+        print("API: An error occurred in logging out user {}: {}".format(request.json['username'], e))
+        return "ERROR: An error occurred in logging out: {}".format(e)
+    
+    return "SUCCESS: Logged out user {}.".format(request.json['username'])
