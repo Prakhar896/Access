@@ -68,9 +68,26 @@ def loginIdentityPage():
   else:
     return render_template('loginIdentity.html', email=request.args['email'])
 
+@app.route('/identity/logout/')
+def logout():
+  if 'username' not in request.args:
+    flash('Username was not provided for identity logout. Failed to perform identity logout.')
+    return redirect(url_for('processError'))
+  elif 'authToken' not in request.args:
+    flash('Authentication token was not provided for identity logout. Failed to perform identity logout.')
+    return redirect(url_for('processError'))
+  return render_template('logout.html', username=request.args['username'])
+
 @app.route('/security/unauthorised')
 def unauthorizedPage():
   return render_template('unauthorised.html', message=request.args['error'])
+
+@app.route('/security/error')
+def processError():
+  if 'error' not in request.args:
+    return render_template('error.html', error=None)
+  else:
+    return render_template('error.html', error=request.args['error'])
 
 # API
 from api import *

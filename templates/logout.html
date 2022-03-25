@@ -1,0 +1,30 @@
+{% extends "baseXNav.html" %}
+
+{% block tabTitle %}Logout | Access Portal{% endblock %}
+
+{% block head %}
+<style>
+    body {
+        margin-top: 150px;
+    }
+    #content {
+        text-align: left;
+        margin-left: 20px;
+    }
+    #heading {
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div id="content">
+    <h1 id="heading">Logging out {{ username }}...</h1>
+    <br>
+    <p id="statusLabel">Please wait a moment while we log you out of the Access Portal...</p>
+    <br>
+    <br>
+    <script src="/assets/copyright"></script>
+    <script src="/assets/logoutJS"></script>
+</div>
+{% endblock %}
