@@ -116,9 +116,17 @@ def loginIdentity():
 
     Kind Regards,
     The Access Team
-    """.format(targetIdentity['username'], request.host_url + '/identity/logout?authToken=' + accessIdentities[targetIdentity['username']]['loggedInAuthToken'])
+    """.format(
+        targetIdentity['username'],
+        "{}/identity/logout?authToken={}&username={}".format(request.host_url, accessIdentities[targetIdentity['username']]['loggedInAuthToken'], targetIdentity['username'])
+        )
 
-    html = render_template("emails/loginEmail.html", userName=targetIdentity['username'], datetime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' UTC' + time.strftime('%z'), logoutLink=(request.host_url + 'identity/logout?authToken=' + accessIdentities[targetIdentity['username']]['loggedInAuthToken']))
+    html = render_template(
+        "emails/loginEmail.html", 
+        userName=targetIdentity['username'], 
+        datetime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' UTC' + time.strftime('%z'), 
+        logoutLink=("{}/identity/logout?authToken={}&username={}".format(request.host_url, accessIdentities[targetIdentity['username']]['loggedInAuthToken'], targetIdentity['username']))
+        )
 
     Emailer.sendEmail(targetIdentity['email'], "Access Identity Login Alert", text, html)
 
