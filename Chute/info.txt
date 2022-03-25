@@ -1,0 +1,1 @@
+This file exists to indicate that any lost files will end up in this chute folder.
