@@ -207,3 +207,39 @@ def logoutIdentity():
         return "ERROR: An error occurred in logging out: {}".format(e)
     
     return "SUCCESS: Logged out user {}.".format(request.json['username'])
+
+@app.route('/api/deleteFile', methods=['POST'])
+def deleteFileFromFolder():
+    global accessIdentities
+
+    # Headers check
+    check = headersCheck(headers=request.headers)
+    if check != True:
+        return check
+
+    # Body check
+    if 'username' not in request.json:
+        return "ERROR: Username field is not present in request body."
+    if request.json['username'] not in accessIdentities:
+        return "UERROR: Username is not associated with any Access Identity. Please try again."
+    if 'filename' not in request.json:
+        return "ERROR: Filename field is not present in request body."
+
+    if not AFManager.checkIfFolderIsRegistered(username=request.json['username']):
+        return "UERROR: Folder for the Access Identity associated with that username has not been registered."
+    
+    files = AFManager.getFilenames(username=request.json['username'])
+
+    if request.json['filename'] not in files:
+        return "UERROR: No such file exists under your Access Folder."
+    
+    # Deletion of file
+
+    response = AFManager.deleteFile(username=request.json['username'], filename=request.json['filename'])
+    if AFMError.checkIfErrorMessage(response):
+        return "ERROR: {}".format(response)
+    elif response == "AFM: Successfully deleted the file.":
+        return "SUCCESS: File {} belonging to user {} was successfully deleted.".format(request.json['filename'], request.json['username'])
+    else:
+        print("API: Unidentified response received from AFManager when executing delete file function. Response: {}".format(response))
+        return "ERROR: Unknown response received from AFManager service. Check server logs for more information."

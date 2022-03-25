@@ -53,6 +53,9 @@ if not os.path.isfile('validOTPCodes.txt'):
 
 validOTPCodes = json.load(open('validOTPCodes.txt', 'r'))
 
+if not os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders')):
+  os.mkdir(os.path.join(os.getcwd(), 'AccessFolders'))
+
 @app.route('/')
 def homepage():
   return fileContent('homepage.html')

@@ -155,4 +155,4 @@ def deleteFileConfirmation(certID, authToken):
                 flash('No such file exists with that file name in your Access Folder. Please try again.')
                 return redirect(url_for('processError'))
             
-            return render_template('portal/portalFolderDeleteFile.html', filename=request.args['filename'])
+            return render_template('portal/portalFolderDeleteFile.html', filename=request.args['filename'], username=check[1])
