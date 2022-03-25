@@ -94,6 +94,9 @@ def newUpload(certID, authToken):
                     else:
                         flash("No file slots available.")
                         return redirect(request.url)
+                else:
+                    flash('Filename is not allowed. Please try again.')
+                    return redirect(request.url)
             if (3 - len(AFManager.getFilenames(username=check[1]))) == 0:
                 return redirect(url_for('portalFolder', certID=certID, authToken=authToken))
             return render_template('portal/newUpload.html', slotsAvailable=(3 - len(AFManager.getFilenames(check[1]))))
