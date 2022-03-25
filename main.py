@@ -19,6 +19,7 @@ CORS(app)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
+app.secret_key = os.environ['APP_SECRET_KEY']
 
 def allowed_file(filename):
   return ('.' in filename) and (filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS)
