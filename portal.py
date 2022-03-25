@@ -138,3 +138,21 @@ def deleteListing(certID, authToken):
             return redirect(url_for('portalFolder', certID=certID, authToken=authToken))
     else:
         return check
+
+@app.route('/portal/session/<certID>/<authToken>/folder/deleteFile')
+def deleteFileConfirmation(certID, authToken):
+    check = checkSessionCredentials(certID, authToken)
+
+    if isinstance(check, list) and check[0]:
+        if AFManager.checkIfFolderIsRegistered(username=check[1]):
+            if 'filename' not in request.args:
+                flash('Filename argument not present in delete file confirmation request. Please try again.')
+                return redirect(url_for('processError'))
+
+            storedFilenames = AFManager.getFilenames(username=check[1])
+
+            if request.args['filename'] not in storedFilenames:
+                flash('No such file exists with that file name in your Access Folder. Please try again.')
+                return redirect(url_for('processError'))
+            
+            return render_template('portal/portalFolderDeleteFile.html', filename=request.args['filename'])

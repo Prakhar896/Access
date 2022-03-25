@@ -7,6 +7,8 @@
     #content {
         margin-top: 50px;
         text-align: center;
+        margin-left: 20px;
+        margin-right: 20px;
     }
 </style>
 {% endblock %}
@@ -15,13 +17,14 @@
 <div id="content">
     <h1>Delete File</h1>
     <br>
-    <div class="card">
+    <div class="card border-danger mb-3">
         <h5 class="card-header">Confirm Delete?</h5>
         <div class="card-body">
-          <h5 class="card-title">Are you sure you want to delete the file "{{ filename }}"</h5>
+          <h5 class="card-title">Are you sure you want to delete the file "{{ filename }}"?</h5>
           <p class="card-text">Your file will be permanently deleted and this action is irreversible.</p>
-          <a href="#" class="btn btn-primary">Confirm</a><a href="#" class="btn btn-secondary">Cancel</a>
+          <button type="button" class="btn btn-primary" onclick="deleteConfirmed()">Confirm</button>&nbsp;&nbsp;&nbsp;&nbsp;<button type="button" class="btn btn-secondary" onclick="backToPortal()">Cancel</button>
         </div>
     </div>
 </div>
+<script src="/assets/deleteFileJS"></script>
 {% endblock %}

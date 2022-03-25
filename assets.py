@@ -32,3 +32,7 @@ def folderRegistrationJS():
 @app.route('/assets/logoutJS')
 def logoutJS():
   return fileContent('supportJSFiles/logout.js')
+
+@app.route('/assets/deleteFileJS')
+def deleteFileJS():
+  return fileContent('supportJSFiles/deleteFile.js')
