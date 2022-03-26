@@ -27,7 +27,7 @@ def checkSessionCredentials(certID, authToken):
                     return [True, username, targetCertificate]
                 else:
                     return render_template("unauthorised.html", message="Invalid authentication token. Please sign in to your identity first.")
-    return render_template('unauthorised.html', message="No such Access Identity certificate was found.")
+    return render_template('unauthorised.html', message="Certificate ID provided does not match any Access Identity.")
 
 
 @app.route('/portal/session/<certID>/<authToken>/home')
