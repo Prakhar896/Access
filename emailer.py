@@ -13,6 +13,10 @@ class Emailer:
 
     @staticmethod
     def sendEmail(destEmail, subject, altText, html):
+        ## Email bypass
+        if 'GitpodEnvironment' in os.environ and os.environ['GitpodEnvironment'] == 'True':
+            print("EMAILER: Skipping email due to Gitpod environment.")
+            return
         try:
             message = MIMEMultipart("alternative")
             message["Subject"] = subject
