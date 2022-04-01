@@ -107,12 +107,29 @@ class AccessAnalytics:
                 'subject': subject,
                 'type': type
             }
-            AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+            response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+            if response.startswith("AAError:"):
+                return response
         except Exception as e:
             return "AAError: Failed to save email data to analytics data file. Error: {}".format(e)
         
         return True
+    
+    @staticmethod
+    def newRequest(path):
+        if not path.startswith('/'):
+            return "AAError: Given path does not start with a forward-slash."
+        try:
+            AccessAnalytics.analyticsData['requests'].append(path)
+        except Exception as e:
+            return "AAError: Failed to append path to memory-saved analytics data. Error: {}".format(e)
+
+        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+        if isinstance(response, str):
+            if response.startswith("AAError:"):
+                return response
+
+        return True
+        
 
 
-print(AccessAnalytics.prepEnvironmentForAnalytics())
-print(AccessAnalytics.newEmail('prakhar0706@gmail.com', 'Something', 'Access Portal OTP'))

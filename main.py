@@ -7,6 +7,7 @@ from models import *
 from certAuthority import *
 from AFManager import *
 from emailer import *
+from accessAnalytics import *
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -55,6 +56,16 @@ validOTPCodes = json.load(open('validOTPCodes.txt', 'r'))
 
 if not os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders')):
   os.mkdir(os.path.join(os.getcwd(), 'AccessFolders'))
+
+## Other pre-requisites
+@app.before_request
+def updateAnalytics():
+  if AccessAnalytics.permissionCheck():
+    response = AccessAnalytics.newRequest(request.path)
+    if isinstance(response, str):
+      if response.startswith("AAError:"):
+        print(response)
+  
 
 @app.route('/')
 def homepage():
@@ -105,6 +116,7 @@ from portal import *
 from assets import *
 
 if __name__ == "__main__":
+  # Load certificates
   response = CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
   if CAError.checkIfErrorMessage(response):
     print(response)
@@ -112,10 +124,29 @@ if __name__ == "__main__":
   else:
     print(response)
   
-
+  # Expire old certificates and save new data
   CertAuthority.expireOldCertificates()
   CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
+
+  ## Expire auth tokens
   tempIdentities = accessIdentities
   accessIdentities = expireAuthTokens(tempIdentities)
   json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+
+  ## Set up Access Analytics
+  if AccessAnalytics.permissionCheck():
+    AAresponse = AccessAnalytics.prepEnvironmentForAnalytics()
+    if AAresponse.startswith("AAError:"):
+      print("MAIN: Error in getting Analytics to prep environment. Response: {}".format(AAresponse))
+      sys.exit(1)
+    elif AAresponse != "AA: Environment prep successful.":
+      print("MAIN: Unknown response when attempting to get Analytics to prep environment. Response: {}".format(AAresponse))
+      sys.exit(1)
+    else:
+      print(AAresponse)
+  else:
+    print("MAIN: Notice!!! AccessAnalytics is not enabled and will not be setup and run.")
+      
+
+  print()
   app.run(host='0.0.0.0', port=8000)
