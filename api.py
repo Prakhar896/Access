@@ -131,6 +131,14 @@ def loginIdentity():
     ## SEND EMAIL
     Emailer.sendEmail(targetIdentity['email'], "Access Identity Login Alert", text, html)
 
+    ## Update Access Analytics with sign in metric
+    response = AccessAnalytics.newSignin()
+    if isinstance(response, str):
+        if response.startswith("AAError:"):
+            print("API: Error in updating Analytics with new sign in; Response: {}".format(response))
+        else:
+            print("API: Unexpected response when attempting to update Analytics with new sign in; Response: {}".format(response))
+
     if 'GitpodEnvironment' in os.environ and os.environ['GitpodEnvironment'] == 'True':
         return "SUCCESS: Identity logged in. Auth Session Data: {}-{}".format(accessIdentities[targetIdentity['username']]['loggedInAuthToken'], targetIdentity['associatedCertID'])
 
@@ -234,6 +242,15 @@ def logoutIdentity():
     try:
         del accessIdentities[request.json['username']]['loggedInAuthToken']
         json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+
+        ## Update Access Analytics
+        response = AccessAnalytics.newSignout()
+        if isinstance(response, str):
+            if response.startswith("AAError:"):
+                print("API: Error in updating Analytics with new sign out; Response: {}".format(response))
+            else:
+                print("API: Unexpected response when attempting to update Analytics with new sign out; Response: {}".format(response))
+
     except Exception as e:
         print("API: An error occurred in logging out user {}: {}".format(request.json['username'], e))
         return "ERROR: An error occurred in logging out: {}".format(e)
@@ -276,9 +293,9 @@ def deleteFileFromFolder():
         response = AccessAnalytics.newFileDeletion()
         if isinstance(response, str):
             if response.startswith("AAError:"):
-                print("PORTAL: Error in updating Analytics with new file deletion; Response: {}".format(response))
+                print("API: Error in updating Analytics with new file deletion; Response: {}".format(response))
             else:
-                print("PORTAL: Unexpected response when attempting to update Analytics with new file deletion; Response: {}".format(response))
+                print("API: Unexpected response when attempting to update Analytics with new file deletion; Response: {}".format(response))
 
         return "SUCCESS: File {} belonging to user {} was successfully deleted.".format(request.json['filename'], request.json['username'])
     else:

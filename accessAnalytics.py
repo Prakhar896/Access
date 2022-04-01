@@ -73,7 +73,8 @@ class AccessAnalytics:
     @staticmethod
     def saveDataToFile(fileObject):
         if not AccessAnalytics.permissionCheck():
-            return "AAError: Access Analytics is not enabled and given permission to operate. Set AccessAnalyticsEnabled to True in the .env file to enable Analytics."
+            # return "AAError: Access Analytics is not enabled and given permission to operate. Set AccessAnalyticsEnabled to True in the .env file to enable Analytics."
+            return False
         
         try:
             json.dump(AccessAnalytics.analyticsData, fileObject)
