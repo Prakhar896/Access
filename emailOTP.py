@@ -1,4 +1,5 @@
 from email import message
+from accessAnalytics import AccessAnalytics
 from main import *
 import smtplib, ssl, re
 from email.mime.text import MIMEText
@@ -40,7 +41,18 @@ Copyright 2022 Prakhar Trivedi.""".format(otp)
     context = ssl._create_unverified_context()
     with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
         server.login(sender_email, password)
-        server.sendmail(sender_email, receiver_email, message.as_string())
+        try:
+            server.sendmail(sender_email, receiver_email, message.as_string())
+            response = AccessAnalytics.newEmail(receiver_email, text, "Access Portal OTP")
+            if isinstance(response, bool):
+                if response == True:
+                    print("OTP SERVICE: OTP Email sent to {}".format(receiver_email))
+                else:
+                    print("OTP SERVICE: OTP Email was sent to {} but an unexpected response was received from Analytics: {}".format(receiver_email, response))
+            else:
+                print("OTP SERVICE: OTP Email was sent to  {} but there was an error in updating Analytics: {}".format(e))
+        except Exception as e:
+            print("OTP SERVICE: There was an error in sending the OTP Email and updating the Analytics Service: {}".format(e))
 
 @app.route('/identity/createProcess/sendOTP', methods=['POST'])
 def sendOTP():
