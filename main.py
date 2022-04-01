@@ -146,9 +146,17 @@ if __name__ == "__main__":
       print(AAresponse)
   else:
     print("MAIN: Notice!!! AccessAnalytics is not enabled and will not be setup and run.")
+
+  ## Port check
+  if 'RuntimePort' not in os.environ:
+    print("MAIN: RuntimePort environment variable is not set in .env file. Access cannot be booted without a valid port set. Please re-boot Access after setting RuntimePort.")
+    sys.exit(1)
+  elif not os.environ['RuntimePort'].isdigit():
+    print("MAIN: RuntimePort environment variable has an invalid value. Port value must be an integer.")
+    sys.exit(1)
       
   print("All services are online; boot pre-processing and setup completed.")
   print()
   print("Booting Access...")
   print()
-  app.run(host='0.0.0.0', port=8000)
+  app.run(host='0.0.0.0', port=int(os.environ['RuntimePort']))
