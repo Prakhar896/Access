@@ -3,55 +3,61 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class AccessAnalytics:
+    analyticsData = {}
+    # Metrics to calculate
+            ## 1) Emails - Object
+            ## 2) Requests - List
+            ## 3) FileUploads - Integer
+            ## 4) FileDeletions - Integer
+            ## 5) FileDownloads - Integer
+            ## 6) SignIns - Integer
+            ## 7) SignOuts - Integer
 
     @staticmethod
     def prepEnvironmentForAnalytics():
-        if 'AccessAnalyticsEnabled' in os.environ and os.environ['AccessAnalyticsEnabled'] == 'True':
-            # Metrics to calculate
-            
-            if not os.path.isfile(os.path.join(os.getcwd(), 'analyticsData.txt')):
-                with open('analyticsData.txt', 'w') as f:
-                    plainData = {
-                        "emails": {},
-                        "requests": [],
-                        "fileUploads": 0,
-                        "fileDeletions": 0,
-                        "signins": 0,
-                        "signups": 0
-                    }
-                    json.dump(plainData, f)
-                print("AA: System environment successfully setup for Access Analytics.")
-            else:
-                data = json.load(open('analyticsData.txt', 'r'))
-                errorOccurred = False
-                for metric in ['emails', 'requests', 'fileUploads', 'fileDeletions', 'signins', 'signups']:
-                    if metric not in data:
-                        errorOccurred = True
-                        print("AA ERROR: The metric \"{}\" is not in the current analytics data file.".format(metric))
-                        action = input("Would you like to do away with the whole file or simply add the metric in with a blank value (type \"delete\" or \"insert\") ")
-                        if action == "insert":
-                            if metric == 'emails':
-                                data[metric] = {}
-                            elif metric == 'requests':
-                                data[metric] = []
-                            else:
-                                data[metric] = 0
-                            
-                            json.dump(data, open('analyticsData.txt', 'w'))
-                            print()
-                        elif action == "delete":
-                            os.remove(os.path.join(os.getcwd(), 'analyticsData.txt'))
-                            AccessAnalytics.prepEnvironmentForAnalytics()
-                            return
-                        else:
-                            print("AA Error: Invalid input provided. Aborting preparation...")
-                            return
-                if errorOccurred:
-                    print("AA: Successfully prepped system environment for Access Analytics.")
-                else:
-                    print("AA: Environment is already prepped for Access Analytics.")
+        if not os.path.isfile(os.path.join(os.getcwd(), 'analyticsData.txt')):
+            with open('analyticsData.txt', 'w') as f:
+                blankObject = {
+                    "emails": {},
+                    "requests": [],
+                    "fileUploads": 0,
+                    "fileDeletions": 0,
+                    "fileDownloads": 0,
+                    "signIns": 0,
+                    "signOuts": 0
+                }
+                json.dump(blankObject, f)
+            print("AA: Successfully created analyticsData.txt file for storing purposes. Environment prep successful.")
         else:
-            print("AA Error: Access Analytics has not been allowed to track data. Set AccessAnalyticsEnabled to True in the .env file to allow AccessAnalytics to operate.")
+            ## Check if file data is damaged
+            try:
+                fileData = json.load(open('analyticsData.txt', 'r'))
+            except Exception as e:
+                print("AAError: Failed to load data in analytics file in JSON form. File might be damaged.\nError: " + str(e))
+                return False
+            for metric in ['emails', 'requests', 'fileUploads', 'fileDeletions', 'fileDownloads', 'signIns', 'signOuts']:
+                if not metric in json.load(f):
+                    print("AAError: analyticsData.txt file is damaged ({} metric is not present). Please delete the file and run environment prep again.".format(metric))
+                    return False
+            print("AA: Environment prep successful.")
+            return True
 
+    @staticmethod
+    def loadDataFromFile(fileObject):
+        try:
+            AccessAnalytics.analyticsData = json.load(fileObject)
+        except Exception as e:
+            print("AAError: Failed to load data in analytics file in JSON form. File might be damaged.\nError: " + str(e))
+            return "AAError: Failed to load data in analytics file in JSON form. File might be damaged.\nError: " + str(e)
+        return True
 
-AccessAnalytics.prepEnvironmentForAnalytics()
+    @staticmethod
+    def saveDataToFile(fileObject):
+        try:
+            json.dump(AccessAnalytics.analyticsData, fileObject)
+        except Exception as e:
+            print("AAError: Failed to save data in analytics file in JSON form. File might be damaged.\nError: " + str(e))
+            return "AAError: Failed to save data in analytics file in JSON form. File might be damaged.\nError: " + str(e)
+        return True
+    
+    
