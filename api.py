@@ -271,6 +271,15 @@ def deleteFileFromFolder():
     if AFMError.checkIfErrorMessage(response):
         return "ERROR: {}".format(response)
     elif response == "AFM: Successfully deleted the file.":
+
+        ## Update Access Analytics
+        response = AccessAnalytics.newFileDeletion()
+        if isinstance(response, str):
+            if response.startswith("AAError:"):
+                print("PORTAL: Error in updating Analytics with new file deletion; Response: {}".format(response))
+            else:
+                print("PORTAL: Unexpected response when attempting to update Analytics with new file deletion; Response: {}".format(response))
+
         return "SUCCESS: File {} belonging to user {} was successfully deleted.".format(request.json['filename'], request.json['username'])
     else:
         print("API: Unidentified response received from AFManager when executing delete file function. Response: {}".format(response))

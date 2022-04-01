@@ -117,12 +117,12 @@ from assets import *
 
 if __name__ == "__main__":
   # Load certificates
-  response = CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
-  if CAError.checkIfErrorMessage(response):
-    print(response)
+  CAresponse = CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
+  if CAError.checkIfErrorMessage(CAresponse):
+    print(CAresponse)
     sys.exit(1)
   else:
-    print(response)
+    print(CAresponse)
   
   # Expire old certificates and save new data
   CertAuthority.expireOldCertificates()

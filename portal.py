@@ -94,6 +94,15 @@ def newUpload(certID, authToken):
                         filename = secure_filename(file.filename)
                         app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'AccessFolders', check[1])
                         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+                        ## Update Access Analytics
+                        response = AccessAnalytics.newFileUpload()
+                        if isinstance(response, str):
+                            if response.startswith("AAError:"):
+                                print("PORTAL: Error in updating Analytics with new file upload; Response: {}".format(response))
+                            else:
+                                print("PORTAL: Unexpected response when attempting to update Analytics with new file upload; Response: {}".format(response))
+
                         return redirect(url_for('download_file', name=filename, certID=certID, authToken=authToken))
                     else:
                         flash("No file slots available.")
@@ -115,6 +124,15 @@ def download_file(certID, authToken, name):
     if isinstance(check, list) and check[0]:
         if AFManager.checkIfFolderIsRegistered(username=check[1]):
             app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'AccessFolders', check[1])
+
+            ## Update Access Analytics
+            response = AccessAnalytics.newFileDownload()
+            if isinstance(response, str):
+                if response.startswith("AAError:"):
+                    print("PORTAL: Error in updating Analytics with new file download; Response: {}".format(response))
+                else:
+                    print("PORTAL: Unexpected response when attempting to update Analytics with new file download; Response: {}".format(response))
+
             return send_from_directory(app.config["UPLOAD_FOLDER"], name)
         else:
             return redirect(url_for('portalFolder', certID=certID, authToken=authToken))
