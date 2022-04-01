@@ -135,7 +135,7 @@ def loginIdentity():
         return "SUCCESS: Identity logged in. Auth Session Data: {}-{}".format(accessIdentities[targetIdentity['username']]['loggedInAuthToken'], targetIdentity['associatedCertID'])
 
     ## Update Access Analytics
-    response = AccessAnalytics.newEmail(targetIdentity['email'], text, "Access Identity Login Alert")
+    response = AccessAnalytics.newEmail(targetIdentity['email'], text, "Access Identity Login Alert", targetIdentity['username'])
     if isinstance(response, str):
         if response.startswith("AAError:"):
             print("API: There was an error in updating Analytics with new email data; Response: {}".format(response))
@@ -189,7 +189,23 @@ def registerFolder():
 
     html = render_template('emails/folderRegistered.html', username=request.json['username'])
 
+    ## Send email
     Emailer.sendEmail(accessIdentities[request.json['username']]['email'], "Access Folder Registered!", text, html)
+
+    if 'GitpodEnvironment' in os.environ and os.environ['GitpodEnvironment'] == 'True':
+        return "SUCCESS: Access Folder for {} registered!".format(request.json['username'])
+
+    ## Update Access Analytics
+    response = AccessAnalytics.newEmail(accessIdentities[request.json['username']]['email'], text, "Access Folder Registered!", request.json['username'])
+    if isinstance(response, str):
+        if response.startswith("AAError:"):
+            print("API: There was an error in updating Analytics with new email data; Response: {}".format(response))
+        else:
+            print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
+    elif isinstance(response, bool) and response == True:
+        print("API: Successfully updated Analytics with new email data.")
+    else:
+        print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
 
     return "SUCCESS: Access Folder for {} registered!".format(request.json['username'])
 

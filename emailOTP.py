@@ -1,5 +1,4 @@
 from email import message
-from accessAnalytics import AccessAnalytics
 from main import *
 import smtplib, ssl, re
 from email.mime.text import MIMEText
@@ -56,6 +55,8 @@ Copyright 2022 Prakhar Trivedi.""".format(otp)
 
 @app.route('/identity/createProcess/sendOTP', methods=['POST'])
 def sendOTP():
+    global accessIdentities
+
     if 'Content-Type' not in request.headers:
         return "ERROR: Content-Type header not present in request. Request failed."
     if request.headers['Content-Type'] != 'application/json':
@@ -73,6 +74,10 @@ def sendOTP():
         return "ERROR: email field value is not a valid email. Request failed."
     
     email = request.json['email']
+
+    targetIdentity = obtainTargetIdentity(email, accessIdentities)
+    if targetIdentity != {}:
+        return "ERROR: There is already a created identity associated with that email."
 
     numbers = [str(i) for i in range(10)]
     otp = ''.join(random.choice(numbers) for i in range(6))

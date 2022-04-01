@@ -82,7 +82,7 @@ class AccessAnalytics:
         return True
 
     @staticmethod
-    def newEmail(destEmail, text, subject):
+    def newEmail(destEmail, text, subject, usernameAttachedToEmail="Not provided."):
         if subject not in ['Access Identity Login Alert', 'Access Folder Registered!', 'Access Portal OTP']:
             return "AAError: Subject is not valid."
         
@@ -103,7 +103,8 @@ class AccessAnalytics:
                 'destEmail': destEmail,
                 'text': text,
                 'subject': subject,
-                'type': type
+                'type': type,
+                'username': usernameAttachedToEmail
             }
             response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
             if isinstance(response, str):
