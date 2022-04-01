@@ -1,4 +1,4 @@
-import os, sys, json, random, subprocess, shutil
+import os, sys, json, random, subprocess, shutil, uuid
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -24,11 +24,7 @@ class AccessAnalytics:
 
     @staticmethod
     def generateRandomID():
-        possible = ['a', 'B', 'c', 'D', 'e', 'F', 'g', 'H', 'i', 'J', 'k', 'L', 'm', 'N', 'o', 'P', 'q', 'R', 's', 'T', 'u', 'V', 'w', 'X', 'y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-
-        randomID = ""
-        for i in range(0, 10):
-            randomID += random.choice(possible)
+        randomID = uuid.uuid4().hex
 
         return randomID
 
@@ -101,6 +97,8 @@ class AccessAnalytics:
         emailID = AccessAnalytics.generateRandomID()
 
         try:
+            if 'emails' not in AccessAnalytics.analyticsData:
+                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails paramter not found in memory location data)"
             AccessAnalytics.analyticsData['emails'][emailID] = {
                 'destEmail': destEmail,
                 'text': text,
@@ -108,8 +106,9 @@ class AccessAnalytics:
                 'type': type
             }
             response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
-            if response.startswith("AAError:"):
-                return response
+            if isinstance(response, str):
+                if response.startswith("AAError:"):
+                    return response
         except Exception as e:
             return "AAError: Failed to save email data to analytics data file. Error: {}".format(e)
         
@@ -120,6 +119,8 @@ class AccessAnalytics:
         if not path.startswith('/'):
             return "AAError: Given path does not start with a forward-slash."
         try:
+            if 'emails' not in AccessAnalytics.analyticsData:
+                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
             AccessAnalytics.analyticsData['requests'].append(path)
         except Exception as e:
             return "AAError: Failed to append path to memory-saved analytics data. Error: {}".format(e)

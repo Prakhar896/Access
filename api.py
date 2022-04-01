@@ -128,7 +128,23 @@ def loginIdentity():
         logoutLink=("{}/identity/logout?authToken={}&username={}".format(request.host_url, accessIdentities[targetIdentity['username']]['loggedInAuthToken'], targetIdentity['username']))
         )
 
+    ## SEND EMAIL
     Emailer.sendEmail(targetIdentity['email'], "Access Identity Login Alert", text, html)
+
+    if 'GitpodEnvironment' in os.environ and os.environ['GitpodEnvironment'] == 'True':
+        return "SUCCESS: Identity logged in. Auth Session Data: {}-{}".format(accessIdentities[targetIdentity['username']]['loggedInAuthToken'], targetIdentity['associatedCertID'])
+
+    ## Update Access Analytics
+    response = AccessAnalytics.newEmail(targetIdentity['email'], text, "Access Identity Login Alert")
+    if isinstance(response, str):
+        if response.startswith("AAError:"):
+            print("API: There was an error in updating Analytics with new email data; Response: {}".format(response))
+        else:
+            print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
+    elif isinstance(response, bool) and response == True:
+        print("API: Successfully updated Analytics with new email data.")
+    else:
+        print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
 
     return "SUCCESS: Identity logged in. Auth Session Data: {}-{}".format(accessIdentities[targetIdentity['username']]['loggedInAuthToken'], targetIdentity['associatedCertID'])
     
