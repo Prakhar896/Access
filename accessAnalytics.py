@@ -132,6 +132,86 @@ class AccessAnalytics:
                 return response
 
         return True
+
+    @staticmethod
+    def newFileUpload():
+        try:
+            if 'emails' not in AccessAnalytics.analyticsData:
+                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
+            AccessAnalytics.analyticsData['fileUploads'] += 1
+        except Exception as e:
+            return "AAError: Failed to increment file uploads metric. Error: {}".format(e)
+
+        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+        if isinstance(response, str):
+            if response.startswith("AAError:"):
+                return response
+        
+        return True
+
+    @staticmethod
+    def newFileDeletion():
+        try:
+            if 'emails' not in AccessAnalytics.analyticsData:
+                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
+            AccessAnalytics.analyticsData['fileDeletions'] += 1
+        except Exception as e:
+            return "AAError: Failed to increment file deletions metric. Error: {}".format(e)
+
+        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+        if isinstance(response, str):
+            if response.startswith("AAError:"):
+                return response
+        
+        return True
+
+    @staticmethod
+    def newFileDownload():
+        try:
+            if 'emails' not in AccessAnalytics.analyticsData:
+                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
+            AccessAnalytics.analyticsData['fileDownloads'] += 1
+        except Exception as e:
+            return "AAError: Failed to increment file downloads metric. Error: {}".format(e)
+
+        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+        if isinstance(response, str):
+            if response.startswith("AAError:"):
+                return response
+        
+        return True
+
+    @staticmethod
+    def newSignin():
+        try:
+            if 'emails' not in AccessAnalytics.analyticsData:
+                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
+            AccessAnalytics.analyticsData['signIns'] += 1
+        except Exception as e:
+            return "AAError: Failed to increment sign ins metric. Error: {}".format(e)
+
+        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+        if isinstance(response, str):
+            if response.startswith("AAError:"):
+                return response
+        
+        return True
+
+    @staticmethod
+    def newSignout():
+        try:
+            if 'emails' not in AccessAnalytics.analyticsData:
+                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
+            AccessAnalytics.analyticsData['signOuts'] += 1
+        except Exception as e:
+            return "AAError: Failed to increment sign outs metric. Error: {}".format(e)
+
+        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+        if isinstance(response, str):
+            if response.startswith("AAError:"):
+                return response
+        
+        return True
         
 
 
