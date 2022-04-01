@@ -147,6 +147,8 @@ if __name__ == "__main__":
   else:
     print("MAIN: Notice!!! AccessAnalytics is not enabled and will not be setup and run.")
       
-
+  print("All services are online; boot pre-processing and setup completed.")
+  print()
+  print("Booting Access...")
   print()
   app.run(host='0.0.0.0', port=8000)
