@@ -144,10 +144,30 @@ if __name__ == "__main__":
     AAresponse = AccessAnalytics.prepEnvironmentForAnalytics()
     if AAresponse.startswith("AAError:"):
       print("MAIN: Error in getting Analytics to prep environment. Response: {}".format(AAresponse))
-      sys.exit(1)
+      print()
+      print("MAIN: Would you like to enable Analytics Recovery Mode?")
+      recoveryModeAction = input("Type 'yes' or 'no': ")
+      if recoveryModeAction == "yes":
+        AccessAnalytics.analyticsRecoveryMode()
+      elif recoveryModeAction == "no":
+        print("MAIN: Recovery mode was not enabled. Access Boot is aborted.")
+        sys.exit(1)
+      else:
+        print("MAIN: Invalid action provided. Access Boot is aborted.")
+        sys.exit(1)
     elif AAresponse != "AA: Environment prep successful.":
       print("MAIN: Unknown response when attempting to get Analytics to prep environment. Response: {}".format(AAresponse))
-      sys.exit(1)
+      print()
+      print("MAIN: Would you like to enable Analytics Recovery Mode?")
+      recoveryModeActionTwo = input("Type 'yes' or 'no': ")
+      if recoveryModeActionTwo == "yes":
+        AccessAnalytics.analyticsRecoveryMode()
+      elif recoveryModeActionTwo == "no":
+        print("MAIN: Recovery mode was not enabled. Access Boot is aborted.")
+        sys.exit(1)
+      else:
+        print("MAIN: Invalid action provided. Access Boot is aborted.")
+        sys.exit(1)
     else:
       print(AAresponse)
   else:
