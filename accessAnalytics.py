@@ -160,7 +160,7 @@ class AccessAnalytics:
             print()
             print("The issue you may be facing might be due to other reasons in the system. Manual inspection and intervention in the system might be required.")
             print()
-            print("Recovery mode will not exit in 3 seconds...")
+            print("Recovery mode will now exit in 3 seconds...")
             time.sleep(3)
             print("------- EXITING ACCESS ANALYTICS RECOVERY MODE...")
             print()
