@@ -65,6 +65,12 @@ def updateAnalytics():
     if isinstance(response, str):
       if response.startswith("AAError:"):
         print(response)
+    
+    if request.method == "POST":
+      postResponse = AccessAnalytics.newPOSTRequest()
+      if isinstance(postResponse, str):
+        if postResponse.startswith("AAError:"):
+          print(postResponse)
   
 
 @app.route('/')

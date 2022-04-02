@@ -12,6 +12,7 @@ class AccessAnalytics:
             ## 5) FileDownloads - Integer
             ## 6) SignIns - Integer
             ## 7) SignOuts - Integer
+            ## 8) POST Requests - Integer
 
     @staticmethod
     def permissionCheck():
@@ -42,7 +43,8 @@ class AccessAnalytics:
                     "fileDeletions": 0,
                     "fileDownloads": 0,
                     "signIns": 0,
-                    "signOuts": 0
+                    "signOuts": 0,
+                    "postRequests": 0
                 }
                 json.dump(blankObject, f)
                 AccessAnalytics.analyticsData = blankObject
@@ -53,7 +55,7 @@ class AccessAnalytics:
                 fileData = json.load(open('analyticsData.txt', 'r'))
             except Exception as e:
                 return "AAError: Failed to load data in analytics file in JSON form. File might be damaged.\nError: " + str(e)
-            for metric in ['emails', 'requests', 'fileUploads', 'fileDeletions', 'fileDownloads', 'signIns', 'signOuts']:
+            for metric in ['emails', 'requests', 'fileUploads', 'fileDeletions', 'fileDownloads', 'signIns', 'signOuts', "postRequests"]:
                 if not metric in fileData:
                     return "AAError: analyticsData.txt file is damaged ('{}' metric is not present). Please delete the file and run environment prep again.".format(metric)
             AccessAnalytics.analyticsData = fileData
@@ -206,6 +208,22 @@ class AccessAnalytics:
             AccessAnalytics.analyticsData['signOuts'] += 1
         except Exception as e:
             return "AAError: Failed to increment sign outs metric. Error: {}".format(e)
+
+        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+        if isinstance(response, str):
+            if response.startswith("AAError:"):
+                return response
+        
+        return True
+    
+    @staticmethod
+    def newPOSTRequest():
+        try:
+            if 'emails' not in AccessAnalytics.analyticsData:
+                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
+            AccessAnalytics.analyticsData['postRequests'] += 1
+        except Exception as e:
+            return "AAError: Failed to increment post requests metric. Error: {}".format(e)
 
         response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
         if isinstance(response, str):
