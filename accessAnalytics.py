@@ -676,6 +676,5 @@ END OF REPORT
             print()
             print("AAError: Invalid action provided. Exiting analytics...")
             return
+            
         return
-
-AccessAnalytics.crunchData()
