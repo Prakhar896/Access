@@ -1,5 +1,5 @@
 import os, sys, json, random, subprocess, shutil, uuid, time
-import datetime, time
+import datetime
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -427,6 +427,9 @@ class AccessAnalytics:
             print("AAError: Insufficient permissions to access analytics data. Try enabling AccessAnalytics in the .env file.")
             return "AAError: Insufficient permissions to access analytics data."
 
+        print("Starting Analysis of data...")
+        time.sleep(2)
+
         response = AccessAnalytics.prepEnvironmentForAnalytics()
         if isinstance(response, str):
             if response.startswith("AAError:"):
@@ -438,6 +441,10 @@ class AccessAnalytics:
         
         loadedData = AccessAnalytics.analyticsData
 
+        print()
+        print("Analysing requests data...")
+        time.sleep(3)
+
         # Metric 1
         numRequests = len(loadedData["requests"])
 
@@ -447,6 +454,10 @@ class AccessAnalytics:
             if request.startswith("/portal"):
                 numPortalRequests += 1
         
+        print()
+        print("Analysing portal operations...")
+        time.sleep(3)
+
         # Metric 3
         numFileUploads = loadedData["fileUploads"]
 
@@ -467,6 +478,10 @@ class AccessAnalytics:
 
         # Metric 9
         numGETRequests = len(loadedData["requests"]) - numPOSTRequests
+        
+        print()
+        print("Analysing complex requests...")
+        time.sleep(3)
 
         # Metric 10
         numAPIRequests = 0
@@ -492,6 +507,10 @@ class AccessAnalytics:
                     authTokens.append(authToken)
         numUniqueAuthTokens = len(authTokens)
         
+        print()
+        print("Analysing credentials production and utilisation...")
+        time.sleep(3
+        )
         # Metric 13
         numUniqueCertificationIdentificationNumbers = 0
         uniqueCertIDs = []
@@ -505,6 +524,10 @@ class AccessAnalytics:
                 if certID not in uniqueCertIDs:
                     uniqueCertIDs.append(certID)
         numUniqueCertificationIdentificationNumbers = len(uniqueCertIDs)
+
+        print()
+        print("Analysing electronic mails...")
+        time.sleep(2)
 
         # Metric 14
         numEmailsSent = len(loadedData["emails"])
@@ -536,6 +559,9 @@ class AccessAnalytics:
                 mostFreqRecipient = recipient
                 numEmailsSentToFreqRecipient = recipientAndNumberOfRespectiveEmailsSentToThem[recipient]
         
+        print()
+        print("Collating report...")
+        time.sleep(2)
         ### REPORT CREATION
         reportText = """
 ------ ACCESS ANALYTICS REPORT ON COLLECTED DATA
@@ -611,6 +637,45 @@ END OF REPORT
 )
 
         print(reportText)
+
+        ## Giving the user the option to save the report as a text file
+        print()
+        print()
+        print("AA: Would you like to save this report as a text file?")
+        saveAction = input("Type 'yes' or 'no': ")
+        
+        if saveAction == "yes":
+            print()
+            print("AA: Preparing environnment for saving report...")
+            time.sleep(2)
+            
+            try:
+                if not os.path.isdir(os.path.join(os.getcwd(), 'analyticsReports')):
+                    os.mkdir(os.path.join(os.getcwd(), 'analyticsReports'))
+            except Exception as e:
+                print("AAError: Failed to make/check existence of reports folder; Error: {}".format(e))
+                print("AA: Report could not be saved. Aborting save...")
+                return
+            
+            rel_path = "analyticsReports/aa-report-{}-{}.txt".format(datetime.datetime.now().strftime("%Y%m%dI%H:%M:%S"), AccessAnalytics.generateRandomID())
+
+            try:
+                with open(rel_path, 'w') as f:
+                    f.write(reportText)
+            except Exception as e:
+                print("AAError: Error occurred in saving report into file; Error: {}".format(e))
+            
+            print()
+            print("AA: Report successfully saved at the file at the relative path: {} !".format(rel_path))
+            return
+        elif saveAction == "no":
+            print()
+            print("AA: Exiting anaytics...")
+            return
+        else:
+            print()
+            print("AAError: Invalid action provided. Exiting analytics...")
+            return
         return
 
 AccessAnalytics.crunchData()
