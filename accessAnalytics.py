@@ -1,4 +1,5 @@
 import os, sys, json, random, subprocess, shutil, uuid, time
+import datetime, time
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -400,6 +401,216 @@ class AccessAnalytics:
                 return response
         
         return True
+    
+    @staticmethod
+    def crunchData():
+        ### Statistics to calculate:
+        #### 1) Number of Requests
+        #### 2) Number of Portal Requests
+        #### 3) Number of File Uploads
+        #### 4) Number of File Deletions
+        #### 5) Number of File Downloads
+        #### 6) Number of Sign Ins
+        #### 7) Number of Sign Outs
+        #### 8) Number of POST Requests
+        #### 9) Number of GET Requests
+        #### 10) Number of API Requests
+        #### 11) Number of Assets Requests
+        #### 12) Number of unique auth tokens
+        #### 13) Number of unique Certification Identification Numbers
+        #### EMAILS BREAKDOWN:
+        ##### 14) Number of emails sent
+        ##### 15) Number of emails of each type of email
+        ##### 16) Most frequent email recipient
+
+        if not AccessAnalytics.permissionCheck():
+            print("AAError: Insufficient permissions to access analytics data. Try enabling AccessAnalytics in the .env file.")
+            return "AAError: Insufficient permissions to access analytics data."
+
+        response = AccessAnalytics.prepEnvironmentForAnalytics()
+        if isinstance(response, str):
+            if response.startswith("AAError:"):
+                print(response)
+                return response
+        elif response != True:
+            print("AAError: Failed to prepare environment for analytics data. Error: {}".format(response))
+            return "AAError: Failed to prepare environment for analytics data."
         
+        loadedData = AccessAnalytics.analyticsData
 
+        # Metric 1
+        numRequests = len(loadedData["requests"])
 
+        # Metric 2
+        numPortalRequests = 0
+        for request in loadedData["requests"]:
+            if request.startswith("/portal"):
+                numPortalRequests += 1
+        
+        # Metric 3
+        numFileUploads = loadedData["fileUploads"]
+
+        # Metric 4
+        numFileDeletions = loadedData["fileDeletions"]
+
+        # Metric 5
+        numFileDownloads = loadedData["fileDownloads"]
+
+        # Metric 6
+        numSignIns = loadedData["signIns"]
+
+        # Metric 7
+        numSignOuts = loadedData["signOuts"]
+
+        # Metric 8
+        numPOSTRequests = loadedData["postRequests"]
+
+        # Metric 9
+        numGETRequests = len(loadedData["requests"]) - numPOSTRequests
+
+        # Metric 10
+        numAPIRequests = 0
+        for request in loadedData["requests"]:
+            if request.startswith("/api"):
+                numAPIRequests += 1
+        
+        # Metric 11
+        numAssetsRequests = 0
+        for request in loadedData["requests"]:
+            if request.startswith("/assets"):
+                numAssetsRequests += 1
+        
+        # Metric 12
+        numUniqueAuthTokens = 0
+        authTokens = []
+        for request in loadedData["requests"]:
+            if request.startswith("/portal/session"):
+                path = request.split('/')
+                path.pop(0)
+                authToken = path[3]
+                if authToken not in authTokens:
+                    authTokens.append(authToken)
+        numUniqueAuthTokens = len(authTokens)
+        
+        # Metric 13
+        numUniqueCertificationIdentificationNumbers = 0
+        uniqueCertIDs = []
+        for request in loadedData["requests"]:
+            if request.startswith("/portal/session"):
+                path = request.split('/')
+                path.pop(0)
+                certID = path[2]
+                if len(certID) != 20:
+                    continue
+                if certID not in uniqueCertIDs:
+                    uniqueCertIDs.append(certID)
+        numUniqueCertificationIdentificationNumbers = len(uniqueCertIDs)
+
+        # Metric 14
+        numEmailsSent = len(loadedData["emails"])
+
+        # Metric 15
+        numEmailsForEachType = {
+            "loginAlert": 0,
+            "folderRegistered": 0,
+            "otp": 0
+        }
+
+        for emailID in loadedData["emails"]:
+            numEmailsForEachType[loadedData["emails"][emailID]["type"]] += 1
+
+        # Metric 16
+        recipientAndNumberOfRespectiveEmailsSentToThem = {}
+
+        for emailID in loadedData["emails"]:
+            if loadedData["emails"][emailID]["destEmail"] not in recipientAndNumberOfRespectiveEmailsSentToThem:
+                recipientAndNumberOfRespectiveEmailsSentToThem[loadedData["emails"][emailID]["destEmail"]] = 0
+            
+            recipientAndNumberOfRespectiveEmailsSentToThem[loadedData["emails"][emailID]["destEmail"]] += 1
+
+        mostFreqRecipient = ""
+        numEmailsSentToFreqRecipient = 0
+
+        for recipient in recipientAndNumberOfRespectiveEmailsSentToThem:
+            if recipientAndNumberOfRespectiveEmailsSentToThem[recipient] > numEmailsSentToFreqRecipient:
+                mostFreqRecipient = recipient
+                numEmailsSentToFreqRecipient = recipientAndNumberOfRespectiveEmailsSentToThem[recipient]
+        
+        ### REPORT CREATION
+        reportText = """
+------ ACCESS ANALYTICS REPORT ON COLLECTED DATA
+
+This report was automatically generated based on the data collected by the Access Analytics Service which was given permissions to collect said data in the .env file.
+
+There are 4 sections to this report, namely:
+
+    1) Requests Analysis - A breakdown of all the requests sent to the Access System
+    2) Portal Requests Analysis - A breakdown of all requests that relate to Access Portal operations such as file uploads, sign ins and more.
+    3) Credentials Analysis - A breakdown of the certificate identification numbers and auth tokens in the requests.
+    4) Emails Analysis - A breakdown of all the emails sent out to recipients by the Access System.
+
+REQUESTS ANALYSIS
+-----
+
+Total Requests: {}
+Portal Requests: {}
+POST Requests: {}
+GET Requests: {}
+API Requests: {}
+Assets Requests: {}
+
+PORTAL REQUESTS ANALYSIS
+-----
+
+File Uploads: {}
+File Deletions: {}
+File Downloads: {}
+Sign Ins: {}
+Sign Outs: {}
+
+CREDENTIALS ANALYSIS
+-----
+
+Unique Auth Tokens: {}
+Unique Ceritfication Identification Numbers: {}
+
+EMAILS ANALYSIS
+-----
+
+Total Emails Sent: {}
+Total Login Alert Emails: {}
+Total Folder Registered Emails: {}
+Total OTP Code Emails: {}
+Most Frequent Email Recipient: {}, Number of Emails Most Frequent Recipient Recived: {}
+
+--------
+That is the end of this automatically generated Access Analytics Report. This report was generated on {}
+
+END OF REPORT
+""".format(
+    numRequests,
+    numPortalRequests,
+    numPOSTRequests,
+    numGETRequests,
+    numAPIRequests,
+    numAssetsRequests,
+    numFileUploads,
+    numFileDeletions,
+    numFileDownloads,
+    numSignIns,
+    numSignOuts,
+    numUniqueAuthTokens,
+    numUniqueCertificationIdentificationNumbers,
+    numEmailsSent,
+    numEmailsForEachType["loginAlert"],
+    numEmailsForEachType["folderRegistered"],
+    numEmailsForEachType["otp"],
+    mostFreqRecipient,
+    numEmailsSentToFreqRecipient,
+    datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' UTC' + time.strftime('%z')
+)
+
+        print(reportText)
+        return
+
+AccessAnalytics.crunchData()
