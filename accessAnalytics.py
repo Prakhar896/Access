@@ -678,3 +678,19 @@ END OF REPORT
             return
             
         return
+
+    @staticmethod
+    def clearDataFile():
+        if not os.path.isfile(os.path.join(os.getcwd(), 'analyticsData.txt')):
+            return "AAError: Analytics Data file does not exist."
+        
+        try:
+            with open('analyticsData.txt', 'w') as f:
+                json.dump(AccessAnalytics.blankAnalyticsObject, f)
+        except Exception as e:
+            return "AAError: Error in clearing the data file; Error: {}".format(e)
+        
+        return True
+
+    
+
