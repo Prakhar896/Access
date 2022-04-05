@@ -8,6 +8,7 @@ from certAuthority import *
 from AFManager import *
 from emailer import *
 from accessAnalytics import *
+from getpass import getpass
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -122,6 +123,22 @@ from portal import *
 from assets import *
 
 if __name__ == "__main__":
+  # Boot Authorisation
+  if os.path.isfile(os.path.join(os.getcwd(), 'authorisation.txt')):
+    try:
+      with open('authorisation.txt', 'r') as f:
+        decoded = CertAuthority.decodeFromB64(f.read())
+        code = getpass("MAIN: Enter your Boot Authorisation Code to begin Access Boot: ")
+        if code != decoded:
+          print("MAIN: Boot Authorisation Code is incorrect. Main will not proceed with the boot.")
+          sys.exit(1)
+        else:
+          print()
+    except Exception as e:
+      print("MAIN: Failed to load and ask for boot authorisation code. Error: {}".format(e))
+      print("MAIN: Main will not proceed with the boot.")
+      sys.exit(1)
+
   # Load certificates
   CAresponse = CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
   if CAError.checkIfErrorMessage(CAresponse):
