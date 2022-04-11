@@ -117,7 +117,13 @@ elif choice == 2:
     pass
 elif choice == 3:
     # Run Access CheckUp
-    pass
+    print()
+    print("Startup: Initialising Access CheckUp service...")
+    print()
+    print()
+    import accessCheckup
+    print()
+    print("Startup: Exiting startup...")
 elif choice == 4:
     ## Run Crunch Data in Access Analytics
     print("Running data analysis function...")
