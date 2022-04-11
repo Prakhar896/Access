@@ -276,7 +276,7 @@ else:
             fileContent = f.read()
             parsedText = result.text[3:-4]
             if fileContent != parsedText:
-                critical_issues.append("VERY CRITICAL ISSUE: This Access System's version is outdated. Current system version: {}, Latest System Version: {}. Please update the system for the best performance.".format(fileContent, result.text))
+                critical_issues.append("VERY CRITICAL ISSUE: This Access System's version is outdated. Current system version: {}, Latest System Version: {}. Please update the system for the best performance.".format(fileContent, parsedText))
     except Exception as e:
         print()
         print("AN ERROR OCCURRED IN CONTACTING THE WEBSITE TO OBTAIN LATEST ACCESS SYTEM VERSION INFORMATION. THE CURRENT SYSTEM VERSION'S OUTDATED STATUS CANNOT BE DETERMINED.")
