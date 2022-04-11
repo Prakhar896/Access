@@ -268,13 +268,14 @@ time.sleep(2)
 if not os.path.isfile(os.path.join(os.getcwd(), 'version.txt')):
     critical_issues.append("CRITICAL ISSUE: The essential 'version.txt' file is not present in the root folder. The current version of the Access System cannot be determined.")
 else:
-    result = requests.get("https://gist.githubusercontent.com/Prakhar896/09312f253c9640d4482a12b1479e7c11/raw/4c9dbfcbb9d0ba276f8e07ee25f93230e5476ca0/latestVersion.txt")
+    result = requests.get("https://prakhar896.github.io/meta/access/latestVersion.html")
 
     try:
         result.raise_for_status()
         with open('version.txt', 'r') as f:
             fileContent = f.read()
-            if fileContent != result.text:
+            parsedText = result.text[3:-4]
+            if fileContent != parsedText:
                 critical_issues.append("VERY CRITICAL ISSUE: This Access System's version is outdated. Current system version: {}, Latest System Version: {}. Please update the system for the best performance.".format(fileContent, result.text))
     except Exception as e:
         print()
