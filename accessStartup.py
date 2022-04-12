@@ -1,3 +1,27 @@
+import time, os
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception as e:
+    print("Startup Dotenv Library Loading Error: {}".format(e))
+    print("Failed to import dotenv library to load environment variables. Attempting to install libraries from requirements.txt...")
+    time.sleep(2)
+
+    if not os.path.isfile(os.path.join(os.getcwd(), 'requirements.txt')):
+        print()
+        print("No requirements.txt file was found. Startup cannot startup.")
+        sys.exit(1)
+    else:
+        os.system("pip install -r requirements.txt")
+        print()
+        print("Startup: Successfully downloaded libraries...re-importing dotenv...")
+        print()
+        from dotenv import load_dotenv
+        load_dotenv()
+        print()
+        print("Successfully imported! Starting now...")
+        print()
+
 from accessAnalytics import *
 
 print("Welcome to Access Startup!")
