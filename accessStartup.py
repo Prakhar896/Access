@@ -138,7 +138,84 @@ if choice == 1:
     print("STARTUP: Access Startup will now close.")
 elif choice == 2:
     # Meta Settings - Make authorisation code, Run Access Analytics Recovery Mode
-    pass
+    print()
+    print("Meta Settings:")
+    print()
+    print("""
+    Choices:
+
+        1) Access Analytics - Clear Collected Data
+        2) Access Analytics - Recovery Mode
+        3) Delete Data Files
+
+    """)
+
+    while True:
+        try:
+            metaChoice = int(input("Enter your choice number: "))
+            break
+        except Exception as e:
+            print("Invalid choice provided. Please try again.")
+            continue
+        
+    if metaChoice == 1:
+        ## Clear collected data
+        print()
+        print("STARTUP: Executing Access Analytics Clear Data Script...")
+        print()
+        time.sleep(2)
+        response = AccessAnalytics.clearDataFile()
+        if isinstance(response, str):
+            if response.startswith("AAError:"):
+                print("STARTUP: Error in clearing analytics data file; Response: {}".format(response))
+                sys.exit(1)
+            else:
+                print("STARTUP: Unknown response receieved from AA when trying to clear data file; Response: {}".format(response))
+                sys.exit(1)
+        elif response != True:
+            print("STARTUP: Unknown response received from AA; Response: {}".format(response))
+            sys.exit(1)
+        print()
+        print("STARTUP: Successfully cleared analytics data file.")
+        print("STARTUP: Access Startup will now close.")
+    elif metaChoice == 2:
+        ## Analytics Recovery mode
+        print()
+        print("STARTUP: Initialising Access Analytics Recovery Mode...")
+        print()
+        time.sleep(2)
+        try:
+            AccessAnalytics.analyticsRecoveryMode()
+        except Exception as e:
+            print()
+            print("STARTUP: An error occurred in recovery mode; Error: {}".format(e))
+            sys.exit(1)
+        print()
+        print("STARTUP: Access Startup will now close.")
+        sys.exit(0)
+    elif metaChoice == 3:
+        ## Delete data files
+        print()
+        print("STARTUP: Please wait a while for Startup to delete all data files...")
+        print()
+        time.sleep(3)
+
+        dataFilenames = [
+            'accessIdentities.txt',
+            'analyticsData.txt',
+            'certificates.txt',
+            'validOTPCodes.txt'
+        ]
+
+        for filename in dataFilenames:
+            if os.path.isfile(os.path.join(os.getcwd(), filename)):
+                try:
+                    os.remove(os.path.join(os.getcwd(), filename))
+                except Exception as e:
+                    print("STARTUP: There was an error in deleting the file {}; Error: {}".format(filename, e))
+        
+        print("STARTUP: Successfully deleted all files. Startup will now close.")
+        sys.exit(0)
 elif choice == 3:
     # Run Access CheckUp
     print()
