@@ -1,4 +1,7 @@
 import time, os
+from getpass import getpass
+from certAuthority import *
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -147,6 +150,7 @@ elif choice == 2:
         1) Access Analytics - Clear Collected Data
         2) Access Analytics - Recovery Mode
         3) Delete Data Files
+        4) Manage Boot Authorisation Code
 
     """)
 
@@ -213,9 +217,115 @@ elif choice == 2:
                     os.remove(os.path.join(os.getcwd(), filename))
                 except Exception as e:
                     print("STARTUP: There was an error in deleting the file {}; Error: {}".format(filename, e))
-        
+        print()
         print("STARTUP: Successfully deleted all files. Startup will now close.")
         sys.exit(0)
+    elif metaChoice == 4:
+        ## Manage Boot Authorisation Code
+        if not os.path.isfile('authorisation.txt'):
+            ## Make new code
+            print()
+            print("Startup has detected that you have no Boot Authorisation code set yet.")
+            print()
+            print("Q. What is a boot authorisation code?")
+            print("Ans: A boot authorisation code will secure your Access Boot process by preventing anyone other than the owner of the system from booting to system. Before the system is booted, if set, it will ask you for your boot authorisation code which is required to procede with the boot. A wrong code will interrupt and terminate the boot process.")
+            print()
+            wouldLikeToSet = input("Would you like to set a boot authorisation code? (y/n) ")
+            while wouldLikeToSet not in ['y', 'n']:
+                print("Invalid action provided. Please try again.")
+                wouldLikeToSet = input("Would you like to set a boot authorisation code? (y/n) ")
+            
+            if wouldLikeToSet == "y":
+                print()
+                code = getpass("Enter a booth authorisation code of your choice: ")
+                print()
+                print("Setting code...")
+                print()
+                time.sleep(2)
+                try:
+                    with open('authorisation.txt', 'w') as f:
+                        f.write(CertAuthority.encodeToB64(code))
+                except Exception as e:
+                    print("STARTUP: An error occurred in setting the code; Error: {}".format(e))
+                    sys.exit(1)
+                print("Code set successfully. Access Startup will now close.")
+                sys.exit(0)
+            else:
+                print()
+                print("Set process aborted. Access Startup will now close.")
+                sys.exit(0)
+        else:
+            ## Authorisation code is already set
+            print()
+            print("Startup has detected that an authorisation code is already set.")
+            print()
+            print("""
+            What would you like to do:
+                
+                1) Remove boot authorisation code
+                2) Change code
+
+            """)
+            print()
+            while True:
+                try:
+                    alreadySetChoice = int(input("Enter your choice: "))
+                    break
+                except Exception as e:
+                    print("Invalid choice number. Please try again.")
+                    continue
+            print()
+            if alreadySetChoice == 1:
+                while True:
+                    checkCode = getpass("Enter your current boot authorisation code: ")
+
+                    with open('authorisation.txt', 'r') as f:
+                        if checkCode == CertAuthority.decodeFromB64(f.read()):
+                            break
+                        else:
+                            print("Invalid code. Please try again.")
+                            continue
+                    
+                print()
+                print("Removing boot authorisation code...")
+                time.sleep(2)
+
+                try:
+                    os.remove(os.path.join(os.getcwd(), 'authorisation.txt'))
+                except Exception as e:
+                    print()
+                    print("An error occurred in removing the code; Error: {}".format(e))
+                    sys.exit(1)
+                    
+                print()
+                print("STARTUP: Removed boot authorisation code successfully. Access Startup will now close.")
+                sys.exit(0)
+            elif alreadySetChoice == 2:
+                print()
+                while True:
+                    checkCode = getpass("Enter your current boot authorisation code: ")
+
+                    with open('authorisation.txt', 'r') as f:
+                        if checkCode == CertAuthority.decodeFromB64(f.read()):
+                            break
+                        else:
+                            print("Invalid code. Please try again.")
+                            continue
+                
+                newCode = getpass("Enter your new boot authorisation code: ")
+                print()
+                print("Updating code...")
+                time.sleep(2)
+
+                try:
+                    with open('authorisation.txt', 'w') as f:
+                        f.write(CertAuthority.encodeToB64(newCode))
+                except Exception as e:
+                    print("An error occurred in updating the code; Error: {}".format(e))
+                    sys.exit(1)
+                print()
+                print("Successfully updated boot authorisation code. Access Startup will now close.")
+                sys.exit(0)
 elif choice == 3:
     # Run Access CheckUp
     print()
