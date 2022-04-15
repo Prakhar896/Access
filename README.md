@@ -12,6 +12,10 @@
 
 - [The Origins](#the-origins)
 - [About The System](#about-the-system)
+- [Setting up The System](#setting-up-the-system)
+    - [Access Startup](#access-startup)
+        - [Boot Authorisation Code](#boot-authorisation-code)
+    - [Steps for the Admin](#steps-for-the-administrator)
 
 # The Origins
 
@@ -57,7 +61,7 @@ By default, no boot authorisation code is set.
 
 ---
 
-### Steps for the Administrator
+## Steps for the Administrator
 
 First things first, run `accessStartup.py` in your native command line using Python3 or above. You should see that Startup installs all the required system dependencies from the `requirements.txt` file as it detects that they are not installed. Do not choose any option and quit the menu by using the keyboard shortcut `Control Key + C`.
 
