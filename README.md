@@ -23,15 +23,23 @@ One day, I was going through the files I have stored on my OneDrive account and 
 
 # About The System
 
-An Access Identity is known as the account that a user can create to navigate and access the various services Access has to offer. An Access Identity can be logged into with an email and password.
+An Access Identity is known as the account that a user can create to navigate and access the various services Access has to offer. An Access Identity can be logged into with an email and a password.
 
-I put security at the forefront of my design for the application. Around 2000 lines of code have been dedicated to ensure that every transaction on the site is secure and is authorised. A custom designed certificate generation algorithm, custom designed authentication token algorithm and custom API authorisation technologies have been implemented in this web application to ensure the very most secure experience.
+I put security at the forefront of my design for the application. Around 1200 lines of code have been dedicated to ensure that every transaction on the site is secure and is authorised. Custom designed certificate generation, authentication token and API authorisation algorithms have been implemented in this web application to ensure the most secure experience.
 
-Access is easily the biggest web server I have ever built; with Python as its backbone for the code, this web server has over 40 code files and nearly 4000 lines of code. The system in itself has 7+ sub-systems and services that aid the system administrator to fix any issues that arise in the system. The Access CheckUp Service, Access Analytics Recovery Mode and 800+ lines of code worth of error-prevention measures are just a few of them to name. 
+![Sign In Screen](/docs/img/signinScreen.png)
 
-The Access Analytics service also crunches data about the system's usage and savable usage reports for the administrator.
+> ABOVE: A screenshot of the login page of the system
+
+Access is easily the biggest web server I have ever built; with Python as its backbone for the code, this web server has over 40 code files and nearly 4000 lines of code. The system in itself has 7+ sub-systems and services that aid the system administrator to fix any issues that arise in the system. The Access CheckUp Service, Access Analytics Recovery Mode and error-prevention measures worth more than 800 lines of code are just a few of them to name. 
+
+The Access Analytics service also crunches data about the system's usage and generates savable usage reports for the administrator.
 
 The entire system unanimously acts as a complete backend and frontend system. On the website itself, when the user logs in, the user is able to manage their account, upload/download/delete files from their Access Folder and more. The UI was designed with the help of [Bootstrap](https://getbootstrap.com). Login alerts, folder registration and identity creation emails are also sent to the user. At the moment, the system has been configured and hard-coded to allow only 3 file uploads per Access Identity.
+
+![Portal Home Screen](/docs/img/portalHomeScreen.png)
+
+> ABOVE: A screenshot of the home page of the Access Portal
 
 # Setting up the System
 
@@ -59,28 +67,38 @@ This code can be set/deleted/updated via the Access Meta Settings option in the 
 
 By default, no boot authorisation code is set.
 
+![Boot Authorisation Code Prompt Screenshot](/docs/img/authCodeScreenshot.png)
+
+> ABOVE: A screenshot of the boot authorisation code prompt
+
 ---
 
 ## Steps for the Administrator
 
-First things first, run `accessStartup.py` in your native command line using Python3 or above. You should see that Startup installs all the required system dependencies from the `requirements.txt` file as it detects that they are not installed. Do not choose any option and quit the menu by using the keyboard shortcut `Control Key + C`.
+First things first, run `accessStartup.py` in your native command line using [Python 3](https://python.org) or above. You should see that Startup installs all the required system dependencies from the `requirements.txt` file as it detects that they are not installed. Do not choose any option and quit the menu by using the keyboard shortcut `Control Key + C`.
 
 Before booting Access, some environment variables will need to be set in a `.env` file. Don't know what a `.env` file is? Click [here](https://malware.expert/general/what-is-env-files/#:~:text=env%20file%20or%20dotenv%20file,your%20Application%20will%20not%20change.)
 
 First, create your `.env` file.
 
-Then, The folling variables are required to be set:
+Then, The following variables are required to be set:
 
 - `AccessAPIKey`: This is the API key that will be used to check all incoming POST requests are authorised. This must be set to `access@PRAKH0706!API.key#$69`
-- `AssignedSystemEmail`: This field should have the email address that you intend for the system to use to send emails to users. For example, it can be set to `accessportal@gmail.com`. If you are using a Google Email Account, ensure that `Less Secure Apps` is set to `On` in the [Google Account Settings](https://myaccount.google.com). Note that the email has to be a Google Email.
+- `AssignedSystemEmail`: This field should have the email address that you intend for the system to use to send emails to users. Ensure that `Less Secure Apps` is set to `On` in the [Google Account Settings](https://myaccount.google.com). Note that the email has to be a Google Email.
 - `AccessEmailPassword`: This field should be the password to the email account that you set in the `AssignedSystemEmail` field.
 - `APP_SECRET_KEY`: This can be set to anything you like.
 - (OPTIONAL) `GitpodEnvironment`: This field can only be set either `True` or `False`. If you are in a [Gitpod](https://gitpod.io) Environment, setting this field to `True` will disable all emailing services of the system and will prevent emails from being sent. This allows the system to not crash in an attempt to send an email as emails cannot be sent in a [Gitpod](https://gitpod.io) Workspace.
 - `AccessAnalyticsEnabled` - This field can only be set either `True` or `False`. If set to `True`, you hereby grant the Access Analytics service permission to collect and store system usage data in a text file in the system folder. This data can be used by the admin to crunch and get reports on the system's usage.
 - `RuntimePort` - This field can be set to any integer, typically over 8000. This is the port that the system's Flask web application will run and server HTTP content on.
 
-
+--- 
 **After setting the environment variables, it is recommended that you run Access CheckUp via the [Access Startup menu](#access-startup). There should be some warnings popping up when Access CheckUp is finished (these are about the missing database files in the system that are yet to be automatically generated by the system because it isn't booted yet) but no critical issues should be detected. If any are, you should fix them immediately.**
+
+![When CheckUp is run before the first Access Boot](/docs/img/firstBootCheckUpScreenshot.png)
+
+> ABOVE: A screenshot of the ideal output when Access CheckUp is run after setting environment variables and before Access is booted for the first time
+
+---
 
 After doing this, you are ready to boot up Access. In the [Access Startup menu](#access-startup), select the `Access Boot` option. You should see that the system does some boot pre-processing and finally starts up the Flask application on the runtime port. You can now access the Access Portal via the following URL: `http://localhost:<RuntimePort>`.
 

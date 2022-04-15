@@ -1,4 +1,4 @@
-import time, os
+import time, os, shutil
 from getpass import getpass
 from certAuthority import *
 
@@ -149,7 +149,7 @@ elif choice == 2:
 
         1) Access Analytics - Clear Collected Data
         2) Access Analytics - Recovery Mode
-        3) Delete Data Files
+        3) Factory Reset - Delete System and User Information Data Files, Access Folders, Analytics Reports
         4) Manage Boot Authorisation Code
 
     """)
@@ -211,14 +211,37 @@ elif choice == 2:
             'validOTPCodes.txt'
         ]
 
+        errorsPresent = False
+
         for filename in dataFilenames:
             if os.path.isfile(os.path.join(os.getcwd(), filename)):
                 try:
                     os.remove(os.path.join(os.getcwd(), filename))
                 except Exception as e:
                     print("STARTUP: There was an error in deleting the file {}; Error: {}".format(filename, e))
+                    errorsPresent = True
+
+        ## Delete AccessFolders
+        if os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders')):
+            try:
+                shutil.rmtree('AccessFolders')
+            except Exception as e:
+                print("STARTUP: There was an error in deleting the AccessFolders directory; Error: {}".format(e))
+                errorsPresent = True
+        
+        ## Delete Analytics Reports
+        if os.path.isdir(os.path.join(os.getcwd(), 'analyticsReports')):
+            try:
+                shutil.rmtree('analyticsReports')
+            except Exception as e:
+                print("STARTUP: There was an error in deleting the analyticsReports directory; Error: {}".format(e))
+                errorsPresent = True
+        
         print()
-        print("STARTUP: Successfully deleted all files. Startup will now close.")
+        if errorsPresent:
+            print("STARTUP: Startup deleted everything but there were some errors in deleting some of the files. See the errors above for more information. Startup will now close.")
+            sys.exit(1)
+        print("STARTUP: Successfully deleted all files, Access Folders and stored Access Analytics reports. Startup will now close.")
         sys.exit(0)
     elif metaChoice == 4:
         ## Manage Boot Authorisation Code
