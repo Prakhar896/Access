@@ -232,6 +232,7 @@ time.sleep(1)
 
 environmentVariables = [
     'AccessAPIKey',
+    'AssignedSystemEmail',
     'AccessEmailPassword',
     'APP_SECRET_KEY',
     'AccessAnalyticsEnabled',

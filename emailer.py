@@ -8,7 +8,7 @@ load_dotenv()
 class Emailer:
     port = 465  # For SSL
     smtp_server = "smtp.gmail.com"
-    sender_email = "noreply.accessportal@gmail.com"
+    sender_email = os.environ["AssignedSystemEmail"]
     password = os.environ['AccessEmailPassword']
 
     @staticmethod

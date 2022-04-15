@@ -7,7 +7,7 @@ from email.mime.multipart import MIMEMultipart
 def sendEmailWithOTP(destEmail, otp):
     port = 465  # For SSL
     smtp_server = "smtp.gmail.com"
-    sender_email = "noreply.accessportal@gmail.com"
+    sender_email = os.environ["AssignedSystemEmail"]
     receiver_email = destEmail
     password = os.environ['AccessEmailPassword']
 
