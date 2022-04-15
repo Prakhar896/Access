@@ -123,6 +123,8 @@ from portal import *
 from assets import *
 
 if __name__ == "__main__":
+  # BOOT PRE-PROCESSING
+
   # Boot Authorisation
   if os.path.isfile(os.path.join(os.getcwd(), 'authorisation.txt')):
     try:
