@@ -395,7 +395,8 @@ Welcome to the Access Startup Update Guide! This guide will walk you through on 
         Then, you will have to run the command "git checkout <VERSION NUMBER HERE>" where you replace <VERSION NUMBER HERE> with the version you saw earlier.
 
         If not, when you first got this system, a git repository folder came with it so you can actually pull the new changes via the command line command "git pull".
-        Then, you will have to run the command "git checkout <VERSION NUMBER HERE>" where you replace <VERSION NUMBER HERE> with the version you saw earlier.
+        Then, you will have to run the command "git checkout v<VERSION NUMBER HERE>" where you replace <VERSION NUMBER HERE> with the version you saw earlier.
+        For example, "git checkout v1.0".
     
     3) Move data files and folders back to the system folder
 
