@@ -53,6 +53,7 @@ At the top of the system, the Access Startup service (whose code is in [`accessS
 2) Access Meta Settings - This option allows an admin to change some system configurations. Collected Analytics data can be cleared, Analytics Recovery Mode can be activated, all data files that store system and user information can be deleted and the [Boot Authorisation Code](#boot-authorisation-code) can be configured.
 3) Access CheckUp Service - This option will run the [`accessCheckUp.py`](accessCheckUp.py) service that will scan the entire system to make sure that everything is okay and that the system is safe to run. It will produce a set of critical issues (indicating that the system cannot be run) and/or warnings (the system can be run) that are detected.
 4) Crunching Analytics Data - This option allows the admin to run the data crunching function which will analyse all the usage data collected by the system and will generate a report. This can only occur if `AccessAnalyticsEnabled` was set to `True` in the `.env` file.
+5) System Update Guide - This option will output a chunk of text that will guide the admin with the steps to update the system to a newer version.
 
 ![Startup Main Menu](docs/img/startupMainMenu.png)
 
@@ -101,5 +102,13 @@ Then, The following variables are required to be set:
 ---
 
 After doing this, you are ready to boot up Access. In the [Access Startup menu](#access-startup), select the `Access Boot` option. You should see that the system does some boot pre-processing and finally starts up the Flask application on the runtime port. You can now access the Access Portal via the following URL: `http://localhost:<RuntimePort>`.
+
+# Updating the System
+
+Run Access CheckUp to see if the system is on the latest version. If not, a critical issue should be outputted in the end. In the event this happens, you can update the system by following the 3 easy steps guided in the System Update Guide in the [Access Startup menu](#access-startup).
+
+![Sample Update Guide for System on Version 1.0](/docs/img/sampleUpdateGuide.png)
+
+> ABOVE: Sample update guide that would be outputted for a system that is on Version `1.0`.
 
 © 2022 Prakhar Trivedi
