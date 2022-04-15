@@ -16,6 +16,7 @@
     - [Access Startup](#access-startup)
         - [Boot Authorisation Code](#boot-authorisation-code)
     - [Steps for the Admin](#steps-for-the-administrator)
+- [Updating the System](#updating-the-system)
 
 # The Origins
 
