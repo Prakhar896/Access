@@ -3,14 +3,14 @@ from werkzeug.utils import secure_filename
 from flask_cors import CORS
 import json, random, time, sys, subprocess, os, shutil
 import datetime
+from dotenv import load_dotenv
+load_dotenv()
 from models import *
 from certAuthority import *
 from AFManager import *
 from emailer import *
 from accessAnalytics import *
 from getpass import getpass
-from dotenv import load_dotenv
-load_dotenv()
 
 ### APP CONFIG
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'Chute')
