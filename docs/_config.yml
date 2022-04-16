@@ -1,1 +1,5 @@
 theme: jekyll-theme-cayman
+title: Access
+description: Access is a web application that offers cloud storage services and is the biggest web service I have ever built thus far!
+github:
+  is_project_page: true
