@@ -23,7 +23,7 @@ An Access Identity is known as the account that a user can create to navigate an
 
 I put security at the forefront of my design for the application. Around 1200 lines of code have been dedicated to ensure that every transaction on the site is secure and is authorised. Custom designed certificate generation, authentication token and API authorisation algorithms have been implemented in this web application to ensure the most secure experience.
 
-![Sign In Screen](/docs/img/signinScreen.png)
+![Sign In Screen](/img/signinScreen.png)
 
 > ABOVE: A screenshot of the login page of the system
 
