@@ -186,16 +186,16 @@ def registerFolder():
     Hi {},
 
     Congratulations on registering your Access Folder! You can now upload upto a maximum of 3 files, each not bigger than 16MB in size that have the following allowed file extensions:
-    .txt, .pdf, .png, .jpg, .jpeg, .gif
+    {}
 
     Kind Regards,
     The Access Team
 
     THIS IS AN AUTOMATED MESSAGE DELIVERED TO YOU BY THE ACCESS PORTAL. DO NOT REPLY TO THIS EMAIL.
     Copyright 2022 Prakhar Trivedi
-    """
+    """.format(request.json['username'], prepFileExtensions)
 
-    html = render_template('emails/folderRegistered.html', username=request.json['username'])
+    html = render_template('emails/folderRegistered.html', username=request.json['username'], fileExtensions=prepFileExtensions)
 
     ## Send email
     Emailer.sendEmail(accessIdentities[request.json['username']]['email'], "Access Folder Registered!", text, html)

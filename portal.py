@@ -68,7 +68,7 @@ def portalFolder(certID, authToken):
                 slotsAvailable = 3 - len(filenames)
                 return render_template('portal/portalFolder.html', slotsAvailable=slotsAvailable, files=filenames, url=request.url, username=check[1])
         else:
-            return render_template("portal/folderRegistration.html", username=check[1])
+            return render_template("portal/folderRegistration.html", username=check[1], fileExtensions=prepFileExtensions)
     else:
         return check
 
@@ -112,7 +112,7 @@ def newUpload(certID, authToken):
                     return redirect(request.url)
             if (3 - len(AFManager.getFilenames(username=check[1]))) == 0:
                 return redirect(url_for('portalFolder', certID=certID, authToken=authToken))
-            return render_template('portal/newUpload.html', slotsAvailable=(3 - len(AFManager.getFilenames(check[1]))))
+            return render_template('portal/newUpload.html', slotsAvailable=(3 - len(AFManager.getFilenames(check[1]))), fileExtensions=prepFileExtensions)
         else:
             return redirect(url_for('portalFolder', certID=certID, authToken=authToken))
     else:

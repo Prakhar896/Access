@@ -14,7 +14,9 @@ from getpass import getpass
 
 ### APP CONFIG
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'Chute')
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'xlsx'}
+ALLOWED_EXTENSIONS_AS_LIST = [x for x in ALLOWED_EXTENSIONS]
+prepFileExtensions = ', '.join(["."+x for x in ALLOWED_EXTENSIONS_AS_LIST])
 
 app = Flask(__name__)
 CORS(app)
