@@ -39,4 +39,29 @@ The Access Analytics service also crunches data about the system's usage and gen
 
 The entire system unanimously acts as a complete backend and frontend system. On the website itself, when the user logs in, the user is able to manage their account, upload/download/delete files from their Access Folder and more. The UI was designed with the help of [Bootstrap](https://getbootstrap.com). Login alerts, folder registration and identity creation emails are also sent to the user. At the moment, the system has been configured and hard-coded to allow only 3 file uploads per Access Identity.
 
+# What This Means to Me
+
+Access is a project that I spent hours on because I really liked developing web servers. After my [AWS Combustifier Project](https://prakhar896.github.io/Access), I wanted to continue to use the Python and Flask skills I learnt to make soemthing bigger and better.
+
+Every year I always challenge myself to make something bigger than before and this year Access broke my record number of code files. This project indeed means a lot to me as it actually has really useful real-world applications.
+
+Once again, if you wanna try out Access for yourself, simply create your own identity at the [demo portal here.](https://access-1.drakonzai.repl.co)
+
+# What comes next
+
+Though large, this project still has a lot of work to do. Here is my project roadmap:
+
+UPCOMING FEATURES:
+
+- New Access Admin portal, where admin signs-in and can view/manage/edit all identities in the system
+- Completion of all the settings that are found in a user's Access Portal
+- Miscellaneous endpoints such as `/version` to view more information about the system
+- Back-tracking links on relevant error pages
+- Certificate Renewal Code Retreival process
+- Improvement of create identity process with more secure password checks
+
+and much more!
+
+And that's Access, the cloud storage service built for convenience and ultimate security.
+
 <script src="http://code.jquery.com/jquery-1.4.2.min.js"></script> <script> var x = document.getElementsByClassName("site-footer-credits"); setTimeout(() => { x[0].remove(); }, 10); </script>
