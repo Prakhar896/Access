@@ -1,13 +1,17 @@
 import time, os, shutil
 from getpass import getpass
 from certAuthority import *
+import pkg_resources
 
 try:
-    from dotenv import load_dotenv
-    load_dotenv()
+    required = {'flask', 'flask-cors', 'dotenv', 'getpass'}
+    installed = {pkg.key for pkg in pkg_resources.working_set}
+    missing = required - installed
+    if missing:
+        raise Exception("Missing Libraries: " + ', '.join([x for x in missing]))
 except Exception as e:
-    print("Startup Dotenv Library Loading Error: {}".format(e))
-    print("Failed to import dotenv library to load environment variables. Attempting to install libraries from requirements.txt...")
+    print("Startup Library Loading Error: {}".format(e))
+    print("Failed to import one or more libraries. Attempting to install libraries from requirements.txt...")
     time.sleep(2)
 
     if not os.path.isfile(os.path.join(os.getcwd(), 'requirements.txt')):

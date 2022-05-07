@@ -121,6 +121,13 @@ from emailOTP import *
 # Portal Service
 from portal import *
 
+# # Admin Subdomain
+# if 'adminSubdomainEnabled' in os.environ:
+#   if os.environ['adminSubdomainEnabled'] == 'True':
+#     from admin import *
+# else:
+#   print("MAIN: Admin subdomain was not loaded due to .env file configuration.")
+
 # Assets
 from assets import *
 
@@ -206,4 +213,6 @@ if __name__ == "__main__":
   print()
   print("Booting Access...")
   print()
-  app.run(host='0.0.0.0', port=int(os.environ['RuntimePort']))
+
+  # app.config['SERVER_NAME'] = 'prakhar.com:' + os.environ['RuntimePort']
+  app.run(host='0.0.0.0', debug=False)
