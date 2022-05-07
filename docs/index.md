@@ -6,11 +6,15 @@ Access is many things. At its core, Access is a [Flask](https://flask.palletspro
 
 ---
 
-# TRY IT OUT YOURSELF NOW !!!
+# TRY IT OUT YOURSELF NOW!!!
 
 Click on [this link](https://access-1.drakonzai.repl.co) to visit a live and currently working Access System by yourself. You can create your identity, upload files and in general check out the whole system by itself!
 
 Link not working? Copy this into your browser's address bar: https://access-1.drakonzai.repl.co
+
+# Download Access
+
+Looking to get your own copy of the system? Simply [click here to get your download started!](http://gg.gg/AccessDownload)
 
 **Table Of Contents**
 
