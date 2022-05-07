@@ -12,6 +12,10 @@
 
 - [The Origins](#the-origins)
 - [About The System](#about-the-system)
+- [What the project means to me](#what-this-means-to-me)
+- [Project Roadmap](#what-comes-next)
+
+For people who want their own copy of the system:
 - [Setting up The System](#setting-up-the-system)
     - [Access Startup](#access-startup)
         - [Boot Authorisation Code](#boot-authorisation-code)
@@ -41,6 +45,35 @@ The entire system unanimously acts as a complete backend and frontend system. On
 ![Portal Home Screen](/docs/img/portalHomeScreen.png)
 
 > ABOVE: A screenshot of the home page of the Access Portal
+
+# What This Means to Me
+
+Access is a project that I spent hours on because I really liked developing web servers. After my [AWS Combustifier Project](https://prakhar896.github.io/Access), I wanted to continue to use the Python and Flask skills I learnt to make soemthing bigger and better.
+
+Every year I always challenge myself to make something bigger than before and this year Access broke my record number of code files. This project indeed means a lot to me as it actually has really useful real-world applications.
+
+Once again, if you wanna try out Access for yourself, simply create your own identity at the [demo portal here.](https://access-1.drakonzai.repl.co)
+
+# What comes next
+
+Though large, this project still has a lot of work to do. Here is my project roadmap:
+
+UPCOMING FEATURES:
+
+- New Access Admin portal, where admin signs-in and can view/manage/edit all identities in the system
+- Completion of all the settings that are found in a user's Access Portal
+- Miscellaneous endpoints such as `/version` to view more information about the system
+- Back-tracking links on relevant error pages
+- Certificate Renewal Code Retreival process
+- Improvement of create identity process with more secure password checks
+
+and much more!
+
+And that's Access, the cloud storage service built for convenience and ultimate security.
+
+---
+
+For people who want their own copy of the system:
 
 # Setting up the System
 
