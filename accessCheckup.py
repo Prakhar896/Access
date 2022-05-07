@@ -89,7 +89,8 @@ rootFolderEssentialFiles = [
     'homepage.html',
     'main.py',
     'models.py',
-    'portal.py'
+    'portal.py',
+    'admin.py'
 ]
 
 ### Root folder essential files check
@@ -240,7 +241,8 @@ environmentVariables = [
 ]
 
 nonessentialEnvVars = [
-    'GitpodEnvironment'
+    'GitpodEnvironment',
+    'adminSubdomainEnabled'
 ]
 
 for envVar in environmentVariables:

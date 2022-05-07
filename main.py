@@ -131,8 +131,10 @@ from portal import *
 # Assets
 from assets import *
 
-if __name__ == "__main__":
+def bootFunction():
   # BOOT PRE-PROCESSING
+  global accessIdentities
+  global validOTPCodes
 
   # Boot Authorisation
   if os.path.isfile(os.path.join(os.getcwd(), 'authorisation.txt')):
@@ -149,6 +151,17 @@ if __name__ == "__main__":
       print("MAIN: Failed to load and ask for boot authorisation code. Error: {}".format(e))
       print("MAIN: Main will not proceed with the boot.")
       sys.exit(1)
+
+  # Check if system is in beta mode
+  if not os.path.isfile(os.path.join(os.getcwd(), 'version.txt')):
+    print("MAIN: Unable to check system version! (version.txt file not present) Will ignore and attempt to proceed with boot.")
+  else:
+    with open('version.txt', 'r') as f:
+      fileData = f.read()
+      if fileData.endswith("beta"):
+        print("MAIN: Note! You are booting a version of Access that is in beta! Version Info: '" + fileData + "'")
+      else:
+        print("MAIN: Boot version detected: '" + fileData + "'")
 
   # Load certificates
   CAresponse = CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
@@ -215,4 +228,7 @@ if __name__ == "__main__":
   print()
 
   # app.config['SERVER_NAME'] = 'prakhar.com:' + os.environ['RuntimePort']
-  app.run(host='0.0.0.0', debug=False)
+  app.run(host='0.0.0.0', debug=False, port=int(os.environ['RuntimePort']))
+
+if __name__ == "__main__":
+  bootFunction()
