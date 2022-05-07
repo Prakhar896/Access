@@ -47,7 +47,7 @@ The entire system unanimously acts as a complete backend and frontend system. On
 
 # What This Means to Me
 
-Access is a project that I spent hours on because I really liked developing web servers. After my [AWS Combustifier Project](https://prakhar896.github.io/Access), I wanted to continue to use the Python and Flask skills I learnt to make soemthing bigger and better.
+Access is a project that I spent hours on because I really liked developing web servers. After my [AWS Combustifier Project](https://prakhar896.github.io/Combustifier), I wanted to continue to use the Python and Flask skills I learnt to make soemthing bigger and better.
 
 Every year I always challenge myself to make something bigger than before and this year Access broke my record number of code files. This project indeed means a lot to me as it actually has really useful real-world applications.
 
