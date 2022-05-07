@@ -16,7 +16,9 @@ Link not working? Copy this into your browser's address bar: https://access-1.dr
 
 Looking to get your own copy of the system? Simply [click here to get your download started!](http://gg.gg/AccessDownload)
 
-**Table Of Contents**
+---
+
+# Table of Contents
 
 - [The Origins](#the-origins)
 - [About The System](#about-the-system)
