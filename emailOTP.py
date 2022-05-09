@@ -81,7 +81,11 @@ def sendOTP():
 
     numbers = [str(i) for i in range(10)]
     otp = ''.join(random.choice(numbers) for i in range(6))
-    sendEmailWithOTP(email, otp)
+
+    if os.environ['GitpodEnvironment'] != 'True':
+        sendEmailWithOTP(email, otp)
+    else:
+        print("OTP: Skipping OTP email due to Gitpod Environment...")
 
     validOTPCodes[email] = str(otp)
     json.dump(validOTPCodes, open('validOTPCodes.txt', 'w'))
