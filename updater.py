@@ -5,6 +5,8 @@ if check != 'y':
     print("Exiting...")
     sys.exit(1)
 
+targetedVersion = input("What is your target Access Version Number (for e.g, '1.0'): ")
+
 ghUsername = "Prakhar896" # input("Enter the github username: ")
 ghRepo = "Access" # input("Enter the github repository: ")
 
@@ -35,12 +37,13 @@ print()
 for root, dirs, files in os.walk(os.path.join(os.getcwd(), ghRepo)):
     try:
         for name in files:
-            shutil.move(os.path.join(os.getcwd(), ghRepo, name), os.getcwd())
+            if name != 'updater.py':
+                shutil.move(os.path.join(os.getcwd(), ghRepo, name), os.getcwd())
         for name in dirs:
             if os.path.isdir(os.path.join(os.getcwd(), ghRepo, name)):
                 shutil.move(os.path.join(os.getcwd(), ghRepo, name), os.getcwd())
-    except:
-        print("Error moving files and folders")
+    except Exception as e:
+        print("Error moving files and folders:", e)
 
 time.sleep(2)
 
@@ -54,4 +57,18 @@ print()
 
 # Show sucesss
 print("\nSuccessfully updated to latest commit of repository!")
-print("To use the version you want, use the comamand 'git checkout <version tag, for e.g 1.0>")
+
+print()
+print("Attempting to switch to targeted version...")
+time.sleep(2)
+print()
+try:
+    os.system("git checkout " + targetedVersion)
+    print()
+    print("Switched to version successfully! (If the above output does not show a successful switch, you will have to manually use the 'git checkout <version tag>' command)")
+    print("Finished operations.")
+except Exception as e:
+    print("Error in switching to target version:", e)
+    print("To use the version you want, use the comamand 'git checkout <version tag, for e.g 1.0>")
+    print("Finished operations.")
+
