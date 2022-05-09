@@ -133,7 +133,8 @@ elif choice == 2:
             'accessIdentities.txt',
             'analyticsData.txt',
             'certificates.txt',
-            'validOTPCodes.txt'
+            'validOTPCodes.txt',
+            'authorisation.txt'
         ]
 
         errorsPresent = False
