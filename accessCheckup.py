@@ -90,7 +90,8 @@ rootFolderEssentialFiles = [
     'main.py',
     'models.py',
     'portal.py',
-    'admin.py'
+    'admin.py',
+    'updater.py'
 ]
 
 ### Root folder essential files check
@@ -136,7 +137,8 @@ templateFoldersAndItsFiles = {
         'error.html',
         'loginIdentity.html',
         'logout.html',
-        'unauthorised.html'
+        'unauthorised.html',
+        'version.html'
     ]
 }
 
@@ -277,7 +279,7 @@ else:
         result.raise_for_status()
         with open('version.txt', 'r') as f:
             fileContent = f.read()
-            parsedText = result.text[3:-4]
+            parsedText = result.text.split('>')[1].split('</p')[0]
             if fileContent != parsedText:
                 critical_issues.append("VERY CRITICAL ISSUE: This Access System's version is outdated. Current system version: {}, Latest System Version: {}. Please update the system for the best performance. Please refer to the update guide in the Access Startup menu to update the system while still retaining all data.".format(fileContent, parsedText))
     except Exception as e:

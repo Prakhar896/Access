@@ -112,6 +112,17 @@ def processError():
   else:
     return render_template('error.html', error=request.args['error'])
 
+@app.route('/version')
+def version():
+  num = 'Error in reading version data.'
+  try:
+    with open('version.txt', 'r') as f:
+      num = f.read()
+  except Exception as e:
+    print("MAIN: Error in reading version data from version.txt file when request was made to /version endpoint. Error:", e)
+
+  return render_template('version.html', versionNum=num)
+
 # API
 from api import *
 
