@@ -293,39 +293,19 @@ elif choice == 4:
     print("STARTUP: Access Startup will now close.")
 elif choice == 5:
     print("""
-
-Welcome to the Access Startup Update Guide! This guide will walk you through on how you can manually update the system. There are three main steps to the update procedure:
-
-    1) Move data files and folders out into a temporary folder
-
-        If any of the following files/folders are present in your current system folder, move them out to any temporary folder on your system:
-            - AccessFolders (folder)
-            - analyticsReports (folder)
-            - .env (file)
-            - accessIdentities.txt (file)
-            - analyticsData.txt (file)
-            - authorisation.txt (file)
-            - certificates.txt (file)
-            - validOTPCodes.txt (file)
     
-    2) Obtain a copy of the latest version of Access
+    Welcome to the Access System update guide! Updating Access is easy peasy with the built-in Access Updater service (aka the 'updater.py' file).
 
-        First, go to the GitHub Repository (https://github.com/Prakhar896/Access) and click on the latest version release under the "Releases" section on the right.
-        The version number should be higher than the current system version you have which is "{}" 
-        Remember this version number, you will need it later.
+    Before running the file, you will need to know the latest Access Version Number. Do this by running Access CheckUp; if your system is truly out-of-date,
+    you should see a critical issue pop up in the CheckUp summary report. The report should have the latest version number in it. Remember this, you will need it.
 
-        If you would like to get a new and fresh copy of Access, run "git clone https://github.com/Prakhar896/Access" in your command line in the directory
-        where you want to place the system.
-        Then, you will have to run the command "git checkout <VERSION NUMBER HERE>" where you replace <VERSION NUMBER HERE> with the version you saw earlier.
+    Next, simply run the 'updater.py' python script using your command line with Python3, type 'y' (for yes), then type in the version number with the letter 'v' preceding it,
+    like so: 'v1.0' (if the number is 1.0).
 
-        If not, when you first got this system, a git repository folder came with it so you can actually pull the new changes via the command line command "git pull".
-        Then, you will have to run the command "git checkout v<VERSION NUMBER HERE>" where you replace <VERSION NUMBER HERE> with the version you saw earlier.
-        For example, "git checkout v1.0".
-    
-    3) Move data files and folders back to the system folder
+    Then, you should see Updater do its thing while it clears all old files, brings in the new files, switches to the targeted version of Access, and all the while keeps essential data
+    files in the system, so that you do not lose any previously recorded data.
 
-        This step is pretty simple. Simply move all the folders and files you moved out earlier back into the new updated system's folder and run Access CheckUp to ensure
-        that everything is alright. Then boot up Access and you are good to go with a freshly updated system!
+    And that's it! Simply, right!
     
     That is the end of this user guide.
     Startup will now close.

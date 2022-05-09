@@ -139,10 +139,11 @@ After doing this, you are ready to boot up Access. In the [Access Startup menu](
 
 # Updating the System
 
-Run Access CheckUp to see if the system is on the latest version. If not, a critical issue should be outputted in the end. In the event this happens, you can update the system by following the 3 easy steps guided in the System Update Guide in the [Access Startup menu](#access-startup).
+Run Access CheckUp to see if the system is on the latest version. If not, a critical issue should be outputted in the end. In the event this happens, you can update the system using the Access Updater Service (aka the `updater.py` file), which makes it ridiculously easy to update. The System Update Guide in the [Access Startup menu](#access-startup) contains a brief
+description on how to use it.
 
-![Sample Update Guide for System on Version 1.0](/docs/img/sampleUpdateGuide.png)
+![Sample Update Guide for System on Version 1.0](/docs/img/newSystemUpdateGuide.png)
 
-> ABOVE: Sample update guide that would be outputted for a system that is on Version `1.0`.
+> ABOVE: Sample update guide that would be outputted.
 
 © 2022 Prakhar Trivedi
