@@ -5,7 +5,7 @@ if check != 'y':
     print("Exiting...")
     sys.exit(1)
 
-targetedVersion = input("What is your target Access Version Number (for e.g, '1.0'): ")
+targetedVersion = input("What is your target Access Version Number (for e.g, 'v1.0'): ")
 
 ghUsername = "Prakhar896" # input("Enter the github username: ")
 ghRepo = "Access" # input("Enter the github repository: ")
@@ -16,10 +16,10 @@ print("Deleting all irrelevant files...")
 # Delete all files and folders in the current directory
 for root, dirs, files in os.walk(os.getcwd(), topdown=False):
     for name in files:
-        if name != "updater.py" and (name not in ['analyticsData.txt', 'certificates.txt', 'accessIdentities.txt', 'validOTPCodes.txt', '.env']) and (not name.startswith('aa-report')):
+        if name != "updater.py" and (name not in ['analyticsData.txt', 'certificates.txt', 'accessIdentities.txt', 'validOTPCodes.txt', '.env']) and (not name.startswith('aa-report')) and ("AccessFolders" not in root):
             os.remove(os.path.join(root, name))
     for name in dirs:
-        if name != 'analyticsReports' and name != 'AccessFolders':
+        if name != 'analyticsReports' and name != 'AccessFolders' and ("AccessFolders" not in root):
             os.rmdir(os.path.join(root, name))
 
 time.sleep(2)
@@ -53,7 +53,6 @@ print("Deleting the repository folder...")
 print()
 shutil.rmtree(os.path.join(os.getcwd(), ghRepo))
 time.sleep(2)
-print()
 
 # Show sucesss
 print("\nSuccessfully updated to latest commit of repository!")
@@ -71,6 +70,6 @@ try:
     print("Finished operations.")
 except Exception as e:
     print("Error in switching to target version:", e)
-    print("To use the version you want, use the comamand 'git checkout <version tag, for e.g 1.0>")
+    print("To use the version you want, use the comamand 'git checkout <version tag, for e.g v1.0>")
     print("Finished operations.")
 
