@@ -185,7 +185,7 @@ elif choice == 2:
             
             if wouldLikeToSet == "y":
                 print()
-                code = getpass("Enter a booth authorisation code of your choice: ")
+                code = getpass("Enter a boot authorisation code of your choice: ")
                 print()
                 print("Setting code...")
                 print()
