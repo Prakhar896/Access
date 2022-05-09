@@ -1,6 +1,6 @@
 import os, shutil, sys, json, time
 
-check = input("Are you very sure that you would like to update? This service will destroy all current non-data files and bring in the new data files, thus retaining data. (y/n): ")
+check = input("Are you very sure that you would like to update? All files except for data files (current data will not be deleted) will be destroyed and new files would be pulled from Access Servers. (y/n): ")
 if check != 'y':
     print("Exiting...")
     sys.exit(1)
