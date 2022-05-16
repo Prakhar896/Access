@@ -306,7 +306,7 @@ elif choice == 5:
     Then, you should see Updater do its thing while it clears all old files, brings in the new files, switches to the targeted version of Access, and all the while keeps essential data
     files in the system, so that you do not lose any previously recorded data.
 
-    And that's it! Simply, right!
+    And that's it! Simple, right!
     
     That is the end of this user guide.
     Startup will now close.
