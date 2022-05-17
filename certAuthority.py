@@ -2,6 +2,7 @@
 from operator import index
 import random, base64
 import datetime, time, json, os, shutil, subprocess
+from tkinter import N
 
 class CertAuthority:
     registeredCertificates = []
@@ -75,7 +76,7 @@ class CertAuthority:
                 return CAError.revokedCertAndValid
             else:
                 return CAError.revokedCertNotValid
-                    
+
 
     @staticmethod
     def issueCertificate(user):
@@ -145,6 +146,41 @@ class CertAuthority:
         print("CA: Expired {} certificates.".format(expiredCounter))
 
     @staticmethod
+    def renewCertificate(certID):
+        certificate = CertAuthority.getCertificate(certID)
+        if certificate == None:
+            return CAError.noSuchCertFound
+        
+        if certificate['revoked'] != True:
+            return CAError.certIsNotRevoked
+        elif certificate['user'] not in CertAuthority.revokedCertificates:
+            print(CAError.certHasRevokedDetailButNotInRevokedCertificates)
+            CertAuthority.revokeCertificate(certificate['user'], certificate['certID'], certificate['revocationReason'])
+
+        # Renew certificate process
+        user = certificate.pop('user')
+
+        for username in CertAuthority.revokedCertificates.copy():
+            if username == user and CertAuthority.revokedCertificates[user]['certID'] == certificate['certID']:
+                CertAuthority.revokedCertificates.pop(user)
+
+        ## Update certificate details
+        expiryDate = datetime.datetime.now() + datetime.timedelta(days=30)
+        expiryDateString = expiryDate.strftime('%Y-%m-%d %H:%M:%S')
+        certificate['expiryDate'] = expiryDateString
+
+        certificate['revoked'] = False
+        certificate['revocationReason'] = None
+        certificate['revocationDate'] = None
+        certificate['renewalDate'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        ## put certificate in registered certificates
+        CertAuthority.registeredCertificates[user] = certificate
+
+        return "Successfully renewed certificate with ID: " + certificate['certID']
+
+
+    @staticmethod
     def loadCertificatesFromFile(fileObject):
         try:
             allCerts = json.load(fileObject)
@@ -180,9 +216,12 @@ class CAError(Exception):
     validCertNotValid = "This certificate is registered but it is not signed by this Certificate Authority."
     loadingCertsFailed = "There was an error in loading the certificates from the file provided."
     savingCertsFailed = "There was an error in saving certificate data to the file provided."
+    noSuchCertFound = "No such certificate was found associated with that Certificate ID."
+    certIsNotRevoked = "The certificate is not revoked. Only revoked certificates can be renewed."
+    certHasRevokedDetailButNotInRevokedCertificates = "CAError: The certificate is revoked according to its details but is not in the registered certificates database. Attempting to revoke it before renewing..."
 
 
-    ## SuccessMessage
+    ## Success Message
     validCert = "This certificate is valid and is signed by this Certificate Authority."
 
     @staticmethod
@@ -195,7 +234,10 @@ class CAError(Exception):
             CAError.notFoundAndInvalid,
             CAError.validCertNotValid,
             CAError.loadingCertsFailed,
-            CAError.savingCertsFailed
+            CAError.savingCertsFailed,
+            CAError.noSuchCertFound,
+            CAError.certIsNotRevoked,
+            CAError.certHasRevokedDetailButNotInRevokedCertificates
         ]
         if msg in arrayOfMsgs:
             return True

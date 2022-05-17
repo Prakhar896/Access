@@ -103,14 +103,35 @@ def logout():
 
 @app.route('/security/unauthorised')
 def unauthorizedPage():
-  return render_template('unauthorised.html', message=request.args['error'])
+  return render_template('unauthorised.html', message=request.args['error'], originURL=request.host_url)
 
 @app.route('/security/error')
 def processError():
   if 'error' not in request.args:
-    return render_template('error.html', error=None)
+    return render_template('error.html', error=None, originURL=request.host_url)
   else:
-    return render_template('error.html', error=request.args['error'])
+    return render_template('error.html', error=request.args['error'], originURL=request.host_url)
+
+@app.route('/certManagement/renewal')
+def renewCertificate():
+  if 'certID' not in request.args or 'bootAuthCode' not in request.args:
+    flash('One or more required request arguments were not present.')
+    return redirect(url_for('processError'))
+
+  if request.args['bootAuthCode'] != CertAuthority.decodeFromB64(fileContent('authorisation.txt')):
+    return render_template('unauthorised.html', message='Provided boot authorisation code is incorrect.', originURL=request.host_url)
+
+  response = CertAuthority.renewCertificate(request.args['certID'])
+  if CAError.checkIfErrorMessage(response):
+    flash(response)
+    return redirect(url_for('processError'))
+
+  if response == "Successfully renewed certificate with ID: {}".format(request.args['certID']):
+    CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
+    return "Renewed the certificate successfully."
+  else:
+    flash("Unknown response received from CertAuthority when renewing. Response: {}".format(response))
+    return redirect(url_for('processError'))
 
 @app.route('/version')
 def version():
@@ -237,6 +258,8 @@ def bootFunction():
   print()
   print("Booting Access...")
   print()
+
+  CertAuthority.revokeCertificate('p0706', '58818025301266937285', 'i want to do it')
 
   # app.config['SERVER_NAME'] = 'prakhar.com:' + os.environ['RuntimePort']
   app.run(host='0.0.0.0', debug=False, port=int(os.environ['RuntimePort']))

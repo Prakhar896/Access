@@ -598,7 +598,7 @@ CREDENTIALS ANALYSIS
 -----
 
 Unique Auth Tokens: {}
-Unique Ceritfication Identification Numbers: {}
+Unique Certificate Identification Numbers: {}
 
 EMAILS ANALYSIS
 -----

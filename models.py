@@ -1,5 +1,7 @@
 import json, os, shutil, subprocess, random, datetime
 
+systemWideStringDateFormat = '%Y-%m-%d %H:%M:%S'
+
 def fileContent(fileName):
   with open(fileName, 'r') as f:
     f_content = f.read()

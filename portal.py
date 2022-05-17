@@ -13,21 +13,21 @@ def checkSessionCredentials(certID, authToken):
         if accessIdentities[username]['associatedCertID'] == certID:
             targetCertificate = CertAuthority.getCertificate(certID)
             if targetCertificate == None:
-                return render_template('unauthorised.html', message="No such Access Identity certificate was found.")
+                return render_template('error.html', message="No such Access Identity certificate was found.")
 
             if targetCertificate['revoked'] == True:
-                return render_template('unauthorised.html', message="Your Access Identity's Certificate has been revoked. Reason: {}".format(targetCertificate['revocationReason']))
+                return render_template('unauthorised.html', message="Your Access Identity's Certificate has been revoked. Reason: {}".format(targetCertificate['revocationReason']), originURL=request.host_url)
             
             response = CertAuthority.checkCertificateSecurity(targetCertificate)
             if CAError.checkIfErrorMessage(response):
-                return render_template('unauthorised.html', message=response)
+                return render_template('unauthorised.html', message=response, originURL=request.host_url)
             elif response == CAError.validCert:
                 if 'loggedInAuthToken' in accessIdentities[username] and accessIdentities[username]['loggedInAuthToken'] == authToken:
                     # return render_template('portalHome.html', username=username)
                     return [True, username, targetCertificate]
                 else:
                     return render_template("unauthorised.html", message="Invalid authentication token. Please sign in to your identity first.")
-    return render_template('unauthorised.html', message="Certificate ID provided does not match any Access Identity.")
+    return render_template('unauthorised.html', message="Certificate ID provided does not match any Access Identity.", originURL=request.host_url)
 
 
 @app.route('/portal/session/<certID>/<authToken>/home')
