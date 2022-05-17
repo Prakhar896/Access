@@ -127,6 +127,7 @@ def renewCertificate():
     return redirect(url_for('processError'))
 
   if response == "Successfully renewed certificate with ID: {}".format(request.args['certID']):
+    # Success case
     CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
     return "Renewed the certificate successfully."
   else:
