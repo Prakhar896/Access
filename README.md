@@ -89,7 +89,10 @@ At the top of the system, the Access Startup service (whose code is in [`accessS
 4) Crunching Analytics Data - This option allows the admin to run the data crunching function which will analyse all the usage data collected by the system and will generate a report. This can only occur if `AccessAnalyticsEnabled` was set to `True` in the `.env` file.
 5) System Update Guide - This option will output a chunk of text that will guide the admin with the steps to update the system to a newer version.
 
-![Startup Main Menu](docs/img/startupMainMenu.png)
+
+![Startup Main Menu](docs/img/startupMainMenuUpdated.png)
+
+> ABOVE: A screenshot of the main menu of the Access Startup service
 
 ---
 #### Boot Authorisation Code
