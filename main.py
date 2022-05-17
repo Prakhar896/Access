@@ -260,8 +260,6 @@ def bootFunction():
   print("Booting Access...")
   print()
 
-  CertAuthority.revokeCertificate('p0706', '58818025301266937285', 'i want to do it')
-
   # app.config['SERVER_NAME'] = 'prakhar.com:' + os.environ['RuntimePort']
   app.run(host='0.0.0.0', debug=False, port=int(os.environ['RuntimePort']))
 

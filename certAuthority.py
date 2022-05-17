@@ -153,7 +153,7 @@ class CertAuthority:
         
         if certificate['revoked'] != True:
             return CAError.certIsNotRevoked
-        elif certificate['user'] not in CertAuthority.revokedCertificates:
+        if certificate['user'] not in CertAuthority.revokedCertificates:
             print(CAError.certHasRevokedDetailButNotInRevokedCertificates)
             CertAuthority.revokeCertificate(certificate['user'], certificate['certID'], certificate['revocationReason'])
 
