@@ -114,6 +114,10 @@ def processError():
 
 @app.route('/certManagement/renewal')
 def renewCertificate():
+  if not os.path.isfile(os.path.join(os.getcwd(), 'authorisation.txt')):
+    flash('No boot authorisation code is set in the system. Certificate renewal cannot occur without a boot authorisation code being set.')
+    return redirect(url_for('processError'))
+
   if 'certID' not in request.args or 'bootAuthCode' not in request.args:
     flash('One or more required request arguments were not present.')
     return redirect(url_for('processError'))
