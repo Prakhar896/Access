@@ -2,7 +2,6 @@
 from operator import index
 import random, base64
 import datetime, time, json, os, shutil, subprocess
-from tkinter import N
 
 class CertAuthority:
     registeredCertificates = []
