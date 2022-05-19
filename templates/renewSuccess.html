@@ -1,0 +1,25 @@
+{% extends "baseXNav.html" %}
+
+{% block tabTitle %}Access Certificate Renewal Success{% endblock %}
+{% block head %}
+<style>
+    body {
+        margin-top: 150px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<img src="/assets/accessLogo" alt="logo" width="200" height="57">
+<br>
+<h1>Certificate Renewal Success</h1>
+<br>
+<br>
+<h5>The Access Certificate with the ID '{{ certID }}' was successfully renewed.</h5>
+<br>
+<br>
+<a href="{{ originURL }}"><p>Go back to Access Home</p></a>
+<br>
+<script src="/assets/copyright"></script>
+{% endblock %}

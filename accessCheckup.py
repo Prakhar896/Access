@@ -138,7 +138,8 @@ templateFoldersAndItsFiles = {
         'loginIdentity.html',
         'logout.html',
         'unauthorised.html',
-        'version.html'
+        'version.html',
+        'renewSuccess.html'
     ]
 }
 

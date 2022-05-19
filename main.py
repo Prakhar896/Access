@@ -129,7 +129,7 @@ def renewCertificate():
   if response == "Successfully renewed certificate with ID: {}".format(request.args['certID']):
     # Success case
     CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
-    return "Renewed the certificate successfully."
+    return render_template('renewSuccess.html', originURL=request.host_url, certID=request.args['certID'])
   else:
     flash("Unknown response received from CertAuthority when renewing. Response: {}".format(response))
     return redirect(url_for('processError'))
