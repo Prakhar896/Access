@@ -288,7 +288,22 @@ def deleteFileFromFolder():
     if AFMError.checkIfErrorMessage(response):
         return "ERROR: {}".format(response)
     elif response == "AFM: Successfully deleted the file.":
+        ## Update Access Identity
+        targetIdentity = {}
+        for username in accessIdentities:
+            if username == request.json['username']:
+                targetIdentity = accessIdentities[username]
 
+        if "AF_and_files" not in targetIdentity:
+            targetIdentity["AF_and_files"] = {}
+
+        if request.json['filename'] in targetIdentity["AF_and_files"]:
+            targetIdentity["AF_and_files"].pop(request.json['filename'])
+        else:
+            print("API: When updating Access Identity with file deletion, file's name was not found in the identity. Recovering and continuing...")
+
+        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+        
         ## Update Access Analytics
         response = AccessAnalytics.newFileDeletion()
         if isinstance(response, str):
