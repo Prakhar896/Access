@@ -26,7 +26,7 @@ def checkSessionCredentials(certID, authToken):
                     # return render_template('portalHome.html', username=username)
                     return [True, username, targetCertificate]
                 else:
-                    return render_template("unauthorised.html", message="Invalid authentication token. Please sign in to your identity first.")
+                    return render_template("unauthorised.html", message="Invalid authentication token. Please sign in to your identity first.", originURL=request.host_url)
     return render_template('unauthorised.html', message="Certificate ID provided does not match any Access Identity.", originURL=request.host_url)
 
 
@@ -80,7 +80,7 @@ def portalFolder(certID, authToken):
                 
                 if "AF_and_files" not in targetIdentity:
                     targetIdentity["AF_and_files"] = {}
-                    
+
                     accessIdentities[check[1]]["AF_and_files"] = {}
                     json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
