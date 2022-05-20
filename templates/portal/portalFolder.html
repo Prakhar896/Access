@@ -79,8 +79,8 @@
             {% for filename in filesData %}
             <tr>
                 <th scope="row">{{ loop.index }}</th>
-                <td><a href="folder/uploads/{{ file }}"><p>{{ filename.split('.')[0] }}</p></a></td>
-                <td>{{ filename.split('.')[1] }}</td>
+                <td><a href="folder/uploads/{{ filename }}"><p>{{ '.'.join(filename.split('.')[0:filename.split('.')|length - 1]) }}</p></a></td>
+                <td>{{ filename.split('.')[filename.split('.')|length - 1] }}</td>
                 <td>{{ filesData[filename] }}</td>
             </tr>
             {% endfor %}

@@ -42,9 +42,9 @@
             <tr>
                 <th scope="row">{{ loop.index }}</th>
                 <td><a href="deleteFile?filename={{ file }}">
-                        <p>{{ file.split('.')[0] }}</p>
+                        <p>{{ '.'.join(file.split('.')[0:file.split('.')|length - 1]) }}</p>
                     </a></td>
-                <td>{{ file.split('.')[1] }}</td>
+                <td>{{ file.split('.')[file.split('.')|length - 1] }}</td>
             </tr>
             {% endfor %}
         </tbody>
