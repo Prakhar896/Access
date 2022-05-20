@@ -44,6 +44,20 @@ def makeAnIdentity():
         if request.json['otpCode'] != validOTPCodes[request.json['email']]:
             return "UERROR: OTP code is incorrect."
 
+        # Check if password is secure enough
+        specialCharacters = list('!@#$%^&*()_-+')
+
+        hasSpecialChar = False
+        hasNumericDigit = False
+        for char in request.json['password']:
+            if char.isdigit():
+                hasNumericDigit = True
+            elif char in specialCharacters:
+                hasSpecialChar = True
+
+        if not (hasSpecialChar and hasNumericDigit):
+            return "UERROR: Password must have at least 1 special character and 1 numeric digit."
+
         validOTPCodes.pop(request.json['email'])
         json.dump(validOTPCodes, open('validOTPCodes.txt', 'w'))
 
@@ -303,7 +317,7 @@ def deleteFileFromFolder():
             print("API: When updating Access Identity with file deletion, file's name was not found in the identity. Recovering and continuing...")
 
         json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
-        
+
         ## Update Access Analytics
         response = AccessAnalytics.newFileDeletion()
         if isinstance(response, str):
