@@ -95,6 +95,19 @@ def newUpload(certID, authToken):
                         app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'AccessFolders', check[1])
                         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
+                        ## Update Access Identity
+                        uploadDatetime = datetime.datetime.now().strftime(systemWideStringDateFormat)
+                        targetIdentity = {}
+                        for username in accessIdentities:
+                            if username == check[1]:
+                                targetIdentity = accessIdentities[username]
+
+                        if "AF_and_files" not in targetIdentity:
+                            targetIdentity["AF_and_files"] = {}
+                        targetIdentity["AF_and_files"][filename] = uploadDatetime
+                        accessIdentities[username] = targetIdentity
+                        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+
                         ## Update Access Analytics
                         response = AccessAnalytics.newFileUpload()
                         if isinstance(response, str):
