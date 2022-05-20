@@ -55,7 +55,7 @@
     <p>Here, you can upload files to your folder, delete them or anything else.</p>
     <br>
     <br>
-    {% if files != None %}
+    {% if filesData != None %}
     {% if slotsAvailable == 0 %}
     <div id="actionButtons">
         <a href="#" id="deleteHREF"><button type="button" class="btn btn-outline-danger">Delete File</button></a>
@@ -72,14 +72,16 @@
                 <th scope="col">#</th>
                 <th scope="col">File Name</th>
                 <th scope="col">File Extension</th>
+                <th scope="col">Upload Timestamp</th>
             </tr>
         </thead>
         <tbody>
-            {% for file in files %}
+            {% for filename in filesData %}
             <tr>
                 <th scope="row">{{ loop.index }}</th>
-                <td><a href="folder/uploads/{{ file }}"><p>{{ file.split('.')[0] }}</p></a></td>
-                <td>{{ file.split('.')[1] }}</td>
+                <td><a href="folder/uploads/{{ file }}"><p>{{ filename.split('.')[0] }}</p></a></td>
+                <td>{{ filename.split('.')[1] }}</td>
+                <td>{{ filesData[filename] }}</td>
             </tr>
             {% endfor %}
         </tbody>

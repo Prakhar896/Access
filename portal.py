@@ -58,15 +58,40 @@ def portalHome(certID, authToken):
 
 @app.route('/portal/session/<certID>/<authToken>/folder')
 def portalFolder(certID, authToken):
+    global accessIdentities
+
     check = checkSessionCredentials(certID, authToken)
     if isinstance(check, list) and check[0]:
         if AFManager.checkIfFolderIsRegistered(username=check[1]):
             filenames = AFManager.getFilenames(check[1])
             if filenames == []:
-                return render_template('portal/portalFolder.html', slotsAvailable=3, files=None, username=check[1], url=request.url)
+                return render_template('portal/portalFolder.html', slotsAvailable=3, filesData=None, username=check[1], url=request.url)
             else:
                 slotsAvailable = 3 - len(filenames)
-                return render_template('portal/portalFolder.html', slotsAvailable=slotsAvailable, files=filenames, url=request.url, username=check[1])
+
+                ## Collate files data, aka get filename plus its upload timestamp
+                collatedFilesData = {}
+                
+                ### Get target identity
+                targetIdentity = {}
+                for username in accessIdentities:
+                    if username == check[1]:
+                        targetIdentity = accessIdentities[username]
+                
+                if "AF_and_files" not in targetIdentity:
+                    targetIdentity["AF_and_files"] = {}
+                    
+                    accessIdentities[check[1]]["AF_and_files"] = {}
+                    json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+
+                for filename in filenames:
+                    if filename not in targetIdentity["AF_and_files"]:
+                        collatedFilesData[filename] = "ERROR: Timestamp not found."
+                    else:
+                        collatedFilesData[filename] = targetIdentity["AF_and_files"][filename]
+
+                
+                return render_template('portal/portalFolder.html', slotsAvailable=slotsAvailable, filesData=collatedFilesData, url=request.url, username=check[1])
         else:
             return render_template("portal/folderRegistration.html", username=check[1], fileExtensions=prepFileExtensions)
     else:
