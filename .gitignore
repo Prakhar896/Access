@@ -11,3 +11,4 @@ analyticsData.txt
 analyticsReports/
 authorisation.txt
 .DS_Store
+venv/
