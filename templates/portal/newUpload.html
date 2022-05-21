@@ -18,6 +18,13 @@
     #uploadForm {
         align-content: center;
     }
+
+    #statusLabel {
+        font-size: 18px;
+        font-weight: bold;
+        color: #000000;
+        visibility: hidden;
+    }
 </style>
 {% endblock %}
 
@@ -32,12 +39,13 @@
     <p>Allowed file extensions: {{ fileExtensions }}</p>
     <p>File slots available: {{ slotsAvailable }}</p>
     <br>
+    <p id="statusLabel">Processing...</p>
     <br>
     <form method=post enctype=multipart/form-data id="uploadForm">
         <input type=file name=file>
         <br>
         <br>
-        <input type=submit value=Upload>
+        <input type=submit value=Upload onclick="startProcessing()">
     </form>
     <br>
     <br>
@@ -55,6 +63,14 @@
         splitArray.pop(9)
         splitArray = splitArray.join('/')
         window.location.href = splitArray
+    }
+
+    function startProcessing() {
+        document.getElementById("statusLabel").style.visibility = "visible"
+
+        setTimeout(() => {
+            document.getElementById("statusLabel").style.visibility = "hidden"
+        }, 10000)
     }
 </script>
 {% endblock %}
