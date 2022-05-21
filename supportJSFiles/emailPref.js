@@ -22,18 +22,18 @@ function updateUI(prefsData) {
     // Define HTML variables
     const checkedSwitchHTML = `
 <div class="form-check form-switch">
-    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked onchange="updateAPI()">
+    <input class="form-check-input" type="checkbox" role="switch" id="{{}}" checked onchange="updateAPI()">
     <label class="form-check-label" for="flexSwitchCheckChecked">{{}}</label>
 </div>`
     const uncheckedSwitchHTML = `
 <div class="form-check form-switch">
-    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+    <input class="form-check-input" type="checkbox" role="switch" id="{{}}" onchange="updateAPI()">
     <label class="form-check-label" for="flexSwitchCheckDefault">{{}}</label>
 </div>`
 
     var listingDivHTML = ``
 
-    for (preference in data) {
+    for (var preference in data) {
         var readableText = ""
         if (preference == "fileDeletionNotifs") {
             readableText = "File Deletion Emails (Emails are sent whenever a file is deleted from your Access Folder)"
@@ -43,9 +43,9 @@ function updateUI(prefsData) {
             readableText = "Sign-in Emails (Emails for whenever you login to your Access Identity)"
         }
         if (data[preference] == true) {
-            listingDivHTML += "\n<br>\n" + checkedSwitchHTML.replace("{{}}", readableText)
+            listingDivHTML += "\n<br>\n" + checkedSwitchHTML.replace("{{}}", preference).replace("{{}}", readableText)
         } else {
-            listingDivHTML += "\n<br>\n" + uncheckedSwitchHTML.replace("{{}}", readableText)
+            listingDivHTML += "\n<br>\n" + uncheckedSwitchHTML.replace("{{}}", preference).replace("{{}}", readableText)
         }
     }
 
@@ -101,3 +101,18 @@ axios({
     alert("An error occurred in connecting to Access Servers. Please try again. Check logs for more information.")
     statusLabel.innerText = "An error occurred. Refresh this site."
 })
+
+function updateAPI() {
+    var updatedSwitchID = ''
+    var updatedSwitchNewStatus = false
+    for (var preference in currentPreferencesState) {
+        const targetSwitch = document.getElementById(preference)
+        if (targetSwitch.checked != currentPreferencesState[preference]) {
+            updatedSwitchID = preference
+            updatedSwitchNewStatus = targetSwitch.checked
+        }
+    }
+
+    // Send user preference update request to API
+
+}
