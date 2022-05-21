@@ -151,7 +151,8 @@ def loginIdentity():
         )
 
     ## SEND EMAIL
-    Emailer.sendEmail(targetIdentity['email'], "Access Identity Login Alert", text, html)
+    if 'settings' in targetIdentity and 'emailPref' in targetIdentity['settings'] and targetIdentity['settings']['emailPref']['loginNotifs'] == True:
+        Emailer.sendEmail(targetIdentity['email'], "Access Identity Login Alert", text, html)
 
     ## Update Access Analytics with sign in metric
     response = AccessAnalytics.newSignin()
@@ -165,16 +166,17 @@ def loginIdentity():
         return "SUCCESS: Identity logged in. Auth Session Data: {}-{}".format(accessIdentities[targetIdentity['username']]['loggedInAuthToken'], targetIdentity['associatedCertID'])
 
     ## Update Access Analytics
-    response = AccessAnalytics.newEmail(targetIdentity['email'], text, "Access Identity Login Alert", targetIdentity['username'])
-    if isinstance(response, str):
-        if response.startswith("AAError:"):
-            print("API: There was an error in updating Analytics with new email data; Response: {}".format(response))
+    if 'settings' in targetIdentity and 'emailPref' in targetIdentity['settings'] and targetIdentity['settings']['emailPref']['loginNotifs'] == True:
+        response = AccessAnalytics.newEmail(targetIdentity['email'], text, "Access Identity Login Alert", targetIdentity['username'])
+        if isinstance(response, str):
+            if response.startswith("AAError:"):
+                print("API: There was an error in updating Analytics with new email data; Response: {}".format(response))
+            else:
+                print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
+        elif isinstance(response, bool) and response == True:
+            print("API: Successfully updated Analytics with new email data.")
         else:
             print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
-    elif isinstance(response, bool) and response == True:
-        print("API: Successfully updated Analytics with new email data.")
-    else:
-        print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
 
     return "SUCCESS: Identity logged in. Auth Session Data: {}-{}".format(accessIdentities[targetIdentity['username']]['loggedInAuthToken'], targetIdentity['associatedCertID'])
     
