@@ -19,7 +19,7 @@ for root, dirs, files in os.walk(os.getcwd(), topdown=False):
         if name != "updater.py" and (name not in ['analyticsData.txt', 'certificates.txt', 'accessIdentities.txt', 'validOTPCodes.txt', '.env', 'authorisation.txt']) and (not name.startswith('aa-report')) and ("AccessFolders" not in root):
             os.remove(os.path.join(root, name))
     for name in dirs:
-        if name != 'analyticsReports' and name != 'AccessFolders' and ("AccessFolders" not in root) and (name not in ['venv', 'virt']):
+        if name != 'analyticsReports' and name != 'AccessFolders' and ("AccessFolders" not in root):
             os.rmdir(os.path.join(root, name))
 
 time.sleep(2)
@@ -67,9 +67,18 @@ try:
     print("------ END OF GIT OUTPUT")
     print()
     print("Switched to version successfully! (If the above output does not show a successful switch, you will have to manually use the 'git checkout <version tag>' command)")
-    print("Finished operations.")
 except Exception as e:
     print("Error in switching to target version:", e)
     print("To use the version you want, use the comamand 'git checkout <version tag, for e.g v1.0>")
-    print("Finished operations.")
 
+print()
+print("Updating Updater service itself...")
+print()
+time.sleep(2)
+
+print("----- GIT UPDATER SERVICE UPDATE OUTPUT")
+os.system("git checkout updater.py")
+print("------ END OF GIT OUTPUT")
+
+print()
+print("Finished operations!")
