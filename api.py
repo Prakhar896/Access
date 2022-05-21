@@ -377,6 +377,14 @@ def fetchUserPreferences():
         }
         json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
+        targetIdentity['settings'] = {
+            "emailPref": {
+                "loginNotifs": True,
+                "fileUploadNotifs": False,
+                "fileDeletionNotifs": False
+            }
+        }
+
     if request.json['resourceReq'] == 'emailPrefs' and ('emailPref' not in targetIdentity['settings']):
         accessIdentities[targetIdentity['username']]['settings'] = {
             "emailPref": {
@@ -386,6 +394,14 @@ def fetchUserPreferences():
             }
         }
         json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+
+        targetIdentity['settings'] = {
+            "emailPref": {
+                "loginNotifs": True,
+                "fileUploadNotifs": False,
+                "fileDeletionNotifs": False
+            }
+        }
 
     # Response to request
     if request.json['resourceReq'] == 'emailPrefs':
