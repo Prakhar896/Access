@@ -355,7 +355,7 @@ def fetchUserPreferences():
     targetIdentity = {}
     for username in accessIdentities:
         if accessIdentities[username]['associatedCertID'] == request.json['certID']:
-            targetIdentity = accessIdentities[username]
+            targetIdentity = accessIdentities[username].copy()
             targetIdentity['username'] = username
     
     if targetIdentity == {}:
@@ -405,7 +405,7 @@ def fetchUserPreferences():
 
     # Response to request
     if request.json['resourceReq'] == 'emailPrefs':
-        responseObject = targetIdentity['settings']['emailPref']
+        responseObject = targetIdentity['settings']['emailPref'].copy()
         responseObject['responseStatus'] = "SUCCESS"
         return responseObject
     elif request.json['resourceReq'] == 'certData':
@@ -414,4 +414,89 @@ def fetchUserPreferences():
     elif request.json['resourceReq'] == 'identityInfo':
         ## TODO
         pass
+
+@app.route('/api/updateUserPreference', methods=['POST'])
+def updateUserPreference():
+    global accessIdentities
+
+    # Headers check
+    check = headersCheck(headers=request.headers)
+    if check != True:
+        return check
+
+    # Body check
+    if 'certID' not in request.json:
+        return "ERROR: Field 'certID' is not present in request body."
+    
+    targetIdentity = {}
+    for username in accessIdentities:
+        if accessIdentities[username]['associatedCertID'] == request.json['certID']:
+            targetIdentity = accessIdentities[username].copy()
+            targetIdentity['username'] = username
+    
+    if targetIdentity == {}:
+        return "ERROR: No such Access Identity is associated with that certificate ID."
+    
+    if 'resourceReq' not in request.json:
+        return "ERROR: Field 'resourceReq' is not present in request body."
+    if request.json['resourceReq'] not in ['emailPrefs', 'certData', 'identityInfo']:
+        return "ERROR: Invalid resource was requested."
+
+    if 'preferenceName' not in request.json:
+        return "ERROR: Field 'preferenceName' not present in request body."
+
+    if 'newValue' not in request.json:
+        return "ERROR: Field 'newValue' not present in request body."
+    
+    ## Backwards compatibility (setting settings parameter to default if it wasnt there)
+    if 'settings' not in targetIdentity:
+        accessIdentities[targetIdentity['username']]['settings'] = {
+            "emailPref": {
+                "loginNotifs": True,
+                "fileUploadNotifs": False,
+                "fileDeletionNotifs": False
+            }
+        }
+        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+
+        targetIdentity['settings'] = {
+            "emailPref": {
+                "loginNotifs": True,
+                "fileUploadNotifs": False,
+                "fileDeletionNotifs": False
+            }
+        }
+
+    if request.json['resourceReq'] == 'emailPrefs' and ('emailPref' not in targetIdentity['settings']):
+        accessIdentities[targetIdentity['username']]['settings'] = {
+            "emailPref": {
+                "loginNotifs": True,
+                "fileUploadNotifs": False,
+                "fileDeletionNotifs": False
+            }
+        }
+        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+
+        targetIdentity['settings'] = {
+            "emailPref": {
+                "loginNotifs": True,
+                "fileUploadNotifs": False,
+                "fileDeletionNotifs": False
+            }
+        }
+    
+    ## Update preference and respond
+    if request.json['resourceReq'] == "emailPrefs":
+        if request.json["preferenceName"] not in ['loginNotifs', 'fileUploadNotifs', 'fileDeletionNotifs']:
+            return "ERROR: Given preference name for that settings resource does not exist."
+
+        accessIdentities[targetIdentity['username']]['settings']['emailPref'][request.json['preferenceName']] = request.json['newValue']
+        targetIdentity['settings']['emailPref'][request.json['preferenceName']] = request.json['newValue']
+
+        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+
+        responseObject = targetIdentity['settings']['emailPref'].copy()
+        responseObject['responseStatus'] = "SUCCESS"
+
+        return responseObject
     

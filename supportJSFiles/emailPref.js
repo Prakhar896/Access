@@ -114,5 +114,8 @@ function updateAPI() {
     }
 
     // Send user preference update request to API
+    
 
+    // Update local tracking variable
+    currentPreferencesState[updatedSwitchID] = updatedSwitchNewStatus
 }

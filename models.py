@@ -18,7 +18,7 @@ def obtainTargetIdentity(email, accessIdentities):
   targetIdentity = {}
   for username in accessIdentities:
     if accessIdentities[username]['email'] == email:
-      targetIdentity = accessIdentities[username]
+      targetIdentity = accessIdentities[username].copy()
       targetIdentity["username"] = username
   return targetIdentity
 
