@@ -336,6 +336,37 @@ def deleteFileFromFolder():
             else:
                 print("API: Unexpected response when attempting to update Analytics with new file deletion; Response: {}".format(response))
 
+        ## Send Email
+
+        text = """
+        Hi {},
+
+        This email is a notification that you recently deleted a file with the name: '{}'.
+
+        If this was you, please ignore this email. If it was not, please login to the Access Portal immediately and change your password.
+
+        THIS IS AN AUTOMATED MESSAGE DELIVERED TO YOU BY THE ACCESS PORTAL. DO NOT REPLY TO THIS EMAIL.</p>
+        Copyright 2022 Prakhar Trivedi
+        """.format(request.json['username'], request.json['filename'])
+
+        html = render_template('emails/fileDeleted.html', username=request.json['username'], filename=request.json['filename'])
+
+        ### Send the email itself
+        if 'settings' in targetIdentity and 'emailPref' in targetIdentity['settings'] and targetIdentity['settings']['emailPref']['fileDeletionNotifs'] == True:
+            Emailer.sendEmail(targetIdentity['email'], "File Deletion | Access Portal", text, html)
+
+            ## Update Access Analytics
+            response = AccessAnalytics.newEmail(accessIdentities[request.json['username']]['email'], text, "File Deletion | Access Portal", request.json['username'])
+            if isinstance(response, str):
+                if response.startswith("AAError:"):
+                    print("API: There was an error in updating Analytics with new email data; Response: {}".format(response))
+                else:
+                    print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
+            elif isinstance(response, bool) and response == True:
+                print("API: Successfully updated Analytics with new email data.")
+            else:
+                print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
+
         return "SUCCESS: File {} belonging to user {} was successfully deleted.".format(request.json['filename'], request.json['username'])
     else:
         print("API: Unidentified response received from AFManager when executing delete file function. Response: {}".format(response))

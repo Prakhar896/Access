@@ -256,7 +256,7 @@ class AccessAnalytics:
 
     @staticmethod
     def newEmail(destEmail, text, subject, usernameAttachedToEmail="Not provided."):
-        if subject not in ['Access Identity Login Alert', 'Access Folder Registered!', 'Access Portal OTP']:
+        if subject not in ['Access Identity Login Alert', 'Access Folder Registered!', 'Access Portal OTP', 'File Deletion | Access Portal']:
             return "AAError: Subject is not valid."
         
         type = ''
@@ -266,6 +266,8 @@ class AccessAnalytics:
             type = 'folderRegistered'
         elif subject == 'Access Portal OTP':
             type = 'otp'
+        elif subject == 'File Deletion | Access Portal':
+            type = 'fileDeletionNotif'
         
         emailID = AccessAnalytics.generateRandomID()
 
@@ -536,7 +538,8 @@ class AccessAnalytics:
         numEmailsForEachType = {
             "loginAlert": 0,
             "folderRegistered": 0,
-            "otp": 0
+            "otp": 0,
+            "fileDeletionNotif": 0
         }
 
         for emailID in loadedData["emails"]:
@@ -607,6 +610,7 @@ Total Emails Sent: {}
 Total Login Alert Emails: {}
 Total Folder Registered Emails: {}
 Total OTP Code Emails: {}
+Total File Deletion Emails: {}
 Most Frequent Email Recipient: {}, Number of Emails Most Frequent Recipient Recived: {}
 
 --------
@@ -631,6 +635,7 @@ END OF REPORT
     numEmailsForEachType["loginAlert"],
     numEmailsForEachType["folderRegistered"],
     numEmailsForEachType["otp"],
+    numEmailsForEachType["fileDeletionNotif"],
     mostFreqRecipient,
     numEmailsSentToFreqRecipient,
     datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' UTC' + time.strftime('%z')
