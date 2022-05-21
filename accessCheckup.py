@@ -244,8 +244,7 @@ environmentVariables = [
 ]
 
 nonessentialEnvVars = [
-    'GitpodEnvironment',
-    'adminSubdomainEnabled'
+    'GitpodEnvironment'
 ]
 
 for envVar in environmentVariables:
@@ -292,6 +291,7 @@ else:
 
 print()
 print("CheckUp has successfully finished its scan!")
+print()
 
 if len(critical_issues) == 0:
     print("There were no critical issues found and so the Access System is safe to boot and is operational.")
@@ -325,3 +325,4 @@ else:
 print()
 print()
 print("Access CheckUp has successfully completed its operations!")
+print("***PLEASE LOOK ABOVE FOR ANY CRITICAL ISSUES AND WARNINGS THAT HAVE BEEN DETECTED BY CHECKUP!!!***")

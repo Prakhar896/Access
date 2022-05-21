@@ -158,12 +158,8 @@ from emailOTP import *
 # Portal Service
 from portal import *
 
-# # Admin Subdomain
-# if 'adminSubdomainEnabled' in os.environ:
-#   if os.environ['adminSubdomainEnabled'] == 'True':
-#     from admin import *
-# else:
-#   print("MAIN: Admin subdomain was not loaded due to .env file configuration.")
+# Admin Portal and Service
+
 
 # Assets
 from assets import *
