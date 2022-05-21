@@ -65,42 +65,42 @@ axios({
         'resourceReq': 'emailPrefs'
     }
 })
-.then(response => {
-    if (response.status == 200) {
-        if (typeof response.data == "object") {
-            if (response.data.responseStatus == "SUCCESS") {
-                updateUI(response.data)
+    .then(response => {
+        if (response.status == 200) {
+            if (typeof response.data == "object") {
+                if (response.data.responseStatus == "SUCCESS") {
+                    updateUI(response.data)
+                } else {
+                    console.log(`A non-success response status with an object was received from Access Servers: ${response.data}`)
+                    alert("An error occurred in fetching your preferences' data. Please try again. Check logs for more information.")
+                    statusLabel.innerText = "An error occurred. Refresh this site."
+                }
+            } else if (typeof response.data == "string") {
+                if (response.data.startsWith("ERROR")) {
+                    console.log("An error occurred in fetching preferences' data. Error response: " + response.data)
+                    alert("An error occurred in fetching your preferences' data. Please try again. Check logs for more information.")
+                    statusLabel.innerText = "An error occurred. Refresh this site."
+                } else {
+                    console.log("An unknown response string was received from Access Servers. Response: " + response.data)
+                    alert("An unknown response string was received from Access Servers. Please try again. Check logs for more information.")
+                    statusLabel.innerText = "An error occurred. Refresh this site."
+                }
             } else {
-                console.log(`A non-success response status with an object was received from Access Servers: ${response.data}`)
-                alert("An error occurred in fetching your preferences' data. Please try again. Check logs for more information.")
-                statusLabel.innerText = "An error occurred. Refresh this site."
-            }
-        } else if (typeof response.data == "string") {
-            if (response.data.startsWith("ERROR")) {
-                console.log("An error occurred in fetching preferences' data. Error response: " + response.data)
-                alert("An error occurred in fetching your preferences' data. Please try again. Check logs for more information.")
-                statusLabel.innerText = "An error occurred. Refresh this site."
-            } else {
-                console.log("An unknown response string was received from Access Servers. Response: " + response.data)
-                alert("An unknown response string was received from Access Servers. Please try again. Check logs for more information.")
+                console.log("An unknown response was received from Access Servers. Response: " + response.data)
+                alert("An unknown response was received from Access Servers. Please try again. Check logs for more information.")
                 statusLabel.innerText = "An error occurred. Refresh this site."
             }
         } else {
-            console.log("An unknown response was received from Access Servers. Response: " + response.data)
-            alert("An unknown response was received from Access Servers. Please try again. Check logs for more information.")
+            console.log("Non-200 status code response was received from Access Servers. Response data: " + response.data)
+            alert("Failed to connect to Access Servers. Please try again. Check logs for more information.")
             statusLabel.innerText = "An error occurred. Refresh this site."
         }
-    } else {
-        console.log("Non-200 status code response was received from Access Servers. Response data: " + response.data)
-        alert("Failed to connect to Access Servers. Please try again. Check logs for more information.")
+    })
+    .catch(error => {
+        console.log("An error occurred in connecting to Access Servers. Error: " + error)
+        alert("An error occurred in connecting to Access Servers. Please try again. Check logs for more information.")
         statusLabel.innerText = "An error occurred. Refresh this site."
-    }
-})
-.catch(error => {
-    console.log("An error occurred in connecting to Access Servers. Error: " + error)
-    alert("An error occurred in connecting to Access Servers. Please try again. Check logs for more information.")
-    statusLabel.innerText = "An error occurred. Refresh this site."
-})
+    })
 
 function updateAPI() {
     var updatedSwitchID = ''
@@ -114,8 +114,57 @@ function updateAPI() {
     }
 
     // Send user preference update request to API
-    
+    statusLabel.innerText = "Updating..."
+    statusLabel.style.visibility = 'visible'
 
-    // Update local tracking variable
-    currentPreferencesState[updatedSwitchID] = updatedSwitchNewStatus
+    axios({
+        method: 'post',
+        url: `${origin}/api/updateUserPreference`,
+        headers: {
+            'Content-Type': 'application/json',
+            'AccessAPIKey': 'access@PRAKH0706!API.key#$69'
+        },
+        data: {
+            'certID': userCertID,
+            'resourceReq': 'emailPrefs',
+            'preferenceName': updatedSwitchID,
+            'newValue': updatedSwitchNewStatus
+        }
+    })
+        .then(response => {
+            if (response.status == 200) {
+                if (typeof response.data == "object") {
+                    if (response.data.responseStatus == "SUCCESS") {
+                        updateUI(response.data)
+                    } else {
+                        console.log(`A non-success response status with an object was received from Access Servers: ${response.data}`)
+                        alert("An error occurred in updating that setting. Please try again. Check logs for more information.")
+                        statusLabel.innerText = "An error occurred. Refresh this site."
+                    }
+                } else if (typeof response.data == "string") {
+                    if (response.data.startsWith("ERROR")) {
+                        console.log(`An error occurred in updating preference '${updatedSwitchID}'. Error response: ` + response.data)
+                        alert("An error occurred in updating that setting. Please try again. Check logs for more information.")
+                        statusLabel.innerText = "An error occurred. Refresh this site."
+                    } else {
+                        console.log("An unknown response string was received from Access Servers. Response: " + response.data)
+                        alert("An unknown response string was received from Access Servers. Please try again. Check logs for more information.")
+                        statusLabel.innerText = "An error occurred. Refresh this site."
+                    }
+                } else {
+                    console.log("An unknown response was received from Access Servers. Response: " + response.data)
+                    alert("An unknown response was received from Access Servers. Please try again. Check logs for more information.")
+                    statusLabel.innerText = "An error occurred. Refresh this site."
+                }
+            } else {
+                console.log("Non-200 status code response was received from Access Servers. Response data: " + response.data)
+                alert("Failed to connect to Access Servers. Please try again. Check logs for more information.")
+                statusLabel.innerText = "An error occurred. Refresh this site."
+            }
+        })
+        .catch(error => {
+            console.log("An error occurred in connecting to Access Servers. Error: " + error)
+            alert("An error occurred in connecting to Access Servers. Please try again. Check logs for more information.")
+            statusLabel.innerText = "An error occurred. Refresh this site."
+        })
 }
