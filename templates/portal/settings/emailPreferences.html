@@ -1,0 +1,35 @@
+{% extends "baseNav.html" %}
+
+{% block tabTitle %}Email Settings | Access Portal{% endblock %}
+
+{% block head %}
+<style>
+    #heading {
+        margin-top: 20px;
+        text-align: center;
+    }
+    #content {
+        text-align: left;
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div id="heading">
+    <h1>Email Preferences</h1>
+</div>
+<br>
+<br>
+<div id="content">
+    <p>Here you can customise your email preferences so that you only get the notifications from Access that are most important to you.</p>
+    <br>
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked onchange="updateAPI()">
+        <label class="form-check-label" for="flexSwitchCheckChecked">Checked switch checkbox input</label>
+    </div>
+</div>
+
+<script src="/assets/emailPrefJS"></script>
+{% endblock %}

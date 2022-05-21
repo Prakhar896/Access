@@ -36,3 +36,7 @@ def logoutJS():
 @app.route('/assets/deleteFileJS')
 def deleteFileJS():
   return fileContent('supportJSFiles/deleteFile.js')
+
+@app.route('/assets/emailPrefJS')
+def emailPrefJS():
+  return fileContent('supportJSFiles/emailPref.js')

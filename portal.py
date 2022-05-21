@@ -212,3 +212,16 @@ def deleteFileConfirmation(certID, authToken):
                 return redirect(url_for('processError'))
             
             return render_template('portal/portalFolderDeleteFile.html', filename=request.args['filename'], username=check[1])
+    else:
+        return check
+
+### SETTINGS WEBPAGES
+
+@app.route('/portal/session/<certID>/<authToken>/settings/emailPref')
+def emailPreferences(certID, authToken):
+    check = checkSessionCredentials(certID, authToken)
+
+    if isinstance(check, list) and check[0]:
+        return render_template('portal/settings/emailPreferences.html', username=check[1], url=request.url)
+    else:
+        return check

@@ -68,7 +68,15 @@ def makeAnIdentity():
             'otpCode': request.json['otpCode'],
             'sign-up-date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             'last-login-date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'associatedCertID': CertAuthority.issueCertificate(request.json['username'])['certID']
+            'associatedCertID': CertAuthority.issueCertificate(request.json['username'])['certID'],
+            'AF_and_files': {},
+            'settings': {
+                "emailPref": {
+                    "loginNotifs": True,
+                    "fileUploadNotifs": False,
+                    "fileDeletionNotifs": False
+                }
+            }
         }
 
         # Save identities to file

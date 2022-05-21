@@ -73,11 +73,9 @@
     <script>
     // My folder nav link
     var myFolderLink = document.getElementById("myFolderLink");
-
     const url = "{{ url }}"
     var arrayURL = url.split("/");
-    arrayURL.pop(9)
-    arrayURL = arrayURL.join('/') + "/folder"
+    arrayURL = arrayURL.slice(0, 7).join('/') + "/folder"
 
     myFolderLink.href = arrayURL;
 
@@ -85,10 +83,17 @@
     var homeLink = document.getElementById("homeLink");
 
     arrayURL = url.split("/");
-    arrayURL.pop(9)
-    arrayURL = arrayURL.join('/') + "/home"
+    arrayURL = arrayURL.slice(0, 7).join('/') + "/home"
 
     homeLink.href = arrayURL;
+
+    // Emails settings link
+    var emailsLink = document.getElementById("emailsLink");
+
+    arrayURL = url.split("/");
+    arrayURL = arrayURL.slice(0, 7).join('/') + "/settings/emailPref"
+
+    emailsLink.href = arrayURL;
     </script>
 </body>
 
