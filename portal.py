@@ -130,7 +130,7 @@ def newUpload(certID, authToken):
                         if "AF_and_files" not in targetIdentity:
                             targetIdentity["AF_and_files"] = {}
                         targetIdentity["AF_and_files"][filename] = uploadDatetime
-                        accessIdentities[username] = targetIdentity
+                        accessIdentities[check[1]] = targetIdentity
                         json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
                         ## Update Access Analytics
@@ -140,6 +140,36 @@ def newUpload(certID, authToken):
                                 print("PORTAL: Error in updating Analytics with new file upload; Response: {}".format(response))
                             else:
                                 print("PORTAL: Unexpected response when attempting to update Analytics with new file upload; Response: {}".format(response))
+
+                        ## Send file upload email
+
+                        text = """
+    Hi {},
+
+    This email is a notification that you recently uploaded a file with the name: '{}'.
+
+    If this was you, please ignore this email. If it was not, please login to the Access Portal immediately and change your password.
+
+    THIS IS AN AUTOMATED MESSAGE DELIVERED TO YOU BY THE ACCESS PORTAL. DO NOT REPLY TO THIS EMAIL.</p>
+    Copyright 2022 Prakhar Trivedi
+    """.format(check[1], filename)
+
+                        html = render_template('emails/fileUploaded.html', username=check[1], filename=filename)
+
+                        if 'settings' in targetIdentity and 'emailPref' in targetIdentity['settings'] and targetIdentity['settings']['emailPref']['fileUploadNotifs'] == True:
+                            Emailer.sendEmail(targetIdentity['email'], "File Uploaded | Access Portal", text, html)
+
+                            ## Update Access Analytics
+                            response = AccessAnalytics.newEmail(accessIdentities[check[1]]['email'], text, "File Uploaded | Access Portal", check[1])
+                            if isinstance(response, str):
+                                if response.startswith("AAError:"):
+                                    print("PORTAL: There was an error in updating Analytics with new email data; Response: {}".format(response))
+                                else:
+                                    print("PORTAL: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
+                            elif isinstance(response, bool) and response == True:
+                                print("PORTAL: Successfully updated Analytics with new email data.")
+                            else:
+                                print("PORTAL: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
 
                         return redirect(url_for('download_file', name=filename, certID=certID, authToken=authToken))
                     else:
