@@ -73,6 +73,7 @@ except Exception as e:
 
 print()
 print("Updating Updater service itself...")
+print()
 time.sleep(2)
 
 print("----- GIT UPDATER SERVICE UPDATE OUTPUT")
