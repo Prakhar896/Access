@@ -398,43 +398,6 @@ def fetchUserPreferences():
         return "ERROR: Field 'resourceReq' is not present in request body."
     if request.json['resourceReq'] not in ['emailPrefs', 'certData', 'identityInfo']:
         return "ERROR: Invalid resource was requested."
-    
-    ## Backwards compatibility
-    if 'settings' not in targetIdentity:
-        accessIdentities[targetIdentity['username']]['settings'] = {
-            "emailPref": {
-                "loginNotifs": True,
-                "fileUploadNotifs": False,
-                "fileDeletionNotifs": False
-            }
-        }
-        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
-
-        targetIdentity['settings'] = {
-            "emailPref": {
-                "loginNotifs": True,
-                "fileUploadNotifs": False,
-                "fileDeletionNotifs": False
-            }
-        }
-
-    if request.json['resourceReq'] == 'emailPrefs' and ('emailPref' not in targetIdentity['settings']):
-        accessIdentities[targetIdentity['username']]['settings'] = {
-            "emailPref": {
-                "loginNotifs": True,
-                "fileUploadNotifs": False,
-                "fileDeletionNotifs": False
-            }
-        }
-        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
-
-        targetIdentity['settings'] = {
-            "emailPref": {
-                "loginNotifs": True,
-                "fileUploadNotifs": False,
-                "fileDeletionNotifs": False
-            }
-        }
 
     # Response to request
     if request.json['resourceReq'] == 'emailPrefs':
@@ -480,43 +443,6 @@ def updateUserPreference():
 
     if 'newValue' not in request.json:
         return "ERROR: Field 'newValue' not present in request body."
-    
-    ## Backwards compatibility (setting settings parameter to default if it wasnt there)
-    if 'settings' not in targetIdentity:
-        accessIdentities[targetIdentity['username']]['settings'] = {
-            "emailPref": {
-                "loginNotifs": True,
-                "fileUploadNotifs": False,
-                "fileDeletionNotifs": False
-            }
-        }
-        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
-
-        targetIdentity['settings'] = {
-            "emailPref": {
-                "loginNotifs": True,
-                "fileUploadNotifs": False,
-                "fileDeletionNotifs": False
-            }
-        }
-
-    if request.json['resourceReq'] == 'emailPrefs' and ('emailPref' not in targetIdentity['settings']):
-        accessIdentities[targetIdentity['username']]['settings'] = {
-            "emailPref": {
-                "loginNotifs": True,
-                "fileUploadNotifs": False,
-                "fileDeletionNotifs": False
-            }
-        }
-        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
-
-        targetIdentity['settings'] = {
-            "emailPref": {
-                "loginNotifs": True,
-                "fileUploadNotifs": False,
-                "fileDeletionNotifs": False
-            }
-        }
     
     ## Update preference and respond
     if request.json['resourceReq'] == "emailPrefs":

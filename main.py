@@ -196,6 +196,19 @@ def bootFunction():
       else:
         print("MAIN: Boot version detected: '" + fileData + "'")
 
+  # Run code that supports older versions (Backwards compatibility)
+  for username in accessIdentities:
+    if 'settings' not in accessIdentities[username] or ('emailPref' not in accessIdentities[username]['settings']):
+      accessIdentities[username]['settings'] = {
+            "emailPref": {
+                "loginNotifs": True,
+                "fileUploadNotifs": False,
+                "fileDeletionNotifs": False
+            }
+        }
+        
+  json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+
   # Load certificates
   CAresponse = CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
   if CAError.checkIfErrorMessage(CAresponse):
