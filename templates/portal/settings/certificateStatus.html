@@ -7,6 +7,17 @@
     #content {
         text-align: center;
         margin-top: 20px;
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+
+    #dataDiv {
+        margin-top: 80px;
+        align-items: center;
+        align-self: center;
+        align-content: center;
+        text-align: center;
+        margin-left: 30px;
     }
 </style>
 {% endblock %}
@@ -14,5 +25,28 @@
 {% block body %}
 <div id="content">
     <h1>Your Certificate Status</h1>
+    <div id="dataDiv">
+        <div class="row">
+            <div class="card border-info mb-3" style="max-width: 18rem;">
+                <div class="card-header">Header</div>
+                <div class="card-body">
+                    <h5 class="card-title">Info card title</h5>
+                    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the
+                        card's
+                        content.</p>
+                </div>
+            </div>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <div class="card border-info mb-3" style="max-width: 18rem;">
+                <div class="card-header">Header</div>
+                <div class="card-body">
+                    <h5 class="card-title">Info card title</h5>
+                    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the
+                        card's
+                        content.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
