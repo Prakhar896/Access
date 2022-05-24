@@ -197,6 +197,7 @@ def bootFunction():
         print("MAIN: Boot version detected: '" + fileData + "'")
 
   # Run code that supports older versions (Backwards compatibility)
+  ## SUPPORT FOR v1.0.2
   for username in accessIdentities:
     if 'settings' not in accessIdentities[username] or ('emailPref' not in accessIdentities[username]['settings']):
       accessIdentities[username]['settings'] = {

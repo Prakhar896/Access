@@ -255,3 +255,12 @@ def emailPreferences(certID, authToken):
         return render_template('portal/settings/emailPreferences.html', username=check[1], url=request.url)
     else:
         return check
+
+@app.route('/portal/session/<certID>/<authToken>/settings/certStatus')
+def certStatus(certID, authToken):
+    check = checkSessionCredentials(certID, authToken)
+
+    if isinstance(check, list) and check[0]:
+        return render_template('portal/settings/certificateStatus.html', username=check[1], url=request.url)
+    else:
+        return check
