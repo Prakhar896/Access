@@ -73,3 +73,11 @@ function signin() {
         statusLabel.style.visibility = 'hidden'
     })
 }
+
+document.getElementById("passwordField")
+.addEventListener("keyup", (event) => {
+    event.preventDefault()
+    if (event.keyCode === 13) {
+        document.getElementById("signinButton").click();
+    }
+})

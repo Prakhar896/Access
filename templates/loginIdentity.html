@@ -34,7 +34,6 @@
         visibility: hidden;
     }
 </style>
-<script src="/assets/signinJS"></script>
 {% endblock %}
 
 {% block body %}
@@ -51,5 +50,6 @@
     <input type="password" id="passwordField" name="password" placeholder="Password">
 </form>
 <br>
-<button class="fancyButtons" onclick="signin()">Sign In</button>
+<button class="fancyButtons" onclick="signin()" id="signinButton">Sign In</button>
+<script src="/assets/signinJS"></script>
 {% endblock %}
