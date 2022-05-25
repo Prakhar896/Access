@@ -258,9 +258,65 @@ def emailPreferences(certID, authToken):
 
 @app.route('/portal/session/<certID>/<authToken>/settings/certStatus')
 def certStatus(certID, authToken):
+    global accessIdentities
     check = checkSessionCredentials(certID, authToken)
 
     if isinstance(check, list) and check[0]:
-        return render_template('portal/settings/certificateStatus.html', username=check[1], url=request.url)
+        ## Prepare certificate information for display
+
+        ## Get certificate
+        targetIdentity = {}
+        for username in accessIdentities:
+            if username == check[1]:
+                targetIdentity = accessIdentities[username].copy()
+
+        targetCertificate = CertAuthority.getCertificate(targetIdentity['associatedCertID'])
+        if targetCertificate == None:
+            flash("Could not get certificate information of identity.")
+            return redirect(url_for('processError'))
+
+        ## Information to prepare:
+        ## 1) Cert ID, 2) Certificate Validity, 3) Certificate Security, 4) Issue Date, 5) Expiry date, 6) Days till expiry
+
+        # 1)
+        certID = targetIdentity['associatedCertID']
+
+        # 2)
+        validity = ''
+        if targetCertificate['revoked'] == False:
+            validity = 'Valid'
+        else:
+            validity = 'Revoked! (Your login session will remain active until its the time is up)'
+
+        # 3)
+        secureOrNot = ''
+        certAuthResponse = CertAuthority.checkCertificateSecurity(targetCertificate)
+        if certAuthResponse == CAError.validCert:
+            secureOrNot = 'Secure 🔒'
+        elif CAError.checkIfErrorMessage(certAuthResponse):
+            secureOrNot = 'Insecure. Your cert may have been damaged/manipulated.'
+        else:
+            secureOrNot = 'Security could not be determined.'
+
+        # 4)
+        issueDate = targetCertificate['issueDate']
+
+        # 5)
+        expiryDate = targetCertificate['expiryDate']
+
+        # 6)
+        daysTillExpiry = str((datetime.datetime.strptime(expiryDate, systemWideStringDateFormat) - datetime.datetime.now()).days)
+
+        ## Complete date object
+        certData = {
+            'certID': certID,
+            'validity': validity,
+            'security': secureOrNot,
+            'issueDate': issueDate,
+            'expiryDate': expiryDate,
+            'daysTillExpiry': daysTillExpiry
+        }
+
+        return render_template('portal/settings/certificateStatus.html', username=check[1], url=request.url, certData=certData)
     else:
         return check
