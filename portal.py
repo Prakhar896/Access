@@ -286,7 +286,7 @@ def certStatus(certID, authToken):
         if targetCertificate['revoked'] == False:
             validity = 'Valid'
         else:
-            validity = 'Revoked! (Your login session will remain active until its the time is up)'
+            validity = 'REVOKED! (Your login session will remain active until its time is up)'
 
         # 3)
         secureOrNot = ''
@@ -294,9 +294,9 @@ def certStatus(certID, authToken):
         if certAuthResponse == CAError.validCert:
             secureOrNot = 'Secure 🔒'
         elif CAError.checkIfErrorMessage(certAuthResponse):
-            secureOrNot = 'Insecure. Your cert may have been damaged/manipulated.'
+            secureOrNot = 'INSECURE! Your cert may have been damaged/manipulated'
         else:
-            secureOrNot = 'Security could not be determined.'
+            secureOrNot = 'Security could not be determined'
 
         # 4)
         issueDate = targetCertificate['issueDate']
