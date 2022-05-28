@@ -6,7 +6,7 @@ def copyright():
 
 @app.route('/assets/fancyButtons')
 def fancyButtonsCSS():
-  return fileContent('fancyButtonStyle.css')
+  return fileContent('stylesheets/fancyButtonStyle.css')
 
 @app.route('/assets/createIDJS')
 def createIDJS():
@@ -40,3 +40,7 @@ def deleteFileJS():
 @app.route('/assets/emailPrefJS')
 def emailPrefJS():
   return fileContent('supportJSFiles/emailPref.js')
+
+@app.route('/assets/updateEmailConfirmationJS')
+def updateEmailConfirmationJS():
+  return fileContent('supportJSFiles/updateEmailConfirmation.js')

@@ -1,0 +1,81 @@
+{% extends "baseXNav.html" %}
+
+{% block tabTitle %}Update Email | Settings | Access Portal{% endblock %}
+
+{% block head %}
+<style>
+    #heading {
+        text-align: center;
+    }
+
+    #backToPortalButton {
+        text-align: center;
+    }
+
+    #content {
+        text-align: center;
+        margin-top: 20px;
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+
+    #otpEnteringSection {
+        visibility: hidden;
+    }
+
+    .fancyButtons:hover {
+        background-color: #000000;
+        color: white;
+        stroke: green;
+        stroke-width: 3px;
+        stroke-dashoffset: 15px;
+    }
+
+    .fancyButtons {
+        border: none;
+        color: white;
+        padding: 14px 18px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 13px;
+        margin: 4px 2px;
+        transition-duration: 0.5s;
+        cursor: pointer;
+        background-color: darkslategray;
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div id="content">
+    <h1 id="heading">Update Email</h1>
+    <br>
+    <div id="backToPortalButton">
+        <button type="button" class="btn btn-primary" onclick="backToPortal()">< Back to Portal</button>
+    </div>
+    <br>
+    <br>
+    <form>
+        <label for="password">Enter current password:</label><br>
+        <input type="password" id="currentPasswordField" name="password" placeholder="Password">
+        <br>
+        <br>
+        <label for="email">Enter new email:</label><br>
+        <input type="email" id="newEmail" name="email" placeholder="name@example.com">
+    </form>
+    <br>
+    <button class="fancyButtons" onclick="sendOTPVerification()" id="sendOTPButton">Send Verification OTP Code</button>
+    <br>
+    <div id="otpEnteringSection">
+        <label for="otp">Enter email verification OTP:</label><br>
+        <input type="text" id="otpField" name="otp" placeholder="OTP Code">
+        <br>
+        <br>
+        <button class="fancyButtons" onclick="updateEmail()" id="updateEmailButton">Update Email</button>
+    </div>
+    <br>
+    <script src="/assets/updateEmailConfirmationJS"></script>
+</div>
+{% endblock %}

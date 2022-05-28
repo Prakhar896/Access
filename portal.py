@@ -355,3 +355,12 @@ def idInfoAndManagement(certID, authToken):
         return render_template('portal/settings/identityInfo.html', username=check[1], url=request.url, idInfo=idInfo)
     else:
         return check
+
+@app.route('/portal/session/<certID>/<authToken>/settings/idInfo/updateEmail')
+def updateEmailConfirmation(certID, authToken):
+    check = checkSessionCredentials(certID, authToken)
+
+    if isinstance(check, list) and check[0]:
+        return render_template('portal/settings/updateEmailConfirmation.html')
+    else:
+        return check
