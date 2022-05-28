@@ -76,12 +76,12 @@ def portalFolder(certID, authToken):
                 targetIdentity = {}
                 for username in accessIdentities:
                     if username == check[1]:
-                        targetIdentity = accessIdentities[username]
+                        targetIdentity = accessIdentities[username].copy()
                 
                 if "AF_and_files" not in targetIdentity:
                     targetIdentity["AF_and_files"] = {}
-
                     accessIdentities[check[1]]["AF_and_files"] = {}
+
                     json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
                 for filename in filenames:
@@ -125,12 +125,14 @@ def newUpload(certID, authToken):
                         targetIdentity = {}
                         for username in accessIdentities:
                             if username == check[1]:
-                                targetIdentity = accessIdentities[username]
+                                targetIdentity = accessIdentities[username].copy()
 
                         if "AF_and_files" not in targetIdentity:
                             targetIdentity["AF_and_files"] = {}
+                            accessIdentities[check[1]]['AF_and_files'] = {}
+
                         targetIdentity["AF_and_files"][filename] = uploadDatetime
-                        accessIdentities[check[1]] = targetIdentity
+                        accessIdentities[check[1]]['AF_and_files'][filename] = uploadDatetime
                         json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
                         ## Update Access Analytics
@@ -318,5 +320,38 @@ def certStatus(certID, authToken):
         }
 
         return render_template('portal/settings/certificateStatus.html', username=check[1], url=request.url, certData=certData)
+    else:
+        return check
+
+@app.route('/portal/session/<certID>/<authToken>/settings/idInfo')
+def idInfoAndManagement(certID, authToken):
+    global accessIdentities
+    check = checkSessionCredentials(certID, authToken)
+
+    if isinstance(check, list) and check[0]:
+        
+        # Get target identity
+        targetIdentity = {}
+        for username in accessIdentities:
+            if username == check[1]:
+                targetIdentity = accessIdentities[username].copy()
+        
+        # Collate identity information
+        AFStatusString = ''
+
+        if targetIdentity['folderRegistered'] == False:
+            AFStatusString = 'Access Folder Not Registered'
+        else:
+            fileSlotsAvailable = 3 - len(targetIdentity['AF_and_files'])
+            AFStatusString = 'Registered, {} File Slots Free'.format(fileSlotsAvailable)
+
+        idInfo = {
+            'email': targetIdentity['email'],
+            'passCensored': '●' * len(CertAuthority.decodeFromB64(targetIdentity['password'])),
+            'creationDate': datetime.datetime.strptime(targetIdentity['sign-up-date'], systemWideStringDateFormat).strftime('%d %B, %A, %Y %H:%M:%S%p') + ' UTC' + time.strftime('%z'),
+            'AFStatus': AFStatusString
+        }
+
+        return render_template('portal/settings/identityInfo.html', username=check[1], url=request.url, idInfo=idInfo)
     else:
         return check

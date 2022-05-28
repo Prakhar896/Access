@@ -1,0 +1,44 @@
+{% extends "baseNav.html" %}
+
+{% block tabTitle %}Identity Info & Management | Access Portal{% endblock %}
+
+{% block head %}
+<style>
+    #content {
+        text-align: left;
+        margin-top: 20px;
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+
+    #heading {
+        text-align: center
+    }
+
+    .sideFloats {
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div id="content">
+    <h1 id="heading">Identity Information & Management</h1>
+    <br>
+    <br>
+    <h4>This is your Access Identity.</h4>
+    <br>
+    <br>
+    <p>Username: <strong>{{ username }}</strong></p>
+    <br>
+    <div class="sideFloats"><p>Email: <strong>{{ idInfo['email'] }}</strong></p></div>&nbsp;&nbsp;&nbsp;&nbsp;<div class="sideFloats"><button type="button" class="btn btn-outline-primary">Change Your Email</button></div>
+    <br>
+    <br>
+    <div class="sideFloats"><p>Password: {{ idInfo['passCensored'] }}</p></div>&nbsp;&nbsp;&nbsp;&nbsp;<div class="sideFloats"><button type="button" class="btn btn-outline-primary">Change Your Password</button></div>
+    <br>
+    <br>
+    <p>Access Folder Status: <strong>{{ idInfo['AFStatus'] }}</strong></p>
+    <br>
+    <p>Creation Date: <strong>{{ idInfo['creationDate'] }}</strong></p>
+</div>
+{% endblock %}

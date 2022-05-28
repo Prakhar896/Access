@@ -46,7 +46,7 @@
                             <li><a class="dropdown-item" href="#" id="emailsLink">Emails</a></li>
                             <li><a class="dropdown-item" href="#" id="certStatusLink">Certificate Status</a></li>
                             <!-- <li><hr class="dropdown-divider"></li> -->
-                            <li><a class="dropdown-item" href="#">Identity Info & Management</a></li>
+                            <li><a class="dropdown-item" href="#" id="idInfoLink">Identity Info & Management</a></li>
                           </ul>
                     </li>
                 </ul>
@@ -102,6 +102,14 @@
     arrayURL = arrayURL.slice(0, 7).join('/') + "/settings/certStatus"
 
     certStatusLink.href = arrayURL;
+
+    // Identity Info & Management settings link
+    var idInfoLink = document.getElementById("idInfoLink");
+
+    arrayURL = url.split("/");
+    arrayURL = arrayURL.slice(0, 7).join('/') + "/settings/idInfo"
+
+    idInfoLink.href = arrayURL;
     </script>
 </body>
 

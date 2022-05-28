@@ -224,7 +224,12 @@ def registerFolder():
     ## Send email
     Emailer.sendEmail(accessIdentities[request.json['username']]['email'], "Access Folder Registered!", text, html)
 
-    if 'GitpodEnvironment' in os.environ and os.environ['GitpodEnvironment'] == 'True':
+    ## Update Access Identity
+    accessIdentities[request.json['username']]['folderRegistered'] = True
+
+    json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+
+    if 'AccessAnalyticsEnabled' in os.environ and os.environ['AccessAnalyticsEnabled'] == 'True':
         return "SUCCESS: Access Folder for {} registered!".format(request.json['username'])
 
     ## Update Access Analytics
@@ -313,16 +318,20 @@ def deleteFileFromFolder():
         return "ERROR: {}".format(response)
     elif response == "AFM: Successfully deleted the file.":
         ## Update Access Identity
+        identityUsername = ''
         targetIdentity = {}
         for username in accessIdentities:
             if username == request.json['username']:
-                targetIdentity = accessIdentities[username]
+                targetIdentity = accessIdentities[username].copy()
+                identityUsername = username
 
         if "AF_and_files" not in targetIdentity:
             targetIdentity["AF_and_files"] = {}
+            accessIdentities[identityUsername]['AF_and_files'] = {}
 
         if request.json['filename'] in targetIdentity["AF_and_files"]:
             targetIdentity["AF_and_files"].pop(request.json['filename'])
+            accessIdentities[identityUsername]['AF_and_files'].pop(request.json['filename'])
         else:
             print("API: When updating Access Identity with file deletion, file's name was not found in the identity. Recovering and continuing...")
 

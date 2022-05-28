@@ -197,9 +197,12 @@ def bootFunction():
         print("MAIN: Boot version detected: '" + fileData + "'")
 
   # Run code that supports older versions (Backwards compatibility)
+  report = []
+
   ## SUPPORT FOR v1.0.2
   for username in accessIdentities:
     if 'settings' not in accessIdentities[username] or ('emailPref' not in accessIdentities[username]['settings']):
+      report.append('Settings data including email preferences were added to user \'{}\''.format(username))
       accessIdentities[username]['settings'] = {
             "emailPref": {
                 "loginNotifs": True,
@@ -207,8 +210,31 @@ def bootFunction():
                 "fileDeletionNotifs": False
             }
         }
+
+    if 'folderRegistered' not in accessIdentities[username]:
+      report.append('Folder registration status data was added to user \'{}\''.format(username))
+      if AFManager.checkIfFolderIsRegistered(username):
+        accessIdentities[username]['folderRegistered'] = True
+      else:
+        accessIdentities[username]['folderRegistered'] = False
+    
+    if 'AF_and_files' not in accessIdentities[username]:
+      accessIdentities[username]['AF_and_files'] = {}
+      report.append('AF Files data was added to user \'{}\''.format(username))
+      if AFManager.checkIfFolderIsRegistered(username):
+        currentDatetimeString = datetime.datetime.now().strftime(systemWideStringDateFormat)
+        
+        for filename in AFManager.getFilenames(username):
+          accessIdentities[username]['AF_and_files'][filename] = currentDatetimeString
         
   json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+
+  if len(report) != 0:
+    print()
+    print("BACKWARDS COMPATIBILITY (BC) code made the following changes:")
+    for item in report:
+      print('\t' + item)
+    print()
 
   # Load certificates
   CAresponse = CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
