@@ -76,7 +76,8 @@ def makeAnIdentity():
                     "fileUploadNotifs": False,
                     "fileDeletionNotifs": False
                 }
-            }
+            },
+            'folderRegistered': True
         }
 
         # Save identities to file
