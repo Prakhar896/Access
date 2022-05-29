@@ -45,6 +45,13 @@
         background-color: darkslategray;
         border-radius: 10px;
     }
+
+    #statusLabel {
+        font-size: 18px;
+        font-weight: bold;
+        color: #000000;
+        visibility: hidden;
+    }
 </style>
 {% endblock %}
 
@@ -56,6 +63,8 @@
         <a href="../idInfo"><button type="button" class="btn btn-primary" onclick="backToPortal()">< Back to Portal</button></a>
     </div>
     <br>
+    <br>
+    <p id="statusLabel">Processing...</p>
     <br>
     <form>
         <label for="password">Enter current password:</label><br>

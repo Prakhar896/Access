@@ -1,5 +1,6 @@
 from main import *
 from models import *
+import re
 
 def headersCheck(headers):
     ## Headers check
@@ -468,4 +469,85 @@ def updateUserPreference():
         responseObject['responseStatus'] = "SUCCESS"
 
         return responseObject
+
+@app.route('/api/confirmEmailUpdate', methods=['POST'])
+def confirmEmailUpdate():
+    global accessIdentities
+    global validOTPCodes
+
+    # Headers check
+    check = headersCheck(headers=request.headers)
+    if check != True:
+        return check
+
+    # Body check
+    if 'newEmail' not in request.json:
+        return "ERROR: 'newEmail' field not present in request body."
+    if 'currentPass' not in request.json:
+        return "ERROR: Current password field not present in request body."
+    if 'certID' not in request.json:
+        return "ERROR: Certificate ID field not present in request body."
+
+    ## Get identity from certID
+    targetIdentity = {}
+    for username in accessIdentities:
+        if accessIdentities[username]['associatedCertID'] == request.json['certID']:
+            targetIdentity = accessIdentities[username].copy()
+            targetIdentity['username'] = username
+    
+    if targetIdentity == {}:
+        return "ERROR: No such Access Identity is associated with that certificate ID."
+
+    ## Check current password
+    decodedPass = CertAuthority.decodeFromB64(targetIdentity['password'])
+    if decodedPass != request.json['currentPass']:
+        return "UERROR: Password is incorrect."
+
+    ## Check if it is a valid email
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", request.json['newEmail']):
+        return "UERROR: That is not a valid email."
+
+    # Generate OTP Code
+    numbers = [str(i) for i in range(10)]
+    otp = ''.join(random.choice(numbers) for i in range(6))
+
+    validOTPCodes[request.json['newEmail']] = otp
+    json.dump(validOTPCodes, open('validOTPCodes.txt', 'w'))
+
+    # Send email
+    text = """
+    Hi {},
+
+    You recently requested to update your Access Identity email on the Access Portal. Please enter the OTP code below to verify this email.
+
+    OTP Code: {}
+
+    Was not you? Please kindly ignore this email. Apologies for any inconveniences.
+
+    Kind regards, The Access Team
+    THIS IS AN AUTOMATED MESSAGE DELIVERED TO YOU BY THE ACCESS PORTAL. DO NOT REPLY TO THIS EMAIL.
+    Copyright 2022 Prakhar Trivedi
+    """.format(targetIdentity['username'], otp)
+
+    html = render_template('emails/confirmEmailUpdate.html', username=targetIdentity['username'], otpCode=otp)
+
+    Emailer.sendEmail(request.json['newEmail'], "Confirm Email Update | Access Portal", text, html)
+
+    ## Update Access Analytics
+    response = AccessAnalytics.newEmail(request.json['newEmail'], text, "Confirm Email Update | Access Portal", targetIdentity['username'])
+    if isinstance(response, str):
+        if response.startswith("AAError:"):
+            print("API: There was an error in updating Analytics with new email data; Response: {}".format(response))
+        else:
+            print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
+    elif isinstance(response, bool) and response == True:
+        print("API: Successfully updated Analytics with new email data.")
+    else:
+        print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
+
+    return "SUCCESS: Email confirmation email was sent to {}".format(request.json['newEmail'])
+
+
+
+
     

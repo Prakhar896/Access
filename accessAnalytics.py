@@ -256,7 +256,14 @@ class AccessAnalytics:
 
     @staticmethod
     def newEmail(destEmail, text, subject, usernameAttachedToEmail="Not provided."):
-        if subject not in ['Access Identity Login Alert', 'Access Folder Registered!', 'Access Portal OTP', 'File Deletion | Access Portal', 'File Uploaded | Access Portal']:
+        if subject not in [
+            'Access Identity Login Alert', 
+            'Access Folder Registered!', 
+            'Access Portal OTP', 
+            'File Deletion | Access Portal', 
+            'File Uploaded | Access Portal',
+            'Confirm Email Update | Access Portal'
+            ]:
             return "AAError: Subject is not valid."
         
         type = ''
@@ -270,6 +277,8 @@ class AccessAnalytics:
             type = 'fileDeletionNotif'
         elif subject == 'File Uploaded | Access Portal':
             type = 'fileUploadNotif'
+        elif subject == 'Confirm Email Update | Access Portal':
+            type = 'emailUpdateConfirmation'
         
         emailID = AccessAnalytics.generateRandomID()
 
@@ -515,6 +524,7 @@ class AccessAnalytics:
         print("Analysing credentials production and utilisation...")
         time.sleep(3
         )
+
         # Metric 13
         numUniqueCertificationIdentificationNumbers = 0
         uniqueCertIDs = []
@@ -542,7 +552,8 @@ class AccessAnalytics:
             "folderRegistered": 0,
             "otp": 0,
             "fileDeletionNotif": 0,
-            "fileUploadNotif": 0
+            "fileUploadNotif": 0,
+            "emailUpdateConfirmation": 0
         }
 
         for emailID in loadedData["emails"]:
@@ -615,6 +626,7 @@ Total Folder Registered Emails: {}
 Total OTP Code Emails: {}
 Total File Deletion Emails: {}
 Total File Upload Emails: {}
+Total Email Update Confirmation Emails: {}
 Most Frequent Email Recipient: {}, Number of Emails Most Frequent Recipient Recived: {}
 
 --------
@@ -641,6 +653,7 @@ END OF REPORT
     numEmailsForEachType["otp"],
     numEmailsForEachType["fileDeletionNotif"],
     numEmailsForEachType["fileUploadNotif"],
+    numEmailsForEachType["emailUpdateConfirmation"],
     mostFreqRecipient,
     numEmailsSentToFreqRecipient,
     datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' UTC' + time.strftime('%z')
