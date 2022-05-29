@@ -8,6 +8,7 @@ def headersCheck(headers):
         return "ERROR: Content-Type header not present in API request. Request failed."
     if 'AccessAPIKey' not in headers:
         return "ERROR: AccessAPIKey header not present in API request. Request failed."
+        
     if headers['Content-Type'] != 'application/json':
         return "ERROR: Content-Type header had incorrect value for this API request (expected application/json). Request failed."
     if headers['AccessAPIKey'] != os.environ['AccessAPIKey']:
@@ -506,6 +507,10 @@ def confirmEmailUpdate():
     ## Check if it is a valid email
     if not re.match(r"[^@]+@[^@]+\.[^@]+", request.json['newEmail']):
         return "UERROR: That is not a valid email."
+
+    for username in accessIdentities:
+        if accessIdentities[username]['email'] == request.json['newEmail']:
+            return "UERROR: That email is already taken."
 
     # Generate OTP Code
     numbers = [str(i) for i in range(10)]
