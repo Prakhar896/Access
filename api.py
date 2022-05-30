@@ -612,4 +612,93 @@ def updateIdentityEmail():
     json.dump(validOTPCodes, open('validOTPCodes.txt', 'w'))
 
     return "SUCCESS: Email for Access Identity successfully updated."
+
+@app.route('/api/updateIdentityPassword', methods=['POST'])
+def updateIdentityPassword():
+    global accessIdentities
     
+    # Headers check
+    check = headersCheck(headers=request.headers)
+    if check != True:
+        return check
+
+    # Body check
+    if 'certID' not in request.json:
+        return "ERROR: Certificate ID field not present in request body."
+    if 'currentPass' not in request.json:
+        return "ERROR: Current password field not present in request body."
+    if 'newPass' not in request.json:
+        return "ERROR: New password field not present in request body."
+
+    ## Verify certID and obtain target identity
+    targetIdentity = {}
+    for username in accessIdentities:
+        if accessIdentities[username]['associatedCertID'] == request.json['certID']:
+            targetIdentity = accessIdentities[username].copy()
+            targetIdentity['username'] = username
+    
+    if targetIdentity == {}:
+        return "ERROR: No such Access Identity is associated with that certificate ID."
+    
+    ## Check currentPass
+    if request.json['currentPass'] != CertAuthority.decodeFromB64(targetIdentity['password']):
+        return "UERROR: Current password is incorrect."
+
+    ## Check if password is secure enough
+    specialCharacters = list('!@#$%^&*()_-+')
+
+    hasSpecialChar = False
+    hasNumericDigit = False
+    for char in request.json['newPass']:
+        if char.isdigit():
+            hasNumericDigit = True
+        elif char in specialCharacters:
+            hasSpecialChar = True
+
+    if not (hasSpecialChar and hasNumericDigit):
+        return "UERROR: Password must have at least 1 special character and 1 numeric digit."
+
+    # Update access identity with password, send password update email, update db, return success response
+    accessIdentities[targetIdentity['username']]['password'] = request.json['newPass']
+    json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+
+    targetIdentity['password'] = request.json['newPass']
+
+    ## Send email
+    text = """
+    Hi {},
+
+    This is an alert to notify that you have successfully changed you Access Identity's password as of {} on the Access Portal. You can change your password again any time in the Identity Information & Management
+    (IIM) Settings pane.
+
+    Thank you for your time!
+
+    Kind Regards,
+    The Access Team
+
+    THIS IS AN AUTOMATED MESSAGE DELIVERED TO YOU BY THE ACCESS PORTAL. DO NOT REPLY TO THIS EMAIL.
+    Copyright 2022 Prakhar Trivedi
+    """.format(targetIdentity['username'], datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' UTC' + time.strftime('%z'))
+
+    html = render_template(
+        'emails/passwordUpdated.html', 
+        username=targetIdentity['username'], 
+        timestamp=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' UTC' + time.strftime('%z')
+        )
+
+    ## Actually send and update analytics
+    Emailer.sendEmail(targetIdentity['email'], "Password Updated | Access Portal", text, html)
+
+    ## Update Access Analytics
+    response = AccessAnalytics.newEmail(targetIdentity['email'], text, "Password Updated | Access Portal", targetIdentity['username'])
+    if isinstance(response, str):
+        if response.startswith("AAError:"):
+            print("API: There was an error in updating Analytics with new email data; Response: {}".format(response))
+        else:
+            print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
+    elif isinstance(response, bool) and response == True:
+        print("API: Successfully updated Analytics with new email data.")
+    else:
+        print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
+
+    return "SUCCESS: Password successfully updated."

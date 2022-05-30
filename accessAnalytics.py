@@ -262,7 +262,8 @@ class AccessAnalytics:
             'Access Portal OTP', 
             'File Deletion | Access Portal', 
             'File Uploaded | Access Portal',
-            'Confirm Email Update | Access Portal'
+            'Confirm Email Update | Access Portal',
+            'Password Updated | Access Portal'
             ]:
             return "AAError: Subject is not valid."
         
@@ -279,6 +280,8 @@ class AccessAnalytics:
             type = 'fileUploadNotif'
         elif subject == 'Confirm Email Update | Access Portal':
             type = 'emailUpdateConfirmation'
+        elif subject == 'Password Updated | Access Portal':
+            type = 'passwordUpdated'
         
         emailID = AccessAnalytics.generateRandomID()
 
@@ -553,7 +556,8 @@ class AccessAnalytics:
             "otp": 0,
             "fileDeletionNotif": 0,
             "fileUploadNotif": 0,
-            "emailUpdateConfirmation": 0
+            "emailUpdateConfirmation": 0,
+            "passwordUpdated": 0
         }
 
         for emailID in loadedData["emails"]:
@@ -627,6 +631,7 @@ Total OTP Code Emails: {}
 Total File Deletion Emails: {}
 Total File Upload Emails: {}
 Total Email Update Confirmation Emails: {}
+Total Password Updated Notification Emails: {}
 Most Frequent Email Recipient: {}, Number of Emails Most Frequent Recipient Recived: {}
 
 --------
@@ -654,6 +659,7 @@ END OF REPORT
     numEmailsForEachType["fileDeletionNotif"],
     numEmailsForEachType["fileUploadNotif"],
     numEmailsForEachType["emailUpdateConfirmation"],
+    numEmailsForEachType["passwordUpdated"],
     mostFreqRecipient,
     numEmailsSentToFreqRecipient,
     datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' UTC' + time.strftime('%z')
