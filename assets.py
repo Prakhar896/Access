@@ -44,3 +44,7 @@ def emailPrefJS():
 @app.route('/assets/updateEmailConfirmationJS')
 def updateEmailConfirmationJS():
   return fileContent('supportJSFiles/updateEmailConfirmation.js')
+
+@app.route('/assets/updatePasswordJS')
+def updatePasswordJS():
+  return fileContent('supportJSFiles/updatePassword.js')

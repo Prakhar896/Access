@@ -364,3 +364,12 @@ def updateEmailConfirmation(certID, authToken):
         return render_template('portal/settings/updateEmailConfirmation.html')
     else:
         return check
+
+@app.route('/portal/session/<certID>/<authToken>/settings/idInfo/updatePassword')
+def updatePassword(certID, authToken):
+    check = checkSessionCredentials(certID, authToken)
+
+    if isinstance(check, list) and check[0]:
+        return render_template('portal/settings/updatePassword.html')
+    else:
+        return check
