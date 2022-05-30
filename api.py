@@ -8,7 +8,7 @@ def headersCheck(headers):
         return "ERROR: Content-Type header not present in API request. Request failed."
     if 'AccessAPIKey' not in headers:
         return "ERROR: AccessAPIKey header not present in API request. Request failed."
-        
+
     if headers['Content-Type'] != 'application/json':
         return "ERROR: Content-Type header had incorrect value for this API request (expected application/json). Request failed."
     if headers['AccessAPIKey'] != os.environ['AccessAPIKey']:
@@ -553,6 +553,63 @@ def confirmEmailUpdate():
     return "SUCCESS: Email confirmation email was sent to {}".format(request.json['newEmail'])
 
 
+@app.route('/api/updateIdentityEmail', methods=['POST'])
+def updateIdentityEmail():
+    global accessIdentities
+    global validOTPCodes
 
+    # Headers check
+    check = headersCheck(headers=request.headers)
+    if check != True:
+        return check
 
+    # Body check
+    if 'newEmail' not in request.json:
+        return "ERROR: 'newEmail' field not present in request body."
+    if 'currentPass' not in request.json:
+        return "ERROR: Current password field not present in request body."
+    if 'certID' not in request.json:
+        return "ERROR: Certificate ID field not present in request body."
+    if 'otpCode' not in request.json:
+        return "ERROR: OTP Code field not present in request body."
+
+    ## Get identity from certID
+    targetIdentity = {}
+    for username in accessIdentities:
+        if accessIdentities[username]['associatedCertID'] == request.json['certID']:
+            targetIdentity = accessIdentities[username].copy()
+            targetIdentity['username'] = username
+    
+    if targetIdentity == {}:
+        return "ERROR: No such Access Identity is associated with that certificate ID."
+
+    ## Check current password
+    decodedPass = CertAuthority.decodeFromB64(targetIdentity['password'])
+    if decodedPass != request.json['currentPass']:
+        return "UERROR: Password is incorrect."
+
+    ## Check if it is a valid email
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", request.json['newEmail']):
+        return "UERROR: That is not a valid email."
+
+    for username in accessIdentities:
+        if accessIdentities[username]['email'] == request.json['newEmail']:
+            return "UERROR: That email is already taken."
+
+    ## Check if email was sent an OTP code
+    if request.json['newEmail'] not in validOTPCodes:
+        return "ERROR: No OTP code was sent to that email. Please send a confirmEmailUpdate POST request to send an OTP to the new email first."
+
+    ## Check OTP code
+    if validOTPCodes[request.json['newEmail']] != request.json['otpCode']:
+        return "UERROR: OTP Code is incorrect."
+
+    # Update Access Identity's email, update database, delete otp code, return success response
+    accessIdentities[targetIdentity['username']]['email'] = request.json['newEmail']
+    json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+
+    validOTPCodes.pop(request.json['newEmail'])
+    json.dump(validOTPCodes, open('validOTPCodes.txt', 'w'))
+
+    return "SUCCESS: Email for Access Identity successfully updated."
     
