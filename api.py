@@ -659,10 +659,10 @@ def updateIdentityPassword():
         return "UERROR: Password must have at least 1 special character and 1 numeric digit."
 
     # Update access identity with password, send password update email, update db, return success response
-    accessIdentities[targetIdentity['username']]['password'] = request.json['newPass']
+    accessIdentities[targetIdentity['username']]['password'] = CertAuthority.encodeToB64(request.json['newPass'])
     json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
-    targetIdentity['password'] = request.json['newPass']
+    targetIdentity['password'] = CertAuthority.encodeToB64(request.json['newPass'])
 
     ## Send email
     text = """
