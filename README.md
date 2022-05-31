@@ -61,11 +61,11 @@ Though large, this project still has a lot of work to do. Here is my project roa
 UPCOMING FEATURES:
 
 - New Access Admin portal, where admin signs-in and can view/manage/edit all identities in the system
-- Completion of all the settings that are found in a user's Access Portal
-- Miscellaneous endpoints such as `/version` to view more information about the system
-- Back-tracking links on relevant error pages
-- Certificate Renewal Code Retreival process
-- Improvement of create identity process with more secure password checks
+- Completion of all the settings that are found in a user's Access Portal (DONE in `v1.0.2`)
+- Miscellaneous endpoints such as `/version` to view more information about the system (DONE in `v1.0.2`)
+- Back-tracking links on relevant error pages (DONE in `v1.0.2`)
+- Certificate Renewal Code Retreival process (DONE in `v1.0.2`)
+- Improvement of create identity process with more secure password checks (DONE in `v1.0.2`)
 
 and much more!
 
@@ -148,5 +148,7 @@ description on how to use it.
 ![Sample Update Guide for System on Version 1.0.1](/docs/img/updatedSampleUpdateGuide.png)
 
 > ABOVE: Sample update guide that would be outputted.
+
+NOTE: If you are updating from `v1.0.1` to a newer version, you will have to manually update the Updater service itself by running the `git checkout updater.py` command in your native command line. This will bring the Updater service forward to the version you are updating to.
 
 © 2022 Prakhar Trivedi
