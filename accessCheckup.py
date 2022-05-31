@@ -5,7 +5,7 @@ load_dotenv()
 print("Welcome to Access CheckUp!")
 print("This sub-service will check the Access environment for irregularities that may need to be fixed for improved system functionality.")
 print()
-print("Please wait a while CheckUp scans the system environment (this may take some time)...")
+print("Please wait a while while CheckUp scans the system environment (this may take some time)...")
 print()
 
 time.sleep(2)
@@ -78,6 +78,7 @@ time.sleep(3)
 rootFolderEssentialFiles = [
     'accessAnalytics.py',
     'accessStartup.py',
+    'admin.py',
     '.env',
     'AFManager.py',
     'api.py',
@@ -90,8 +91,9 @@ rootFolderEssentialFiles = [
     'main.py',
     'models.py',
     'portal.py',
-    'admin.py',
-    'updater.py'
+    'updater.py',
+    'requirements.txt',
+    'version.txt'
 ]
 
 ### Root folder essential files check
@@ -115,14 +117,26 @@ for folderName in essentialFoldersCheck:
 
 
 ## Templates folders and files check
+def makeSubSubFilePath(subsubFolder, filename):
+    return os.path.join(subsubFolder, filename)
 
 templateFoldersAndItsFiles = {
     "emails": [
+        'confirmEmailUpdate.html',
+        'fileDeleted.html',
+        'fileUploaded.html',
         'folderRegistered.html',
         'loginEmail.html',
-        'otpEmail.html'
+        'otpEmail.html',
+        'passwordUpdated.html'
     ],
     "portal": [
+        makeSubSubFilePath("settings", "certificateStatus.html"),
+        makeSubSubFilePath("settings", "emailPreferences.html"),
+        makeSubSubFilePath("settings", "identityDeleteConfirmation.html"),
+        makeSubSubFilePath("settings", "identityInfo.html"),
+        makeSubSubFilePath("settings", "updateEmailConfirmation.html"),
+        makeSubSubFilePath("settings", "updatePassword.html"),
         'deleteListing.html',
         'folderRegistration.html',
         'newUpload.html',
@@ -137,9 +151,9 @@ templateFoldersAndItsFiles = {
         'error.html',
         'loginIdentity.html',
         'logout.html',
+        'renewSuccess.html',
         'unauthorised.html',
         'version.html',
-        'renewSuccess.html'
     ]
 }
 
@@ -167,10 +181,14 @@ else:
 supportJSFilenames = [
     'createID.js',
     'deleteFile.js',
+    'deleteIdentity.js',
+    'emailPref.js',
     'folderRegistration.js',
     'logout.js',
     'portalHome.js',
-    'signIn.js'
+    'signIn.js',
+    'updateEmailConfirmation.js',
+    'updatePassword.js'
 ]
 
 if not os.path.isdir(os.path.join(os.getcwd(), 'supportJSFiles')):
