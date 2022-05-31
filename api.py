@@ -702,3 +702,9 @@ def updateIdentityPassword():
         print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
 
     return "SUCCESS: Password successfully updated."
+
+@app.route('/api/deleteIdentity', methods=['POST'])
+def deleteIdentity():
+    global accessIdentities
+    global validOTPCodes
+    

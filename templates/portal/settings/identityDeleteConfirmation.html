@@ -1,0 +1,48 @@
+{% extends "baseXNav.html" %}
+
+{% block tabTitle %}Confirm Identity Delete | Access Portal{% endblock %}
+
+{% block head %}
+<style>
+    #content {
+        margin-top: 50px;
+        text-align: center;
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+
+    #statusLabel {
+        visibility: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div id="content">
+    <h1>Delete My Access Identity</h1>
+    <br>
+    <h3 id="statusLabel">Processing...</h3>
+    <br>
+    <div class="card border-danger mb-3">
+        <h5 class="card-header">Confirm Delete?</h5>
+        <div class="card-body">
+            <h5 class="card-title" id="usernameSourceField">{{ username }}, are you sure you want to delete your Access
+                Identity?</h5>
+            <p class="card-text">Deleting your identity will delete all files in your Access Folder, de-register your
+                Access Folder, permanently revoke your certificate and will delete all identity records. This action is
+                irreversible. Please ensure that you are completely certain that you wish to delete your identity.</p>
+            <br>
+            <br>
+            <form>
+                <label for="password">Enter current password:</label><br>
+                <input type="password" id="currentPasswordField" name="password" placeholder="Password"
+                    class="toDisableFields">
+            </form>
+            <br>
+            <button type="button" class="btn btn-danger" onclick="deleteConfirmed()">Confirm</button>&nbsp;&nbsp;&nbsp;&nbsp;<a href="../idInfo"><button type="button" class="btn btn-secondary">Cancel</button></a>
+            <br>
+        </div>
+    </div>
+</div>
+<script src="/assets/deleteIdentityJS"></script>
+{% endblock %}

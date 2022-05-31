@@ -48,3 +48,7 @@ def updateEmailConfirmationJS():
 @app.route('/assets/updatePasswordJS')
 def updatePasswordJS():
   return fileContent('supportJSFiles/updatePassword.js')
+
+@app.route('/assets/deleteIdentityJS')
+def deleteIdentityJS():
+  return fileContent('supportJSFiles/deleteIdentity.js')

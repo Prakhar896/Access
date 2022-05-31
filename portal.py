@@ -373,3 +373,12 @@ def updatePassword(certID, authToken):
         return render_template('portal/settings/updatePassword.html')
     else:
         return check
+
+@app.route('/portal/session/<certID>/<authToken>/settings/idInfo/confirmDelete')
+def confirmIdentityDelete(certID, authToken):
+    check = checkSessionCredentials(certID, authToken)
+
+    if isinstance(check, list) and check[0]:
+        return render_template('portal/settings/identityDeleteConfirmation.html', username=check[1])
+    else:
+        return check
