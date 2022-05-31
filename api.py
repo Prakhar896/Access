@@ -708,3 +708,81 @@ def deleteIdentity():
     global accessIdentities
     global validOTPCodes
     
+    # Headers check
+    check = headersCheck(headers=request.headers)
+    if check != True:
+        return check
+
+    # Body check
+    if 'certID' not in request.json:
+        return "ERROR: Certificate ID field not present in request body."
+    if 'authToken' not in request.json:
+        return "ERROR: Auth token field not present in request body."
+    if 'currentPass' not in request.json:
+        return "ERROR: Current password field not present in request body."
+    
+    # Verify certificate ID and get identity based on it
+    targetIdentity = {}
+    for username in accessIdentities:
+        if accessIdentities[username]['associatedCertID'] == request.json['certID']:
+            targetIdentity = accessIdentities[username].copy()
+            targetIdentity['username'] = username
+    
+    if targetIdentity == {}:
+        return "ERROR: Certificate ID provided is not associated with any Access Identity."
+    
+    # Verify auth token
+    if 'loggedInAuthToken' not in targetIdentity:
+        return "UERROR: Your login session has expired. Please re-login into your identity. (Auth token is invalid)"
+    if targetIdentity['loggedInAuthToken'] != request.json['authToken']:
+        return "ERROR: Auth token provided does not match with the one associated with the logged in identity."
+    
+    # Verify current password
+    if request.json['currentPass'] != CertAuthority.decodeFromB64(targetIdentity['password']):
+        return "UERROR: Password is incorrect."
+    
+    # DELETE ALL RECORDS
+
+    ## possible validOTPCode entries
+    if targetIdentity['email'] in validOTPCodes:
+        validOTPCodes.pop(targetIdentity['email'])
+        json.dump(validOTPCodes, open('validOTPCodes.txt', 'w'))
+
+    ## Delete certificate
+    response = CertAuthority.permanentlyDeleteCertificate(targetIdentity['associatedCertID'])
+    if CAError.checkIfErrorMessage(response):
+        return "SYSTEMERROR: Error response received from CA when attempting to delete identity certificate: {}".format(response)
+    elif response != "Successfully deleted that certificate.":
+        return "SYSTEMERROR: An unknown response string was received from CA when attempting to delete identity certificate: {}".format(response)
+
+    savingDeletionCAResponse = CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
+    if CAError.checkIfErrorMessage(savingDeletionCAResponse):
+        return "SYSTEMERROR: Error response received from CA when attempting to save certification deletion to database: {}".format(savingDeletionCAResponse)
+    
+    ## Delete Access Folder
+    if AFManager.checkIfFolderIsRegistered(targetIdentity['username']):
+        afmResponse = AFManager.deleteFolder(targetIdentity['username'])
+        if AFMError.checkIfErrorMessage(afmResponse):
+            return "SYSTEMERROR: Error response received from AFM when attempting to delete identity's Access Folder: {}".format(afmResponse)
+    
+    ## Delete identity records
+    try:
+        accessIdentities.pop(targetIdentity['username'])
+        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+    except Exception as e:
+        return "SYSTEMERROR: An error occurred in deleting identity records: {}".format(e)
+    
+    # Update Access Analytics
+    aaResponse = AccessAnalytics.newIdentityDeletion()
+    
+    if isinstance(aaResponse, str):
+        if aaResponse.startswith("AAError"):
+            print("API: Failed to update Access Analytics with new identity deletion; Response: {}".format(aaResponse))
+        else:
+            print("API: Unknown string response received from Access Analytics when attempting to update with new identity deletion; Response: {}".format(aaResponse))
+    elif aaResponse != True:
+        print("API: Unknown response received from Access Analytics when attempting to update with new identity deletion; Response: {}".format(aaResponse))
+    else:
+        print("API: Updated Access Analytics with new identity deletion.")
+
+    return "SUCCESS: Identity was successfully wiped from system."

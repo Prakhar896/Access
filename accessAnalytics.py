@@ -419,7 +419,7 @@ class AccessAnalytics:
         return True
     
     @staticmethod
-    def newIdentityDelete():
+    def newIdentityDeletion():
         try:
             if 'emails' not in AccessAnalytics.analyticsData:
                 return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
