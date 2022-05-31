@@ -16,7 +16,7 @@ print("Deleting all irrelevant files...")
 # Delete all files and folders in the current directory
 for root, dirs, files in os.walk(os.getcwd(), topdown=False):
     for name in files:
-        if name != "updater.py" and (name not in ['analyticsData.txt', 'certificates.txt', 'accessIdentities.txt', 'validOTPCodes.txt', '.env', 'authorisation.txt']) and (not name.startswith('aa-report')) and ("AccessFolders" not in root):
+        if name != "updater.py" and (name not in ['analyticsData.txt', 'certificates.txt', 'accessIdentities.txt', 'validOTPCodes.txt', '.env', 'authorisation.txt']) and (not name.startswith('aa-report')) and ("AccessFolders" not in root) and ('venv' not in root) and ('virt' not in root):
             os.remove(os.path.join(root, name))
     for name in dirs:
         if name != 'analyticsReports' and name != 'AccessFolders' and ("AccessFolders" not in root) and (name not in ['venv', 'virt']):
