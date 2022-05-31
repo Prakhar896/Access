@@ -28,6 +28,48 @@ function deleteConfirmed() {
         }
     })
         .then(response => {
+            if (response.status == 200) {
+                if (!response.data.startsWith("UERROR")) {
+                    if (!response.data.startsWith("ERROR")) {
+                        if (!response.data.startsWith("SYSTEMERROR")) {
+                            if (response.data.startsWith("SUCCESS")) {
+                                statusLabel.innerText = "Almost done..."
 
+                                setTimeout(() => {
+                                    statusLabel.innerText = "Access Identity was successfully deleted! Re-directing back to Access Home..."
+                                }, 3000)
+
+                                setTimeout(() => {
+                                    window.location = origin
+                                }, 5000)
+                            } else {
+                                alert("Unknown string response received from Access Servers. Please try again. Check logs for more information.")
+                                console.log("Unknown string response received: " + response.data)
+                                statusLabel.style.visibility = 'hidden'
+                            }
+                        } else {
+                            alert("A server-side error occurred in deleting your identity. Please try again. Check logs for more information.")
+                            console.log("Server-side system error occurred in deleting identity: " + response.data)
+                            statusLabel.style.visibility = 'hidden'
+                        }
+                    } else {
+                        alert("An error occurred in deleting your identity. Please try again. Check logs for more information.")
+                        console.log("Error occurred in deleting identity: " + response.data)
+                        statusLabel.style.visibility = 'hidden'
+                    }
+                } else {
+                    statusLabel.innerText = response.data.substring("UERROR: ".length)
+                    statusLabel.style.visibility = 'visible'
+                }
+            } else {
+                alert("Failed to connect to Access Servers. Please try again. Check logs for more information.")
+                console.log("Non-200 status code response received from Access Servers: " + response.data)
+                statusLabel.style.visibility = 'hidden'
+            }
+        })
+        .catch(error => {
+            alert("An error occurred in connecting to Access Servers. Please try again. Check logs for more information.")
+            console.log("Error occurred in connecting to Access Servers: " + error)
+            statusLabel.style.visibility = 'hidden'
         })
 }

@@ -1,4 +1,4 @@
-import os
+import os, shutil
 
 class AFManager:
 
@@ -27,7 +27,7 @@ class AFManager:
 
         if os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders', username)):
             try:
-                os.rmdir(os.path.join(os.getcwd(), 'AccessFolders', username))
+                shutil.rmtree(os.path.join(os.getcwd(), 'AccessFolders', username), ignore_errors=True)
                 return True
             except Exception as e:
                 print("AFMError: {}".format(e))

@@ -746,7 +746,6 @@ def deleteIdentity():
     ## possible validOTPCode entries
     if targetIdentity['email'] in validOTPCodes:
         validOTPCodes.pop(targetIdentity['email'])
-        json.dump(validOTPCodes, open('validOTPCodes.txt', 'w'))
 
     ## Delete certificate
     response = CertAuthority.permanentlyDeleteCertificate(targetIdentity['associatedCertID'])
@@ -754,10 +753,6 @@ def deleteIdentity():
         return "SYSTEMERROR: Error response received from CA when attempting to delete identity certificate: {}".format(response)
     elif response != "Successfully deleted that certificate.":
         return "SYSTEMERROR: An unknown response string was received from CA when attempting to delete identity certificate: {}".format(response)
-
-    savingDeletionCAResponse = CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
-    if CAError.checkIfErrorMessage(savingDeletionCAResponse):
-        return "SYSTEMERROR: Error response received from CA when attempting to save certification deletion to database: {}".format(savingDeletionCAResponse)
     
     ## Delete Access Folder
     if AFManager.checkIfFolderIsRegistered(targetIdentity['username']):
@@ -768,9 +763,26 @@ def deleteIdentity():
     ## Delete identity records
     try:
         accessIdentities.pop(targetIdentity['username'])
-        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
     except Exception as e:
         return "SYSTEMERROR: An error occurred in deleting identity records: {}".format(e)
+
+    ## SAVE ALL CHANGES TO DATABASE
+    try:
+        json.dump(validOTPCodes, open('validOTPCodes.txt', 'w'))
+    except Exception as e:
+        return "SYSTEMERROR: Failed to update OTP codes database with deletion of entries associated with the Access Identity; Error: {}".format(e)
+
+    try:
+        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+    except Exception as e:
+        return "SYSTEMERROR: Failed to update database with the deletion of the identity's records; Error: {}".format(e)
+
+    try:
+        savingDeletionCAResponse = CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
+        if CAError.checkIfErrorMessage(savingDeletionCAResponse):
+            return "SYSTEMERROR: Error response received from CA when attempting to save certificate deletion to database: {}".format(savingDeletionCAResponse)
+    except Exception as e:
+        return "SYSTEMERROR: An error occurred when attempting to update database with the deletion of the identity's certificate; Error: {}".format(e)    
     
     # Update Access Analytics
     aaResponse = AccessAnalytics.newIdentityDeletion()
