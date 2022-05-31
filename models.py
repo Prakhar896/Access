@@ -24,7 +24,7 @@ def obtainTargetIdentity(email, accessIdentities):
 
 def expireAuthTokens(accessIdentities):
   for username in accessIdentities:
-    if (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['last-login-date'], '%Y-%m-%d %H:%M:%S')).total_seconds() >= 10800:
+    if (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['last-login-date'], systemWideStringDateFormat)).total_seconds() >= 10800:
       try:
         if 'loggedInAuthToken' in accessIdentities[username]:
           del accessIdentities[username]['loggedInAuthToken']

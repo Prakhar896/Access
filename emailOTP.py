@@ -77,7 +77,7 @@ def sendOTP():
 
     targetIdentity = obtainTargetIdentity(email, accessIdentities)
     if targetIdentity != {}:
-        return "ERROR: There is already a created identity associated with that email."
+        return "UERROR: There is already a created identity associated with that email."
 
     numbers = [str(i) for i in range(10)]
     otp = ''.join(random.choice(numbers) for i in range(6))

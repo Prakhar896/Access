@@ -68,8 +68,8 @@ def makeAnIdentity():
             'password': CertAuthority.encodeToB64(request.json['password']),
             'email': request.json['email'],
             'otpCode': request.json['otpCode'],
-            'sign-up-date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'last-login-date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'sign-up-date': datetime.datetime.now().strftime(systemWideStringDateFormat),
+            'last-login-date': datetime.datetime.now().strftime(systemWideStringDateFormat),
             'associatedCertID': CertAuthority.issueCertificate(request.json['username'])['certID'],
             'AF_and_files': {},
             'settings': {
@@ -125,7 +125,7 @@ def loginIdentity():
     if CAError.checkIfErrorMessage(CertAuthority.checkCertificateSecurity(identityCertificate)):
         return { "userMessage": "UERROR: The certificate associated with this identity has failed security checks. Authorisation failed.", "errorMessage": CertAuthority.checkCertificateSecurity(identityCertificate) }
 
-    accessIdentities[targetIdentity['username']]['last-login-date'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    accessIdentities[targetIdentity['username']]['last-login-date'] = datetime.datetime.now().strftime(systemWideStringDateFormat)
     accessIdentities[targetIdentity['username']]['loggedInAuthToken'] = generateAuthToken()
     json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
@@ -149,7 +149,7 @@ def loginIdentity():
     html = render_template(
         "emails/loginEmail.html", 
         userName=targetIdentity['username'], 
-        datetime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' UTC' + time.strftime('%z'), 
+        datetime=datetime.datetime.now().strftime(systemWideStringDateFormat) + ' UTC' + time.strftime('%z'), 
         logoutLink=("{}/identity/logout?authToken={}&username={}".format(request.host_url, accessIdentities[targetIdentity['username']]['loggedInAuthToken'], targetIdentity['username']))
         )
 
@@ -668,12 +668,12 @@ def updateIdentityPassword():
 
     THIS IS AN AUTOMATED MESSAGE DELIVERED TO YOU BY THE ACCESS PORTAL. DO NOT REPLY TO THIS EMAIL.
     Copyright 2022 Prakhar Trivedi
-    """.format(targetIdentity['username'], datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' UTC' + time.strftime('%z'))
+    """.format(targetIdentity['username'], datetime.datetime.now().strftime(systemWideStringDateFormat) + ' UTC' + time.strftime('%z'))
 
     html = render_template(
         'emails/passwordUpdated.html', 
         username=targetIdentity['username'], 
-        timestamp=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' UTC' + time.strftime('%z')
+        timestamp=datetime.datetime.now().strftime(systemWideStringDateFormat) + ' UTC' + time.strftime('%z')
         )
 
     ## Actually send and update analytics
