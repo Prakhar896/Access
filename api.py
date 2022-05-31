@@ -13,8 +13,7 @@ def headersCheck(headers):
         return "ERROR: Content-Type header had incorrect value for this API request (expected application/json). Request failed."
     if headers['AccessAPIKey'] != os.environ['AccessAPIKey']:
         return "ERROR: Incorrect AccessAPIKey value for this API request. Request failed."
-    print(headers['AccessAPIKey'])
-    print(os.environ['AccessAPIKey'])
+    
     return True
 
 @app.route('/api/createIdentity', methods=['POST'])
