@@ -419,6 +419,28 @@ class AccessAnalytics:
         return True
     
     @staticmethod
+    def newIdentityDelete():
+        try:
+            if 'emails' not in AccessAnalytics.analyticsData:
+                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
+            ## Backwards compatibility code
+            if 'identityDeletions' not in AccessAnalytics.analyticsData:
+                AccessAnalytics.analyticsData['identityDeletions'] = 0
+            
+            AccessAnalytics.analyticsData['identityDeletions'] += 1
+        except Exception as e:
+            return "AAError: Failed to increment identity deletions metric. Error: {}".format(e)
+        
+        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+        if isinstance(response, str):
+            if response.startswith("AAError:"):
+                return response
+        elif response == False:
+            return "AAError: Access Analytics is not given permission to collect data."
+
+        return True
+    
+    @staticmethod
     def crunchData():
         ### Statistics to calculate:
         #### 1) Number of Requests
@@ -438,6 +460,7 @@ class AccessAnalytics:
         ##### 14) Number of emails sent
         ##### 15) Number of emails of each type of email
         ##### 16) Most frequent email recipient
+        #### 17) Number of identities deleted
 
         if not AccessAnalytics.permissionCheck():
             print("AAError: Insufficient permissions to access analytics data. Try enabling AccessAnalytics in the .env file.")
@@ -579,6 +602,16 @@ class AccessAnalytics:
             if recipientAndNumberOfRespectiveEmailsSentToThem[recipient] > numEmailsSentToFreqRecipient:
                 mostFreqRecipient = recipient
                 numEmailsSentToFreqRecipient = recipientAndNumberOfRespectiveEmailsSentToThem[recipient]
+
+        # Metric 17
+        print()
+        print("Calculating other metrics...")
+        time.sleep(2)
+
+        numIdentityDeletions = 0
+
+        if "identityDeletions" in loadedData:
+            numIdentityDeletions = loadedData["identityDeletions"]
         
         print()
         print("Collating report...")
@@ -589,12 +622,13 @@ class AccessAnalytics:
 
 This report was automatically generated based on the data collected by the Access Analytics Service which was given permissions to collect said data in the .env file.
 
-There are 4 sections to this report, namely:
+There are 5 sections to this report, namely:
 
     1) Requests Analysis - A breakdown of all the requests sent to the Access System
     2) Portal Requests Analysis - A breakdown of all requests that relate to Access Portal operations such as file uploads, sign ins and more.
     3) Credentials Analysis - A breakdown of the certificate identification numbers and auth tokens in the requests.
     4) Emails Analysis - A breakdown of all the emails sent out to recipients by the Access System.
+    5) Other Metrics - Metrics that do not fall under any specific category and typically relate to identity related operations.
 
 REQUESTS ANALYSIS
 -----
@@ -634,6 +668,11 @@ Total Email Update Confirmation Emails: {}
 Total Password Updated Notification Emails: {}
 Most Frequent Email Recipient: {}, Number of Emails Most Frequent Recipient Recived: {}
 
+OTHER METRICS
+-----
+
+Total Access Identity Deletions: {}
+
 --------
 That is the end of this automatically generated Access Analytics Report. This report was generated on {}
 
@@ -662,6 +701,7 @@ END OF REPORT
     numEmailsForEachType["passwordUpdated"],
     mostFreqRecipient,
     numEmailsSentToFreqRecipient,
+    numIdentityDeletions,
     datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' UTC' + time.strftime('%z')
 )
 
