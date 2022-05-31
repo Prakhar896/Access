@@ -178,6 +178,21 @@ class CertAuthority:
 
         return "Successfully renewed certificate with ID: " + certificate['certID']
 
+    @staticmethod
+    def permanentlyDeleteCertificate(certID):
+        certificate = CertAuthority.getCertificate(certID)
+        if certificate == None:
+            return CAError.noSuchCertFound
+        
+        if certificate['user'] in CertAuthority.registeredCertificates:
+            CertAuthority.registeredCertificates.pop(certificate['user'])
+            return "Successfully deleted that certificate."
+        elif certificate['user'] in CertAuthority.revokedCertificates:
+            CertAuthority.revokedCertificates.pop(certificate['user'])
+            return "Successfully deleted that certificate."
+        else:
+            return CAError.obtainedButNotFoundInDB
+
 
     @staticmethod
     def loadCertificatesFromFile(fileObject):
@@ -217,7 +232,8 @@ class CAError(Exception):
     savingCertsFailed = "There was an error in saving certificate data to the file provided."
     noSuchCertFound = "No such certificate was found associated with that Certificate ID."
     certIsNotRevoked = "The certificate is not revoked. Only revoked certificates can be renewed."
-    certHasRevokedDetailButNotInRevokedCertificates = "CAError: The certificate is revoked according to its details but is not in the registered certificates database. Attempting to revoke it before renewing..."
+    certHasRevokedDetailButNotInRevokedCertificates = "CAError: The certificate is revoked according to its details but is not in the revoked certificates database. Attempting to revoke it before renewing..."
+    obtainedButNotFoundInDB = "CAError: The certificate was successfully obtained but was not found in revoked or registered certificates database."
 
 
     ## Success Message
@@ -236,7 +252,8 @@ class CAError(Exception):
             CAError.savingCertsFailed,
             CAError.noSuchCertFound,
             CAError.certIsNotRevoked,
-            CAError.certHasRevokedDetailButNotInRevokedCertificates
+            CAError.certHasRevokedDetailButNotInRevokedCertificates,
+            CAError.obtainedButNotFoundInDB
         ]
         if msg in arrayOfMsgs:
             return True
