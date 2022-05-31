@@ -287,7 +287,7 @@ class AccessAnalytics:
 
         try:
             if 'emails' not in AccessAnalytics.analyticsData:
-                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails paramter not found in memory location data)"
+                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
             AccessAnalytics.analyticsData['emails'][emailID] = {
                 'destEmail': destEmail,
                 'text': text,
@@ -628,7 +628,7 @@ There are 5 sections to this report, namely:
     2) Portal Requests Analysis - A breakdown of all requests that relate to Access Portal operations such as file uploads, sign ins and more.
     3) Credentials Analysis - A breakdown of the certificate identification numbers and auth tokens in the requests.
     4) Emails Analysis - A breakdown of all the emails sent out to recipients by the Access System.
-    5) Other Metrics - Metrics that do not fall under any specific category and typically relate to identity related operations.
+    5) Other Metrics - Metrics that do not fall under any specific category and are typically identity related operations.
 
 REQUESTS ANALYSIS
 -----

@@ -341,7 +341,7 @@ def idInfoAndManagement(certID, authToken):
             AFStatusString = 'Access Folder Not Registered'
         else:
             fileSlotsAvailable = 3 - len(targetIdentity['AF_and_files'])
-            AFStatusString = 'Registered, {} File Slots Free'.format(fileSlotsAvailable)
+            AFStatusString = 'Registered, {} File Slot(s) Free'.format(fileSlotsAvailable)
 
         idInfo = {
             'email': targetIdentity['email'],

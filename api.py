@@ -725,7 +725,7 @@ def deleteIdentity():
     if 'loggedInAuthToken' not in targetIdentity:
         return "UERROR: Your login session has expired. Please re-login into your identity. (Auth token is invalid)"
     if targetIdentity['loggedInAuthToken'] != request.json['authToken']:
-        return "ERROR: Auth token provided does not match with the one associated with the logged in identity."
+        return "UERROR: Auth token provided does not match with the one associated with the logged in identity."
     
     # Verify current password
     if request.json['currentPass'] != CertAuthority.decodeFromB64(targetIdentity['password']):
