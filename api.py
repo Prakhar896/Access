@@ -13,7 +13,7 @@ def headersCheck(headers):
         return "ERROR: Content-Type header had incorrect value for this API request (expected application/json). Request failed."
     if headers['AccessAPIKey'] != os.environ['AccessAPIKey']:
         return "ERROR: Incorrect AccessAPIKey value for this API request. Request failed."
-    
+
     return True
 
 @app.route('/api/createIdentity', methods=['POST'])
@@ -325,12 +325,8 @@ def deleteFileFromFolder():
         targetIdentity = {}
         for username in accessIdentities:
             if username == request.json['username']:
-                targetIdentity = accessIdentities[username].copy()
+                targetIdentity = copy.deepcopy(accessIdentities[username])
                 identityUsername = username
-
-        if "AF_and_files" not in targetIdentity:
-            targetIdentity["AF_and_files"] = {}
-            accessIdentities[identityUsername]['AF_and_files'] = {}
 
         if request.json['filename'] in targetIdentity["AF_and_files"]:
             targetIdentity["AF_and_files"].pop(request.json['filename'])
@@ -400,7 +396,7 @@ def fetchUserPreferences():
     targetIdentity = {}
     for username in accessIdentities:
         if accessIdentities[username]['associatedCertID'] == request.json['certID']:
-            targetIdentity = accessIdentities[username].copy()
+            targetIdentity = copy.deepcopy(accessIdentities[username])
             targetIdentity['username'] = username
     
     if targetIdentity == {}:
@@ -408,20 +404,14 @@ def fetchUserPreferences():
     
     if 'resourceReq' not in request.json:
         return "ERROR: Field 'resourceReq' is not present in request body."
-    if request.json['resourceReq'] not in ['emailPrefs', 'certData', 'identityInfo']:
+    if request.json['resourceReq'] not in ['emailPrefs']:
         return "ERROR: Invalid resource was requested."
 
     # Response to request
     if request.json['resourceReq'] == 'emailPrefs':
-        responseObject = targetIdentity['settings']['emailPref'].copy()
+        responseObject = copy.deepcopy(targetIdentity['settings']['emailPref'])
         responseObject['responseStatus'] = "SUCCESS"
         return responseObject
-    elif request.json['resourceReq'] == 'certData':
-        ## TODO
-        pass
-    elif request.json['resourceReq'] == 'identityInfo':
-        ## TODO
-        pass
 
 @app.route('/api/updateUserPreference', methods=['POST'])
 def updateUserPreference():
@@ -439,7 +429,7 @@ def updateUserPreference():
     targetIdentity = {}
     for username in accessIdentities:
         if accessIdentities[username]['associatedCertID'] == request.json['certID']:
-            targetIdentity = accessIdentities[username].copy()
+            targetIdentity = copy.deepcopy(accessIdentities[username])
             targetIdentity['username'] = username
     
     if targetIdentity == {}:
@@ -466,7 +456,7 @@ def updateUserPreference():
 
         json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
-        responseObject = targetIdentity['settings']['emailPref'].copy()
+        responseObject = copy.deepcopy(targetIdentity['settings']['emailPref'])
         responseObject['responseStatus'] = "SUCCESS"
 
         return responseObject
@@ -493,7 +483,7 @@ def confirmEmailUpdate():
     targetIdentity = {}
     for username in accessIdentities:
         if accessIdentities[username]['associatedCertID'] == request.json['certID']:
-            targetIdentity = accessIdentities[username].copy()
+            targetIdentity = copy.deepcopy(accessIdentities[username])
             targetIdentity['username'] = username
     
     if targetIdentity == {}:
@@ -577,7 +567,7 @@ def updateIdentityEmail():
     targetIdentity = {}
     for username in accessIdentities:
         if accessIdentities[username]['associatedCertID'] == request.json['certID']:
-            targetIdentity = accessIdentities[username].copy()
+            targetIdentity = copy.deepcopy(accessIdentities[username])
             targetIdentity['username'] = username
     
     if targetIdentity == {}:
@@ -634,7 +624,7 @@ def updateIdentityPassword():
     targetIdentity = {}
     for username in accessIdentities:
         if accessIdentities[username]['associatedCertID'] == request.json['certID']:
-            targetIdentity = accessIdentities[username].copy()
+            targetIdentity = copy.deepcopy(accessIdentities[username])
             targetIdentity['username'] = username
     
     if targetIdentity == {}:
@@ -725,7 +715,7 @@ def deleteIdentity():
     targetIdentity = {}
     for username in accessIdentities:
         if accessIdentities[username]['associatedCertID'] == request.json['certID']:
-            targetIdentity = accessIdentities[username].copy()
+            targetIdentity = copy.deepcopy(accessIdentities[username])
             targetIdentity['username'] = username
     
     if targetIdentity == {}:

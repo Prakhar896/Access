@@ -1,4 +1,4 @@
-import json, os, shutil, subprocess, random, datetime
+import json, os, shutil, subprocess, random, datetime, copy
 
 systemWideStringDateFormat = '%Y-%m-%d %H:%M:%S'
 
@@ -18,7 +18,7 @@ def obtainTargetIdentity(email, accessIdentities):
   targetIdentity = {}
   for username in accessIdentities:
     if accessIdentities[username]['email'] == email:
-      targetIdentity = accessIdentities[username].copy()
+      targetIdentity = copy.deepcopy(accessIdentities[username])
       targetIdentity["username"] = username
   return targetIdentity
 

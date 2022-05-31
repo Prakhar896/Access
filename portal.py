@@ -76,7 +76,7 @@ def portalFolder(certID, authToken):
                 targetIdentity = {}
                 for username in accessIdentities:
                     if username == check[1]:
-                        targetIdentity = accessIdentities[username].copy()
+                        targetIdentity = copy.deepcopy(accessIdentities[username])
                 
                 if "AF_and_files" not in targetIdentity:
                     targetIdentity["AF_and_files"] = {}
@@ -99,6 +99,8 @@ def portalFolder(certID, authToken):
 
 @app.route('/portal/session/<certID>/<authToken>/folder/newUpload', methods=['GET', 'POST'])
 def newUpload(certID, authToken):
+    global accessIdentities
+
     check = checkSessionCredentials(certID, authToken)
 
     if isinstance(check, list) and check[0]:
@@ -125,11 +127,7 @@ def newUpload(certID, authToken):
                         targetIdentity = {}
                         for username in accessIdentities:
                             if username == check[1]:
-                                targetIdentity = accessIdentities[username].copy()
-
-                        if "AF_and_files" not in targetIdentity:
-                            targetIdentity["AF_and_files"] = {}
-                            accessIdentities[check[1]]['AF_and_files'] = {}
+                                targetIdentity = copy.deepcopy(accessIdentities[username])
 
                         targetIdentity["AF_and_files"][filename] = uploadDatetime
                         accessIdentities[check[1]]['AF_and_files'][filename] = uploadDatetime
@@ -270,7 +268,7 @@ def certStatus(certID, authToken):
         targetIdentity = {}
         for username in accessIdentities:
             if username == check[1]:
-                targetIdentity = accessIdentities[username].copy()
+                targetIdentity = copy.deepcopy(accessIdentities[username])
 
         targetCertificate = CertAuthority.getCertificate(targetIdentity['associatedCertID'])
         if targetCertificate == None:
@@ -334,7 +332,7 @@ def idInfoAndManagement(certID, authToken):
         targetIdentity = {}
         for username in accessIdentities:
             if username == check[1]:
-                targetIdentity = accessIdentities[username].copy()
+                targetIdentity = copy.deepcopy(accessIdentities[username])
         
         # Collate identity information
         AFStatusString = ''
