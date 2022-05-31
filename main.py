@@ -158,9 +158,6 @@ from emailOTP import *
 # Portal Service
 from portal import *
 
-# Admin Portal and Service
-
-
 # Assets
 from assets import *
 
