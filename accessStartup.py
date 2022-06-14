@@ -31,12 +31,17 @@ except Exception as e:
 
 from accessAnalytics import *
 
+devMode = False
+if 'DeveloperModeEnabled' in os.environ and os.environ['DeveloperModeEnabled'] == 'True':
+  devMode = True
+
 print("Welcome to Access Startup!")
 print()
 print("Here you can manage and run all things Access!")
 print()
 print()
-print("""
+if not devMode:
+    print("""
 Startup Choices - What would you like to do?
 
     1) Access Boot
@@ -44,6 +49,19 @@ Startup Choices - What would you like to do?
     3) Access CheckUp
     4) Access Analytics - Crunch Data
     5) System Update Guide
+
+
+""")
+else:
+    print("""
+Startup Choices - What would you like to do?
+
+    1) Access Boot
+    2) Access Meta Settings
+    3) Access CheckUp
+    4) Access Analytics - Crunch Data
+    5) System Update Guide
+    6) Developer Tools Suite
 
 
 """)
@@ -311,3 +329,11 @@ elif choice == 5:
     That is the end of this user guide.
     Startup will now close.
     """.format(open('version.txt', 'r').read()))
+elif choice == 6:
+    print("""
+Welcome to the Developer Tools Suite!
+
+TODO
+    """)
+    print()
+    print("Startup will now close.")
