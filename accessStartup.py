@@ -330,94 +330,14 @@ elif choice == 5:
     Startup will now close.
     """.format(open('version.txt', 'r').read()))
 elif choice == 6:
+    try:
+        import devTools
+    except Exception as e:
+        print("STARTUP DEV TOOLS INITIALISER: Failed to initialise developer tools suite program, could not import module. Please ensure that the devTools.py file is present in the system. If not, update Access to a fresh copy.")
+        print("System Error Produced: {}".format(e))
+        print("Startup will now close.")
+        sys.exit(0)
 
-    devToolsChoice = int(input("""
-Welcome to the Developer Tools Suite!
-(PRO Tip: This suite is displayed because you have enabled Developer Mode
-by setting "DeveloperModeEnabled" to "True" in the .env file.)
+    devTools.toolsStartup()
 
-What would you like to do:
-
-        1) Create a new Identity
-        2) Delete an Identity
-        3) Cert Authority and Certificates Tools
-
-
-    """))
-    print()
-    if devToolsChoice == 1:
-        # Initiate manual Create identity process; ask user for parameter inputs
-        print("Initiating Manual Create Identity Process...Please give inputs as follows...")
-        time.sleep(2)
-
-        # Load access Identities
-        if not os.path.isfile('accessIdentities.txt'):
-            with open('accessIdentities.txt', 'w') as f:
-                f.write("{}")
-
-        accessIdentities = json.load(open('accessIdentities.txt', 'r'))
-        print()
-
-        ## GET INPUTS
-        username = input("Enter new identity's username: ")
-        while True:
-            # Check if username is already taken
-            if username in accessIdentities:
-                print("ERROR: Username already taken.")
-                username = input("Enter new identity's username: ")
-                continue
-            break
-
-        email = input("Enter new identity's email: ")
-        while True:
-            # Check if email is already taken
-            if email in [accessIdentities[x]['email'] for x in accessIdentities]:
-                print("ERROR: Email already taken.")
-                email = input("Enter new identity's email: ")
-                continue
-            break
-        
-        password = getpass("Enter new identity's password: ")
-        # Check if password is secure enough
-        specialCharacters = list('!@#$%^&*()_-+')
-        while True:
-            hasSpecialChar = False
-            hasNumericDigit = False
-            for char in password:
-                if char.isdigit():
-                    hasNumericDigit = True
-                elif char in specialCharacters:
-                    hasSpecialChar = True
-
-            if not (hasSpecialChar and hasNumericDigit):
-                print("ERROR: Password must have at least 1 special character and 1 numeric digit.")
-                password = getpass("Enter new identity's password: ")
-                continue
-            break
-
-        # Create new identity
-        accessIdentities[request.json['username']] = {
-            'password': CertAuthority.encodeToB64(request.json['password']),
-            'email': request.json['email'],
-            'otpCode': request.json['otpCode'],
-            'sign-up-date': datetime.datetime.now().strftime(systemWideStringDateFormat),
-            'last-login-date': datetime.datetime.now().strftime(systemWideStringDateFormat),
-            'associatedCertID': CertAuthority.issueCertificate(request.json['username'])['certID'],
-            'AF_and_files': {},
-            'settings': {
-                "emailPref": {
-                    "loginNotifs": True,
-                    "fileUploadNotifs": False,
-                    "fileDeletionNotifs": False
-                }
-            },
-            'folderRegistered': False
-        }
-
-        # Save identities to file
-        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
-        CertAuthority.saveCertificatesToFile(fileObject=open('certificates.txt', 'w'))
-
-        print("SUCCESS: Identity created.")
-
-    print("Startup will now close.")
+    print("STARTUP: Startup will now close.")
