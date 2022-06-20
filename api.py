@@ -37,7 +37,7 @@ def makeAnIdentity():
             return "UERROR: Username already taken."
         
         # Check if email is already taken
-        if request.json['email'] in accessIdentities:
+        if request.json['email'] in [accessIdentities[x]['email'] for x in accessIdentities]:
             return "UERROR: Email already taken."
 
         # Check if otp code is valid
