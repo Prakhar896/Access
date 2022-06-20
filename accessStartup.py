@@ -35,6 +35,10 @@ devMode = False
 if 'DeveloperModeEnabled' in os.environ and os.environ['DeveloperModeEnabled'] == 'True':
   devMode = True
 
+if 'FileUploadsLimit' not in os.environ:
+    print("STARTUP WARNING: Mandatory `FileUploadsLimit` environment variable is not set in .env file. Hence, Access system will automatically fall back to the a limit of `3` file uploads when booted.")
+    print()
+
 print("Welcome to Access Startup!")
 print()
 print("Here you can manage and run all things Access!")
