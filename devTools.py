@@ -109,7 +109,6 @@ Options:
         CertAuthority.saveCertificatesToFile(fileObject=open('certificates.txt', 'w'))
 
         print("DEV TOOLS: Successfully created identity. You may now login with the identity's credentials in the Access Portal.")
-        return
     elif devToolsChoice == 2:
         # Initiate manual delete identity
         print("Initiating manual delete identity process...please wait!")
