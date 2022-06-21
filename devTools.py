@@ -1,8 +1,10 @@
 # Set DeveloperModeEnabled to "True" in .env file to enable the Developer Tools Suite
-import time, json, os, datetime
+import time, json, os, datetime, copy
 from models import systemWideStringDateFormat
 from getpass import getpass
 from certAuthority import *
+from AFManager import *
+from accessAnalytics import *
 def toolsStartup():
 
     print("""
@@ -108,3 +110,141 @@ Options:
 
         print("DEV TOOLS: Successfully created identity. You may now login with the identity's credentials in the Access Portal.")
         return
+    elif devToolsChoice == 2:
+        # Initiate manual delete identity
+        print("Initiating manual delete identity process...please wait!")
+        print()
+        time.sleep(3)
+
+        # Load access identities and certificates, valid otp codes, prep AA environment
+        if not os.path.isfile('accessIdentities.txt'):
+            with open('accessIdentities.txt', 'w') as f:
+                f.write("{}")
+
+        accessIdentities = json.load(open('accessIdentities.txt', 'r'))
+
+        if not os.path.isfile('certificates.txt'):
+            with open('certificates.txt', 'w') as f:
+                f_content = """{ "registeredCertificates": {}, "revokedCertificates": {}}"""
+                f.write(f_content)
+
+        CAresponse = CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
+        if CAError.checkIfErrorMessage(CAresponse):
+            print("DELETE IDENTITY DEV TOOL: Error in loading certificates; response from CA: " + CAresponse)
+            sys.exit(1)
+        print()
+
+        if not os.path.isfile('validOTPCodes.txt'):
+            with open('validOTPCodes.txt', 'w') as f:
+                f.write("{}")
+
+        validOTPCodes = json.load(open('validOTPCodes.txt', 'r'))
+
+        print("Prepping environment for analytics...please wait!")
+        time.sleep(2)
+        AccessAnalytics.prepEnvironmentForAnalytics()
+
+        # Gather inputs
+        print()
+
+        identityUsername = input("Enter the username of the identity you would like to delete: ")
+        while True:
+            if identityUsername not in accessIdentities:
+                print("No such identity has that username.")
+                identityUsername = input("Enter the username of the identity you would like to delete: ")
+                continue
+            break
+        
+        targetIdentity = {}
+        for username in accessIdentities:
+            if username == identityUsername:
+                targetIdentity = copy.deepcopy(accessIdentities[username])
+                targetIdentity['username'] = username
+        
+        password = getpass("For security purposes, you will have to enter the identity's password: ")
+        while True:
+            if password != CertAuthority.decodeFromB64(targetIdentity['password']):
+                print("Incorrect identity password. Try again.")
+                password = getpass("For security purposes, you will have to enter the identity's password: ")
+                continue
+            break
+
+        print()
+        print("Processing identity deletion request...please wait!")
+        print()
+        time.sleep(2)
+        
+        # Delete identity from existence
+
+        ## possible validOTPCode entries
+        if targetIdentity['email'] in validOTPCodes:
+            validOTPCodes.pop(targetIdentity['email'])
+
+        ## Delete certificate
+        response = CertAuthority.permanentlyDeleteCertificate(targetIdentity['associatedCertID'])
+        if CAError.checkIfErrorMessage(response):
+            print("DELETE IDENTITY DEVTOOL SYSTEMERROR: Error response received from CA when attempting to delete identity certificate: {}".format(response))
+            print("Startup will now close.")
+            sys.exit(1)
+        elif response != "Successfully deleted that certificate.":
+            print("DELETE IDENTITY DEVTOOL SYSTEMERROR: An unknown response string was received from CA when attempting to delete identity certificate: {}".format(response))
+            print("Startup will now close.")
+            sys.exit(1)
+    
+        ## Delete Access Folder
+        if AFManager.checkIfFolderIsRegistered(targetIdentity['username']):
+            afmResponse = AFManager.deleteFolder(targetIdentity['username'])
+            if AFMError.checkIfErrorMessage(afmResponse):
+                print("DELETE IDENTITY DEVTOOL SYSTEMERROR: Error response received from AFM when attempting to delete identity's Access Folder: {}".format(afmResponse))
+                print("Startup will now close.")
+                sys.exit(1)
+    
+        ## Delete identity records
+        try:
+            accessIdentities.pop(targetIdentity['username'])
+        except Exception as e:
+            print("DELETE IDENTITY DEVTOOL SYSTEMERROR: An error occurred in deleting identity records: {}".format(e))
+            print("Startup will now close.")
+            sys.exit(1)
+
+        ## SAVE ALL CHANGES TO DATABASE
+        try:
+            json.dump(validOTPCodes, open('validOTPCodes.txt', 'w'))
+        except Exception as e:
+            print("DELETE IDENTITY DEVTOOL SYSTEMERROR: Failed to update OTP codes database with deletion of entries associated with the Access Identity; Error: {}".format(e))
+            print("Startup will now close.")
+            sys.exit(1)
+
+        try:
+            json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+        except Exception as e:
+            print("DELETE IDENTITY DEVTOOL SYSTEMERROR: Failed to update database with the deletion of the identity's records; Error: {}".format(e))
+            print("Startup will now close.")
+            sys.exit(1)
+
+        try:
+            savingDeletionCAResponse = CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
+            if CAError.checkIfErrorMessage(savingDeletionCAResponse):
+                print("DELETE IDENTITY DEVTOOL SYSTEMERROR: Error response received from CA when attempting to save certificate deletion to database: {}".format(savingDeletionCAResponse))
+                print("Startup will now close.")
+                sys.exit(1)
+        except Exception as e:
+            print("DELETE IDENTITY DEVTOOL SYSTEMERROR: An error occurred when attempting to update database with the deletion of the identity's certificate; Error: {}".format(e))
+            print("Startup will now close.")
+            sys.exit(1)
+    
+        # Update Access Analytics
+        aaResponse = AccessAnalytics.newIdentityDeletion()
+    
+        if isinstance(aaResponse, str):
+            if aaResponse.startswith("AAError"):
+                print("DELETE IDENTITY DEVTOOL: Failed to update Access Analytics with new identity deletion; Response: {}".format(aaResponse))
+            else:
+                print("DELETE IDENTITY DEVTOOL: Unknown string response received from Access Analytics when attempting to update with new identity deletion; Response: {}".format(aaResponse))
+        elif aaResponse != True:
+            print("DELETE IDENTITY DEVTOOL: Unknown response received from Access Analytics when attempting to update with new identity deletion; Response: {}".format(aaResponse))
+        else:
+            print("DELETE IDENTITY DEVTOOL: Updated Access Analytics with new identity deletion.")
+
+        print()
+        print("Identity was successfully wiped from system.")
