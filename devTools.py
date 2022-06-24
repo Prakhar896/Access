@@ -16,7 +16,8 @@ Options:
 
         1) Create a new Identity
         2) Delete an Identity
-        3) Cert Authority and Certificates Tools
+        3) View All Identities and their Data
+        4) Cert Authority and Certificates Tools
 
     """)
     devToolsChoice = int(input("What would you like to do: "))
@@ -247,3 +248,54 @@ Options:
 
         print()
         print("Identity was successfully wiped from system.")
+    elif devToolsChoice == 3:
+        print()
+        print("Reading all identities' data from database files...")
+        print()
+        time.sleep(2)
+
+        # Load access identities
+        if not os.path.isfile('accessIdentities.txt'):
+            with open('accessIdentities.txt', 'w') as f:
+                f.write("{}")
+
+        accessIdentities = json.load(open('accessIdentities.txt', 'r'))
+
+        loopIndex = 1
+        for username in accessIdentities:
+            print("({})".format(loopIndex))
+            print("\tUsername: {}".format(username))
+            print("\tEmail: {}".format(accessIdentities[username]["email"]))
+            print("\tPassword (Encrypted): {}".format(accessIdentities[username]["password"]))
+            print("\tSign-Up Date: {}".format(accessIdentities[username]["sign-up-date"]))
+            print("\tAssociated Sign-Up OTP Code: {}".format(accessIdentities[username]["otpCode"]))
+            print("\tLast Login Date: {}".format(accessIdentities[username]["last-login-date"]))
+            if "loggedInAuthToken" in accessIdentities[username]:
+                print("\tSigned-In Status: True, Auth Token: {}".format(accessIdentities[username]["loggedInAuthToken"]))
+            else:
+                print("\tSigned-In Status: False")
+            print("\tAssociated Certificate ID: {}".format(accessIdentities[username]["associatedCertID"]))
+            if accessIdentities[username]["folderRegistered"] == True:
+                print("\tAccess Folder: Registered")
+                print("\t\tFiles:")
+                if accessIdentities[username]["AF_and_files"] == {}:
+                    print("\t\tNo files in folder.")
+                else:
+                    print("\t\tNAME\t\t\t\tUPLOAD DATE")
+                    for file in accessIdentities[username]["AF_and_files"]:
+                        print("\t\t{}\t\t{}".format(file, accessIdentities[username]["AF_and_files"][file]))
+            else:
+                print("\tAccess Folder: Not Registered")
+            print("\tSettings:")
+            for preference in accessIdentities[username]["settings"]:
+                print("\t\t{}: {}".format(preference, accessIdentities[username]["settings"][preference]))
+
+            print()
+            print()
+            loopIndex += 1
+        
+        print("-----")
+        print("END OF IDENTITIES' DATA")
+        print()
+        
+

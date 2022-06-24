@@ -251,7 +251,7 @@ def bootFunction():
   CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
 
   ## Expire auth tokens
-  tempIdentities = accessIdentities
+  tempIdentities = copy.deepcopy(accessIdentities)
   accessIdentities = expireAuthTokens(tempIdentities)
   json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
