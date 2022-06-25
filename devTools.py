@@ -24,7 +24,7 @@ Options:
     print()
     if devToolsChoice == 1:
         # Initiate manual Create identity process; ask user for parameter inputs
-        print("Initiating Manual Create Identity Process...Please give inputs as follows...")
+        print("Initializing Manual Create Identity Process...Please give inputs as follows...")
         time.sleep(2)
 
         # Load access identities and certificates
@@ -112,7 +112,7 @@ Options:
         print("DEV TOOLS: Successfully created identity. You may now login with the identity's credentials in the Access Portal.")
     elif devToolsChoice == 2:
         # Initiate manual delete identity
-        print("Initiating manual delete identity process...please wait!")
+        print("Initializing manual delete identity process...please wait!")
         print()
         time.sleep(3)
 
@@ -297,5 +297,103 @@ Options:
         print("-----")
         print("END OF IDENTITIES' DATA")
         print()
+    elif devToolsChoice == 4:
+        print()
+        print("Initializing Cert Editing Tools...")
+        print()
+        time.sleep(2)
+
+        # Load certificates
+        if not os.path.isfile('certificates.txt'):
+            with open('certificates.txt', 'w') as f:
+                f_content = """{ "registeredCertificates": {}, "revokedCertificates": {}}"""
+                f.write(f_content)
+
+        CAresponse = CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
+        if CAError.checkIfErrorMessage(CAresponse):
+            print("CERT EDIT DEV TOOL: Error in loading certificates; response from CA: " + CAresponse)
+            sys.exit(1)
+        print()
+
+
+        print("""
+Welcome to Certificate Editing Tools! This tool is designed to allow you to edit the certificates that are stored in the CA.
+    
+Please choose an option from below:
         
+    1) View all certificates
+    2) Create a certificate
+    3) Revoke a certificate
+    4) Delete a certificate
+    5) Re-hash a certificate
+        
+        """)
+
+        certEditToolsChoice = int(input("Enter your choice: "))
+        print()
+
+        if certEditToolsChoice == 1:
+            # View all certificates
+            print("Reading all certificates' data...")
+            time.sleep(2)
+            print()
+
+            regCerts = CertAuthority.registeredCertificates
+            revokedCerts = CertAuthority.revokedCertificates
+
+            print("REGISTERED CERTIFICATES:")
+            print("------------------------")
+            print()
+
+            if regCerts == {}:
+                print("No registered certificates.")
+            else:
+                loopIndex = 1
+                for username in regCerts:
+                    print("({})".format(loopIndex))
+                    print("\tUsername of Identity Attached to Certificate: {}".format(username))
+                    print("\tCertificate ID: {}".format(regCerts[username]["certID"]))
+                    print("\tResponse From CertAuthority About Certificate's Security: {}".format(CertAuthority.checkCertificateSecurity(regCerts[username])))
+                    print("\tExpiry Date: {}".format(regCerts[username]["expiryDate"]))
+                    if regCerts[username]["revoked"] == True:
+                        print("\tRevoked: True, Reason: {}".format(regCerts[username]["revocationReason"]))
+                    else:
+                        print("\tRevoked: False")
+                    print("\tIssue Date: {}".format(regCerts[username]["issueDate"]))
+                    print()
+
+                    loopIndex += 1
+
+            print()
+            print("REVOKED CERTIFICATES:")
+            print("---------------------")
+
+            if revokedCerts == {}:
+                print("No revoked certificates.")
+            else:
+                loopIndex = 1
+                for username in revokedCerts:
+                    print("({})".format(loopIndex))
+                    print("\tUsername of Identity Attached to Certificate: {}".format(username))
+                    print("\tCertificate ID: {}".format(revokedCerts[username]["certID"]))
+                    print("\tResponse From CertAuthority About Certificate's Security: {}".format(CertAuthority.checkCertificateSecurity(revokedCerts[username])))
+                    print("\tExpiry Date: {}".format(revokedCerts[username]["expiryDate"]))
+                    if revokedCerts[username]["revoked"] == True:
+                        print("\tRevoked: True, Reason: {}".format(revokedCerts[username]["revocationReason"]))
+                    else:
+                        print("\tRevoked: False")
+                    print("\tIssue Date: {}".format(revokedCerts[username]["issueDate"]))
+                    print()
+
+                    loopIndex += 1
+
+            print()
+            print("-----------------")
+            print("End of certificates data.")
+            print()
+        elif certEditToolsChoice == 2:
+            pass
+
+            
+
 

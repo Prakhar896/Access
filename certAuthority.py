@@ -96,7 +96,8 @@ class CertAuthority:
             'revoked': False,
             'revocationReason': None,
             'revocationDate': None,
-            'issueDate': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            'issueDate': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'user': user
         }
         CertAuthority.registeredCertificates[user] = cert
         return cert

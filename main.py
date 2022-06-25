@@ -198,6 +198,23 @@ def bootFunction():
       else:
         print("MAIN: Boot version detected: '" + fileData + "'")
 
+  # Load certificates
+  CAresponse = CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
+  if CAError.checkIfErrorMessage(CAresponse):
+    print(CAresponse)
+    sys.exit(1)
+  else:
+    print(CAresponse)
+  
+  # Expire old certificates and save new data
+  CertAuthority.expireOldCertificates()
+  CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
+
+  ## Expire auth tokens
+  tempIdentities = copy.deepcopy(accessIdentities)
+  accessIdentities = expireAuthTokens(tempIdentities)
+  json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+
   # Run code that supports older versions (Backwards compatibility)
   report = []
 
@@ -228,6 +245,18 @@ def bootFunction():
         
         for filename in AFManager.getFilenames(username):
           accessIdentities[username]['AF_and_files'][filename] = currentDatetimeString
+
+    ## SUPPORT FOR v1.0.3
+    for username in CertAuthority.registeredCertificates:
+      if 'user' not in CertAuthority.registeredCertificates[username]:
+        report.append("'user' parameter was added to unrevoked certificate of identity with username {}".format(username))
+        CertAuthority.registeredCertificates[username]['user'] = username
+    for username in CertAuthority.revokedCertificates:
+      if 'user' not in CertAuthority.revokedCertificates[username]:
+        report.append("'user' parameter was added to revoked certificate of identity with username {}".format(username))
+        CertAuthority.revokedCertificates[username]['user'] = username
+    
+    CertAuthority.saveCertificatesToFile(fileObject=open('certificates.txt', 'w'))
         
   json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
@@ -237,23 +266,6 @@ def bootFunction():
     for item in report:
       print('\t' + item)
     print()
-
-  # Load certificates
-  CAresponse = CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
-  if CAError.checkIfErrorMessage(CAresponse):
-    print(CAresponse)
-    sys.exit(1)
-  else:
-    print(CAresponse)
-  
-  # Expire old certificates and save new data
-  CertAuthority.expireOldCertificates()
-  CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
-
-  ## Expire auth tokens
-  tempIdentities = copy.deepcopy(accessIdentities)
-  accessIdentities = expireAuthTokens(tempIdentities)
-  json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
   ## Set up Access Analytics
   if AccessAnalytics.permissionCheck():
