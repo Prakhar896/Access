@@ -334,14 +334,18 @@ elif choice == 5:
     Startup will now close.
     """.format(open('version.txt', 'r').read()))
 elif choice == 6:
-    try:
-        import devTools
-    except Exception as e:
-        print("STARTUP DEV TOOLS INITIALISER: Failed to initialise developer tools suite program, could not import module. Please ensure that the devTools.py file is present in the system. If not, update Access to a fresh copy.")
-        print("System Error Produced: {}".format(e))
-        print("Startup will now close.")
-        sys.exit(0)
+    if 'DeveloperModeEnabled' in os.environ and os.environ['DeveloperModeEnabled'] == "True":
+        try:
+            import devTools
+        except Exception as e:
+            print("STARTUP DEV TOOLS INITIALISER: Failed to initialise developer tools suite program, could not import module. Please ensure that the devTools.py file is present in the system. If not, update Access to a fresh copy.")
+            print("System Error Produced: {}".format(e))
+            print("Startup will now close.")
+            sys.exit(0)
 
-    devTools.toolsStartup()
+        devTools.toolsStartup()
+    else:
+        print()
+        print("The Developer Tools Suite is not enabled. Please set 'DeveloperModeEnabled' to 'True' in the .env file to enable the suite.")
 
     print("STARTUP: Startup will now close.")
