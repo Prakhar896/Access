@@ -90,4 +90,4 @@ def sendOTP():
     validOTPCodes[email] = str(otp)
     json.dump(validOTPCodes, open('validOTPCodes.txt', 'w'))
 
-    return "OTP sent to {}".format(email)
+    return "OTP sent to {}. For demo, Code: {}".format(email, otp) ## REPLIT MODIFICATION

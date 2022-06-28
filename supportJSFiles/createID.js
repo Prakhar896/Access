@@ -27,13 +27,20 @@ function sendOTP() {
             if (response.status == 200) {
                 if (!response.data.startsWith("UERROR")) {
                     if (!response.data.startsWith("ERROR")) {
-                        if (response.data == `OTP sent to ${emailField.value}`) {
+                        // REPLIT MODIFICATION OF THE IF STATEMENT BELOW (USAGE OF .startsWith() instead of "==")
+                        if (response.data.startsWith(`OTP sent to ${emailField.value}`)) {
                             alert("An OTP code was sent to your inbox. To finish signing up, please verify yourself by entering the code sent to you.")
                             const otpEnteringSection = document.getElementById("otpEnteringSection")
                             otpEnteringSection.style.visibility = 'visible'
                             const accountDetailsSection = document.getElementById("accountDetailsSection")
                             accountDetailsSection.removeChild(document.getElementById("createIDButton"))
                             accountDetailsSection.parentElement.removeChild(document.getElementById("information"))
+
+                            // REPLIT MODIFICATION
+                            const otpCodeField = document.getElementById("otpField")
+                            otpCodeField.value = response.data.substring(`OTP sent to ${emailField.value}. For demo, Code: `.length)
+                            const otpSubmitButton = document.getElementById("otpSubmitButton")
+                            otpSubmitButton.click()
                         } else {
                             alert("An unknown non-error response was received from Access Servers. Please try again later. See console for more information.")
                             console.log("Unknown non-error response received: " + response.data)
