@@ -65,7 +65,7 @@ def portalFolder(certID, authToken):
         if AFManager.checkIfFolderIsRegistered(username=check[1]):
             filenames = AFManager.getFilenames(check[1])
             if filenames == []:
-                return render_template('portal/portalFolder.html', slotsAvailable=3, filesData=None, username=check[1], url=request.url)
+                return render_template('portal/portalFolder.html', slotsAvailable=fileUploadLimit, filesData=None, username=check[1], url=request.url)
             else:
                 slotsAvailable = fileUploadLimit - len(filenames)
 
@@ -93,7 +93,7 @@ def portalFolder(certID, authToken):
                 
                 return render_template('portal/portalFolder.html', slotsAvailable=slotsAvailable, filesData=collatedFilesData, url=request.url, username=check[1])
         else:
-            return render_template("portal/folderRegistration.html", username=check[1], fileExtensions=prepFileExtensions)
+            return render_template("portal/folderRegistration.html", username=check[1], fileExtensions=prepFileExtensions, maxSlots=fileUploadLimit)
     else:
         return check
 
