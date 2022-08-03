@@ -116,7 +116,7 @@ class CertAuthority:
                 CertAuthority.revokedCertificates[user] = CertAuthority.registeredCertificates[username]
                 CertAuthority.registeredCertificates.pop(user)
                 return CertAuthority.revokedCertificates[user]
-        return None
+        return CAError.certAlreadyRevoked
 
     @staticmethod
     def getCertificate(certID):
@@ -235,7 +235,7 @@ class CAError(Exception):
     certIsNotRevoked = "The certificate is not revoked. Only revoked certificates can be renewed."
     certHasRevokedDetailButNotInRevokedCertificates = "CAError: The certificate is revoked according to its details but is not in the revoked certificates database. Attempting to revoke it before renewing..."
     obtainedButNotFoundInDB = "CAError: The certificate was successfully obtained but was not found in revoked or registered certificates database."
-
+    certAlreadyRevoked = "Certificate is already revoked. Nothing to do."
 
     ## Success Message
     validCert = "This certificate is valid and is signed by this Certificate Authority."
@@ -254,7 +254,8 @@ class CAError(Exception):
             CAError.noSuchCertFound,
             CAError.certIsNotRevoked,
             CAError.certHasRevokedDetailButNotInRevokedCertificates,
-            CAError.obtainedButNotFoundInDB
+            CAError.obtainedButNotFoundInDB,
+            CAError.certAlreadyRevoked
         ]
         if msg in arrayOfMsgs:
             return True

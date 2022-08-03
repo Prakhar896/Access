@@ -301,7 +301,7 @@ Options:
         print()
         print("Initializing Cert Editing Tools...")
         print()
-        time.sleep(2)
+        time.sleep(1)
 
         # Load certificates
         if not os.path.isfile('certificates.txt'):
@@ -406,6 +406,7 @@ Please choose an option from below:
             while True:
                 print()
                 targetCertIDOptions = input("How would you like to reference the target certificate? By username of access identity or by certificate ID? (username/certID) ")
+
                 if targetCertIDOptions == "username":
                     print()
                     targetCertUsername = input("Please enter username of access identity that certificate is attached to: ")
@@ -423,6 +424,7 @@ Please choose an option from below:
 
                     derivedCertIDFromUser = accessIdentities[targetCertUsername]['associatedCertID']
                     break
+
                 elif targetCertIDOptions == "certID":
                     targetCertID = input("Enter certificate ID: ")
                     
@@ -430,6 +432,7 @@ Please choose an option from below:
                     if cert == None:
                         print("Failed to get certificate based on certificate ID. Please try again.")
                         continue
+                    break
 
             print()
             if targetCertUsername == None:
