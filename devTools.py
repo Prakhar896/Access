@@ -342,6 +342,8 @@ Please choose an option from below:
             if (not certEditToolsChoice.isdigit()) or (int(certEditToolsChoice) not in [x for x in range(0, 5)]):
                 print("Invalid input. Please try again.")
                 certEditToolsChoice = input("Enter your choice: ")
+                continue
+            break
         certEditToolsChoice = int(certEditToolsChoice)
         print()
 
