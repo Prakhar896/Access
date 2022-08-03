@@ -61,6 +61,7 @@ Though large, this project still has a lot of work to do. Here is my project roa
 UPCOMING FEATURES:
 
 - New Access Admin portal, where admin signs-in and can view/manage/edit all identities in the system
+- New Developer Tools Suite that allows admins to have low-level database access and more control over identites, certificates and more. (WIP in `1.0.3-beta`)
 - Completion of all the settings that are found in a user's Access Portal (DONE in `v1.0.2`)
 - Miscellaneous endpoints such as `/version` to view more information about the system (DONE in `v1.0.2`)
 - Back-tracking links on relevant error pages (DONE in `v1.0.2`)
