@@ -20,7 +20,16 @@ Options:
         4) Cert Authority and Certificates Tools
 
     """)
-    devToolsChoice = int(input("What would you like to do: "))
+    devToolsChoice = input("What would you like to do: ")
+    while True:
+        if (not devToolsChoice.isdigit()) or (int(devToolsChoice) not in [x for x in range(0, 5)]):
+            print("Invalid input. Please try again.")
+            devToolsChoice = input("What would you like to do: ")
+            continue
+        else:
+            break
+    devToolsChoice = int(devToolsChoice)
+        
     print()
     if devToolsChoice == 1:
         # Initiate manual Create identity process; ask user for parameter inputs
@@ -328,7 +337,12 @@ Please choose an option from below:
         
         """)
 
-        certEditToolsChoice = int(input("Enter your choice: "))
+        certEditToolsChoice = input("Enter your choice: ")
+        while True:
+            if (not certEditToolsChoice.isdigit()) or (int(certEditToolsChoice) not in [x for x in range(0, 5)]):
+                print("Invalid input. Please try again.")
+                certEditToolsChoice = input("Enter your choice: ")
+        certEditToolsChoice = int(certEditToolsChoice)
         print()
 
         if certEditToolsChoice == 1:
