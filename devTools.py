@@ -332,8 +332,8 @@ Please choose an option from below:
         
     1) View all certificates
     2) Revoke a certificate
-    3) Delete a certificate
-    4) Re-hash a certificate
+    3) Renew a certificate
+    4) Delete a certificate
         
         """)
 
@@ -408,7 +408,11 @@ Please choose an option from below:
             print()
         elif certEditToolsChoice == 2:
             # Revoke a certificate tool
-
+            print()
+            print("---REVOKE CERTIFICATE DEVTOOL---")
+            print("Warning: This developer tool allows its user to revoke a certificate. This loads, reads and writes directly to database files and should be used with caution. Revocation is a reversible act; you can renew using the Renew Certificate DevTool. After revocation, the user of the Access Identity whose certificate was revoked will not be able to perform identity-based transactions at all and won't be able to access their identity.")
+            print()
+            print()
             ## Load access identities
             if not os.path.isfile('accessIdentities.txt'):
                 with open('accessIdentities.txt', 'w') as f:
@@ -478,3 +482,79 @@ Please choose an option from below:
                     print("An error occurred in saving the certificate modifications to data files: {}".format(e))
                     sys.exit(1)
                 print("Certificate successfully revoked!")
+        elif certEditToolsChoice == 3:
+            print()
+            print("---RENEW CERTIFICATE DEVTOOL---")
+            print("Warning: This tool allows its user to renew a revoked certificate. It loads, reads and writes directly to database files and should be used with caution. After renewal, the user, whose Access Identity's certificate is renewed, will be able to once again access their identity and perform identity-based transactions. The certificate's new expiry date will become the date 30 days after the time of renewal.")
+            print()
+            print()
+
+            ## Load access identities
+            if not os.path.isfile('accessIdentities.txt'):
+                with open('accessIdentities.txt', 'w') as f:
+                    f.write("{}")
+
+            accessIdentities = json.load(open('accessIdentities.txt', 'r'))
+
+            derivedCertIDFromUser = ""
+            targetCertUsername = None
+            print()
+            while True:
+                print()
+                targetCertIDOptions = input("How would you like to reference the target certificate? By username of access identity or by certificate ID? (username/certID) ")
+
+                if targetCertIDOptions == "username":
+                    print()
+                    targetCertUsername = input("Please enter username of access identity that certificate is attached to: ")
+                    if targetCertUsername not in accessIdentities:
+                        print("No such access identity has that username. Please try again.")
+                        continue
+                    elif 'associatedCertID' not in accessIdentities[targetCertUsername]:
+                        print("Identity with that username has no associated certificate ID parameter. Please try again.")
+                        continue
+                    
+                    cert = CertAuthority.getCertificate(accessIdentities[targetCertUsername]['associatedCertID'])
+                    if cert == None:
+                        print("Failed to get certificate based on associated certificate ID with the identity of that has that username. Please try again.")
+                        continue
+                    elif cert['revoked'] != True:
+                        print("Certificate being requested is not revoked. Please try again.")
+                        continue
+
+                    derivedCertIDFromUser = accessIdentities[targetCertUsername]['associatedCertID']
+                    break
+
+                elif targetCertIDOptions == "certID":
+                    targetCertID = input("Enter certificate ID: ")
+                    
+                    cert = CertAuthority.getCertificate(targetCertID)
+                    if cert == None:
+                        print("Failed to get certificate based on certificate ID. Please try again.")
+                        continue
+                    elif cert['revoked'] != True:
+                        print("Certificate being requested is not revoked. Please try again.")
+                        continue
+
+                    derivedCertIDFromUser = targetCertID
+                    break
+
+            print()
+            print("Processing renewal...")
+            time.sleep(1)
+            
+            # Get CA to renew certificate
+            try:
+                response = CertAuthority.renewCertificate(derivedCertIDFromUser)
+            except Exception as e:
+                print("An error occurred in renewing the certificate: {}".format(e))
+                sys.exit(1)
+
+            if CAError.checkIfErrorMessage(response):
+                print("An error occurred in renewing the certificate: {}".format(response))
+            else:
+                try:
+                    CertAuthority.saveCertificatesToFile(fileObject=open('certificates.txt', 'w'))
+                except Exception as e:
+                    print("An error occurred in saving the certificate modifications to data files: {}".format(e))
+                    sys.exit(1)
+                print("Certificate successfully renewed!")
