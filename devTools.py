@@ -5,6 +5,7 @@ from getpass import getpass
 from certAuthority import *
 from AFManager import *
 from accessAnalytics import *
+import re
 def toolsStartup():
 
     print("""
@@ -62,6 +63,10 @@ Options:
                 print("ERROR: Username already taken.")
                 username = input("Enter new identity's username: ")
                 continue
+            elif username == "" or username == " " or " " in username:
+                print("ERROR: Invalid input. (Empty string/Space string/Space in username not allowed.)")
+                username = input("Enter new identity's username: ")
+                continue
             break
 
         email = input("Enter new identity's email: ")
@@ -69,6 +74,10 @@ Options:
             # Check if email is already taken
             if email in [accessIdentities[x]['email'] for x in accessIdentities]:
                 print("ERROR: Email already taken.")
+                email = input("Enter new identity's email: ")
+                continue
+            elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+                print("ERROR: Invalid email.")
                 email = input("Enter new identity's email: ")
                 continue
             break
