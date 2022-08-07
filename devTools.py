@@ -567,3 +567,72 @@ Please choose an option from below:
                     print("An error occurred in saving the certificate modifications to data files: {}".format(e))
                     sys.exit(1)
                 print("Certificate successfully renewed!")
+
+        elif certEditToolsChoice == 4:
+            # Delete certificate dev tool
+            print()
+            print("---DELETE CERTIFICATE DEVTOOL---")
+            print("Warning: This tool allows its user to delete a certificate. It loads, reads and writes directly to database files and should be used with caution. After deletion, the user, whose Access Identity's certificate is deleted, will no longer be able to access their identity and perform identity-based transactions.")
+            print()
+            print()
+
+            ## Load access identities
+            if not os.path.isfile('accessIdentities.txt'):
+                with open('accessIdentities.txt', 'w') as f:
+                    f.write("{}")
+
+            accessIdentities = json.load(open('accessIdentities.txt', 'r'))
+
+            derivedCertIDFromUser = ""
+            targetCertUsername = None
+            print()
+            while True:
+                print()
+                targetCertIDOptions = input("How would you like to reference the target certificate? By username of access identity or by certificate ID? (username/certID) ")
+
+                if targetCertIDOptions == "username":
+                    print()
+                    targetCertUsername = input("Please enter username of access identity that certificate is attached to: ")
+                    if targetCertUsername not in accessIdentities:
+                        print("No such access identity has that username. Please try again.")
+                        continue
+                    elif 'associatedCertID' not in accessIdentities[targetCertUsername]:
+                        print("Identity with that username has no associated certificate ID parameter. Please try again.")
+                        continue
+                    
+                    cert = CertAuthority.getCertificate(accessIdentities[targetCertUsername]['associatedCertID'])
+                    if cert == None:
+                        print("Failed to get certificate based on associated certificate ID with the identity of that has that username. Please try again.")
+                        continue
+
+                    derivedCertIDFromUser = accessIdentities[targetCertUsername]['associatedCertID']
+                    break
+
+                elif targetCertIDOptions == "certID":
+                    targetCertID = input("Enter certificate ID: ")
+                    
+                    cert = CertAuthority.getCertificate(targetCertID)
+                    if cert == None:
+                        print("Failed to get certificate based on certificate ID. Please try again.")
+                        continue
+                    derivedCertIDFromUser = targetCertID
+                    break
+
+            print()
+
+            # Delete cert
+            try:
+                response = CertAuthority.permanentlyDeleteCertificate(derivedCertIDFromUser)
+            except Exception as e:
+                print("An error occurred in deleting the certificate: {}".format(e))
+                sys.exit(1)
+
+            if CAError.checkIfErrorMessage(response):
+                print("An error occurred in deleting the certificate: {}".format(response))
+            else:
+                try:
+                    CertAuthority.saveCertificatesToFile(fileObject=open('certificates.txt', 'w'))
+                except Exception as e:
+                    print("An error occurred in saving the certificate modifications to data files: {}".format(e))
+                    sys.exit(1)
+                print("Certificate successfully deleted!")

@@ -13,7 +13,8 @@ def checkSessionCredentials(certID, authToken):
         if accessIdentities[username]['associatedCertID'] == certID:
             targetCertificate = CertAuthority.getCertificate(certID)
             if targetCertificate == None:
-                return render_template('error.html', message="No such Access Identity certificate was found.")
+                flash("Certificate for requested identity could not be found. Portal access forbidden.")
+                return redirect(url_for('processError'))
 
             if targetCertificate['revoked'] == True:
                 return render_template('unauthorised.html', message="Your Access Identity's Certificate has been revoked. Reason: {}".format(targetCertificate['revocationReason']), originURL=request.host_url)
