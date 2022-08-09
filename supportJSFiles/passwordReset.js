@@ -34,6 +34,8 @@ function sendPwdResetKey() {
 
                             const sendOTPButton = document.getElementById("sendOTPButton")
                             sendOTPButton.parentNode.removeChild(sendOTPButton)
+                            const backToPortalButton = document.getElementById("backToPortalButton")
+                            backToPortalButton.parentNode.removeChild(backToPortalButton)
 
                             newPasswordEnteringSection.style.visibility = 'visible'
 
@@ -72,6 +74,91 @@ function sendPwdResetKey() {
         .catch(error => {
             statusLabel.style.visibility = 'hidden'
             console.log("Error occurred in connecting to Access Servers while sending password reset key: " + error)
-            alert("An error occurred in connecting to Access Servers. Please try again.")
+            alert("An error occurred in connecting to Access Servers. Please try again. Check logs for more information.")
         })
+}
+
+function resetPassword() {
+    const statusLabel = document.getElementById("statusLabel")
+    const identityEmailFieldDiv = document.getElementById("identityEmailFieldDiv")
+    const newPasswordEnteringSection = document.getElementById("newPasswordEnteringSection")
+
+    const identityEmailField = document.getElementById("identityEmailField")
+    const resetKeyField = document.getElementById("resetKeyField")
+    const newPasswordField = document.getElementById("newPasswordField")
+    const confirmNewPasswordField = document.getElementById("confirmNewPasswordField")
+
+    if (!identityEmailField.value || identityEmailField.value == "" || !resetKeyField.value || resetKeyField.value == "" || !newPasswordField.value || newPasswordField.value == "" || !confirmNewPasswordField.value || confirmNewPasswordField.value == "") {
+        alert("One or more fields are empty. Please try again.")
+        return
+    }
+
+    statusLabel.style.visibility = 'visible'
+    statusLabel.innerText = "Processing..."
+
+    if (newPasswordField.value != confirmNewPasswordField.value) {
+        statusLabel.innerText = "New password and confirm password fields do not match."
+        return
+    }
+
+    axios({
+        method: 'post',
+        url: `${origin}/api/resetPassword`,
+        headers: {
+            'Content-Type': 'application/json',
+            'AccessAPIKey': 'access@PRAKH0706!API.key#$69'
+        },
+        data: {
+            'identityEmail': identityEmailField.value,
+            'resetKey': resetKeyField.value,
+            'newPassword': newPasswordField.value
+        }
+    })
+        .then(response => {
+            if (response.status == 200) {
+                if (response.data != "UERROR: Reset key is incorrect. It may have expired if you are entering it more than 15 minutes after the reset key email was sent to you.") {
+                    if (!response.data.startsWith("UERROR")) {
+                        if (!response.data.startsWith("ERROR")) {
+                            if (response.data.startsWith("SUCCESS")) {
+                                statusLabel.style.visibility = 'visible'
+                                statusLabel.innerText = "Password reset successful! Re-directing to login page..."
+
+                                setTimeout(() => {
+                                    location.href = `${origin}/identity/login?email=${identityEmailField.value}`
+                                }, 2000)
+                            }
+                        } else {
+                            statusLabel.style.visibility = 'hidden'
+                            console.log("Error occurred in resetting password: " + response.data)
+                            alert("An error occurred in resetting the password. Check logs for more information.")
+                        }
+                    } else {
+                        statusLabel.style.visibility = 'visible'
+                        statusLabel.innerText = response.data.substring("UERROR: ".length)
+                        console.log("User error occurred in resetting password: " + response.data)
+                    }
+                } else {
+                    statusLabel.style.visibility = 'visible'
+                    statusLabel.innerText = response.data.substring("UERROR: ".length)
+                    console.log("User error occurred in resetting password: " + response.data)
+
+                    const requestNewButton = document.getElementById("requestNewKeyButton")
+                    requestNewButton.style.visibility = 'visible'
+                    alert("Reset key is incorrect. If you are certain that you entered the exact key from the email that was sent and think that the key expired, click the 'Request New Key' button at the bottom.")
+                }
+            } else {
+                statusLabel.style.visibility = 'hidden'
+                console.log("Non-200 status code response received from Access Servers while resetting password.")
+                alert("An error occurred in connecting to Access Servers. Please try again.")
+            }
+        })
+        .catch(error => {
+            statusLabel.style.visibility = 'hidden'
+            console.log("Error occurred in connecting to Access Servers: " + error)
+            alert("An error occurred in connecting to Access Servers. Please try again. Check logs for more information.")
+        })
+}
+
+function requestNewKey() {
+    location.reload()
 }

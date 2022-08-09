@@ -869,3 +869,49 @@ def sendResetKey():
         print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
 
     return "SUCCESS: Reset key was successfully sent to the identity's email."
+
+@app.route('/api/resetPassword', methods=['POST'])
+def resetPassword():
+    global accessIdentities
+    global validOTPCodes
+
+    # Expire any reset keys that are older than 15 minutes
+    for username in accessIdentities:
+        if 'resetKey' in accessIdentities[username]:
+            if (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['resetKey']['datetime'], systemWideStringDateFormat)) > datetime.timedelta(minutes=15):
+                del accessIdentities[username]['resetKey']
+
+    with open('accessIdentities.txt', 'w') as f:
+        json.dump(accessIdentities, f)
+    
+    # Headers check
+    check = headersCheck(headers=request.headers)
+    if check != True:
+        return check
+
+    # Body check
+    if 'identityEmail' not in request.json:
+        return "ERROR: Email field not present in request body."
+    if 'resetKey' not in request.json:
+        return "ERROR: Reset key field not present in request body."
+    if 'newPassword' not in request.json:
+        return "ERROR: New password field not present in request body."
+    
+    # Verify email
+    emails = [accessIdentities[user]['email'] for user in accessIdentities]
+    if request.json['identityEmail'] not in emails:
+        return "UERROR: Email provided is not associated with any Access Identity."
+
+    # Verify reset key
+    targetIdentity = obtainTargetIdentity(request.json['identityEmail'], accessIdentities)
+    identityUsername = targetIdentity['username']
+    if targetIdentity['resetKey']['key'] != request.json['resetKey']:
+        return "UERROR: Reset key is incorrect. It may have expired if you are entering it more than 15 minutes after the reset key email was sent to you."
+    
+    # Update identity data
+    accessIdentities[identityUsername]['password'] = CertAuthority.encodeToB64(request.json['newPassword'])
+    del accessIdentities[identityUsername]['resetKey']
+    with open('accessIdentities.txt', 'w') as f:
+        json.dump(accessIdentities, f)
+    
+    return "SUCCESS: Password was successfully reset."
