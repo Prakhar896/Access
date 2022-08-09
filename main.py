@@ -85,32 +85,6 @@ def updateAnalytics():
 def homepage():
   return fileContent('homepage.html')
 
-@app.route('/system/rereadData')
-def rereadData():
-  if devMode:
-    if not os.path.isfile('accessIdentities.txt'):
-      with open('accessIdentities.txt', 'w') as f:
-        f.write("{}")
-
-    accessIdentities = json.load(open('accessIdentities.txt', 'r'))
-
-    if not os.path.isfile('certificates.txt'):
-      with open('certificates.txt', 'w') as f:
-        f_content = """{ "registeredCertificates": {}, "revokedCertificates": {}}"""
-        f.write(f_content)
-
-    CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
-
-    if not os.path.isfile('validOTPCodes.txt'):
-      with open('validOTPCodes.txt', 'w') as f:
-        f.write("{}")
-
-    validOTPCodes = json.load(open('validOTPCodes.txt', 'r'))
-
-    return "Data re-read successfully!"
-  else:
-    return "Endpoint access forbidden. Please enable developer mode to use this feature."
-
 @app.route('/security/unauthorised')
 def unauthorizedPage():
   return render_template('unauthorised.html', message=request.args['error'], originURL=request.host_url)

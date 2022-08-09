@@ -116,7 +116,7 @@ function resetPassword() {
     })
         .then(response => {
             if (response.status == 200) {
-                if (response.data != "UERROR: Reset key is incorrect. It may have expired if you are entering it more than 15 minutes after the reset key email was sent to you.") {
+                if (response.data != "UERROR: No reset key was sent to this identity. If you did get a reset key email, the key may have expired if you are entering it more than 15 minutes after the reset key email was sent to you.") {
                     if (!response.data.startsWith("UERROR")) {
                         if (!response.data.startsWith("ERROR")) {
                             if (response.data.startsWith("SUCCESS")) {

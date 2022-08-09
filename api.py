@@ -905,8 +905,10 @@ def resetPassword():
     # Verify reset key
     targetIdentity = obtainTargetIdentity(request.json['identityEmail'], accessIdentities)
     identityUsername = targetIdentity['username']
+    if 'resetKey' not in targetIdentity:
+        return "UERROR: No reset key was sent to this identity. If you did get a reset key email, the key may have expired if you are entering it more than 15 minutes after the reset key email was sent to you."
     if targetIdentity['resetKey']['key'] != request.json['resetKey']:
-        return "UERROR: Reset key is incorrect. It may have expired if you are entering it more than 15 minutes after the reset key email was sent to you."
+        return "UERROR: Reset key is incorrect."
     
     # Update identity data
     accessIdentities[identityUsername]['password'] = CertAuthority.encodeToB64(request.json['newPassword'])
