@@ -271,7 +271,8 @@ class AccessAnalytics:
             'File Deletion | Access Portal', 
             'File Uploaded | Access Portal',
             'Confirm Email Update | Access Portal',
-            'Password Updated | Access Portal'
+            'Password Updated | Access Portal',
+            'Password Reset Key | Access Portal'
             ]:
             return "AAError: Subject is not valid."
         
@@ -290,6 +291,8 @@ class AccessAnalytics:
             type = 'emailUpdateConfirmation'
         elif subject == 'Password Updated | Access Portal':
             type = 'passwordUpdated'
+        elif subject == 'Password Reset Key | Access Portal':
+            type = 'passwordResetKey'
         
         emailID = AccessAnalytics.generateRandomID()
 
@@ -588,7 +591,8 @@ class AccessAnalytics:
             "fileDeletionNotif": 0,
             "fileUploadNotif": 0,
             "emailUpdateConfirmation": 0,
-            "passwordUpdated": 0
+            "passwordUpdated": 0,
+            "passwordResetKey": 0
         }
 
         for emailID in loadedData["emails"]:
@@ -674,6 +678,7 @@ Total File Deletion Emails: {}
 Total File Upload Emails: {}
 Total Email Update Confirmation Emails: {}
 Total Password Updated Notification Emails: {}
+Total Password Reset Key Emails: {}
 Most Frequent Email Recipient: {}, Number of Emails Most Frequent Recipient Recived: {}
 
 OTHER METRICS
@@ -707,6 +712,7 @@ END OF REPORT
     numEmailsForEachType["fileUploadNotif"],
     numEmailsForEachType["emailUpdateConfirmation"],
     numEmailsForEachType["passwordUpdated"],
+    numEmailsForEachType["passwordResetKey"],
     mostFreqRecipient,
     numEmailsSentToFreqRecipient,
     numIdentityDeletions,

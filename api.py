@@ -1,3 +1,4 @@
+from os import access
 from main import *
 from models import *
 import re
@@ -792,3 +793,79 @@ def deleteIdentity():
         print("API: Updated Access Analytics with new identity deletion.")
 
     return "SUCCESS: Identity was successfully wiped from system."
+
+@app.route('/api/sendResetKey', methods=['POST'])
+def sendResetKey():
+    global accessIdentities
+    global validOTPCodes
+    
+    # Headers check
+    check = headersCheck(headers=request.headers)
+    if check != True:
+        return check
+
+    # Body check
+    if 'identityEmail' not in request.json:
+        return "ERROR: Email field not present in request body."
+    
+    # Verify email
+    emails = [accessIdentities[user]['email'] for user in accessIdentities]
+    if request.json['identityEmail'] not in emails:
+        return "UERROR: Email provided is not associated with any Access Identity."
+
+    # Generate reset key
+    options = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    resetKey = ''
+    for i in range(5):
+        resetKey += random.choice(options)
+    
+    # Update identity data
+    targetIdentity = obtainTargetIdentity(request.json['identityEmail'], accessIdentities)
+    identityUsername = targetIdentity['username']
+    
+    accessIdentities[identityUsername]['resetKey'] = {
+        "key": resetKey,
+        "datetime": datetime.datetime.now().strftime(systemWideStringDateFormat)
+    }
+    with open('accessIdentities.txt', 'w') as f:
+        json.dump(accessIdentities, f)
+    
+    # Send reset key in email
+    text = """
+    Hi {},
+
+    You recently requested to reset your identity's password on the Access Portal. For verification, please enter the password reset key below onto the portal to complete your password reset.
+
+    Password Reset Key: {}
+
+    Please note that this key is only valid for 15 minutes; after which, you will get an invalid key error when attempting to complete your password reset.
+
+    Kind Regards,
+    The Access Team
+
+    THIS IS AN AUTOMATED MESSAGE DELIVERED TO YOU BY THE ACCESS PORTAL. DO NOT REPLY TO THIS EMAIL.
+    Copyright 2022 Prakhar Trivedi
+    """.format(identityUsername, resetKey)
+
+    html = render_template(
+        'emails/passwordResetKey.html', 
+        username=identityUsername, 
+        resetKey=resetKey
+        )
+
+    ## Actually send and update analytics
+    Emailer.sendEmail(targetIdentity['email'], "Password Reset Key | Access Portal", text, html)
+
+    ## Update Access Analytics
+    response = AccessAnalytics.newEmail(targetIdentity['email'], text, "Password Reset Key | Access Portal", identityUsername)
+    if isinstance(response, str):
+        if response.startswith("AAError:"):
+            print("API: There was an error in updating Analytics with new email data; Response: {}".format(response))
+        else:
+            print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
+    elif isinstance(response, bool) and response == True:
+        print("API: Successfully updated Analytics with new email data.")
+    else:
+        print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
+
+    return "SUCCESS: Reset key was successfully sent to the identity's email."
