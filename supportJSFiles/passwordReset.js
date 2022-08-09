@@ -32,10 +32,10 @@ function sendPwdResetKey() {
                             // SUCCESS Case
                             statusLabel.style.visibility = 'hidden'
 
-                            const sendOTPButton = document.getElementById("sendOTPButton")
-                            sendOTPButton.parentNode.removeChild(sendOTPButton)
+                            const sendResetKeyButton = document.getElementById("sendResetKeyButton")
+                            sendResetKeyButton.parentElement.removeChild(sendResetKeyButton)
                             const backToPortalButton = document.getElementById("backToPortalButton")
-                            backToPortalButton.parentNode.removeChild(backToPortalButton)
+                            backToPortalButton.parentElement.removeChild(backToPortalButton)
 
                             newPasswordEnteringSection.style.visibility = 'visible'
 
@@ -162,3 +162,19 @@ function resetPassword() {
 function requestNewKey() {
     location.reload()
 }
+
+document.getElementById("identityEmailField")
+    .addEventListener("keyup", (event) => {
+        event.preventDefault()
+        if (event.keyCode === 13) {
+            document.getElementById("sendResetKeyButton").click();
+        }
+    })
+
+document.getElementById("confirmNewPasswordField")
+    .addEventListener("keyup", (event) => {
+        event.preventDefault()
+        if (event.keyCode === 13) {
+            document.getElementById("resetPasswordButton").click();
+        }
+    })
