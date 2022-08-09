@@ -111,9 +111,6 @@ def rereadData():
   else:
     return "Endpoint access forbidden. Please enable developer mode to use this feature."
 
-# Import Identity Meta Transactions Service
-from identityMeta import *
-
 @app.route('/security/unauthorised')
 def unauthorizedPage():
   return render_template('unauthorised.html', message=request.args['error'], originURL=request.host_url)
@@ -161,6 +158,9 @@ def version():
     print("MAIN: Error in reading version data from version.txt file when request was made to /version endpoint. Error:", e)
 
   return render_template('version.html', versionNum=num)
+
+# Identity Meta Transactions Service
+from identityMeta import * 
 
 # API
 from api import *

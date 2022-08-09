@@ -23,4 +23,4 @@ def logout():
 
 @app.route('/identity/passwordReset')
 def passwordReset():
-    return
+    return render_template('passwordReset.html')
