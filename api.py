@@ -666,6 +666,8 @@ def updateIdentityPassword():
     This is an alert to notify that you have successfully changed you Access Identity's password as of {} on the Access Portal. You can change your password again any time in the Identity Information & Management
     (IIM) Settings pane.
 
+    Wasn't you? Click on this link to reset your password so as to recover your identity: {}
+
     Thank you for your time!
 
     Kind Regards,
@@ -673,11 +675,12 @@ def updateIdentityPassword():
 
     THIS IS AN AUTOMATED MESSAGE DELIVERED TO YOU BY THE ACCESS PORTAL. DO NOT REPLY TO THIS EMAIL.
     Copyright 2022 Prakhar Trivedi
-    """.format(targetIdentity['username'], datetime.datetime.now().strftime(systemWideStringDateFormat) + ' UTC' + time.strftime('%z'))
+    """.format(targetIdentity['username'], request.host_url + url_for('passwordReset')[1::], datetime.datetime.now().strftime(systemWideStringDateFormat) + ' UTC' + time.strftime('%z'))
 
     html = render_template(
         'emails/passwordUpdated.html', 
-        username=targetIdentity['username'], 
+        username=targetIdentity['username'],
+        resetPwdLink=(request.host_url + url_for('passwordReset')[1::]),
         timestamp=datetime.datetime.now().strftime(systemWideStringDateFormat) + ' UTC' + time.strftime('%z')
         )
 
