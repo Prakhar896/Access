@@ -916,6 +916,9 @@ def resetPassword():
     # Update identity data
     accessIdentities[identityUsername]['password'] = CertAuthority.encodeToB64(request.json['newPassword'])
     del accessIdentities[identityUsername]['resetKey']
+    ## Logout instances of user if they are logged in for security
+    if 'loggedInAuthToken' in accessIdentities[identityUsername]:
+        del accessIdentities[identityUsername]['loggedInAuthToken']
     with open('accessIdentities.txt', 'w') as f:
         json.dump(accessIdentities, f)
     
