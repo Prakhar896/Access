@@ -3,9 +3,10 @@ from main import *
 
 def checkSessionCredentials(certID, authToken):
     global accessIdentities
+    
     CertAuthority.expireOldCertificates()
     CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
-    tempIdentities = accessIdentities
+    tempIdentities = copy.deepcopy(accessIdentities)
     accessIdentities = expireAuthTokens(tempIdentities)
     json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
@@ -63,6 +64,7 @@ def portalFolder(certID, authToken):
 
     check = checkSessionCredentials(certID, authToken)
     if isinstance(check, list) and check[0]:
+        print(accessIdentities)
         if AFManager.checkIfFolderIsRegistered(username=check[1]):
             filenames = AFManager.getFilenames(check[1])
             if filenames == []:
@@ -78,12 +80,6 @@ def portalFolder(certID, authToken):
                 for username in accessIdentities:
                     if username == check[1]:
                         targetIdentity = copy.deepcopy(accessIdentities[username])
-                
-                if "AF_and_files" not in targetIdentity:
-                    targetIdentity["AF_and_files"] = {}
-                    accessIdentities[check[1]]["AF_and_files"] = {}
-
-                    json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
                 for filename in filenames:
                     if filename not in targetIdentity["AF_and_files"]:

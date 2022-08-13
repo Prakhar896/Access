@@ -41,16 +41,6 @@ if not os.path.isfile('accessIdentities.txt'):
 
 accessIdentities = json.load(open('accessIdentities.txt', 'r'))
 
-# Identity format:
-# username: {
-#   "password": "",
-#   "email": "",
-#   "sign-up-date": "",
-#   "last-login-date": "",
-#   "associatedCertID": "",
-#   "loggedInAuthToken": "" (only present if user is logged in)
-# }
-
 if not os.path.isfile('certificates.txt'):
   with open('certificates.txt', 'w') as f:
     f_content = """{ "registeredCertificates": {}, "revokedCertificates": {}}"""
@@ -64,6 +54,83 @@ validOTPCodes = json.load(open('validOTPCodes.txt', 'r'))
 
 if not os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders')):
   os.mkdir(os.path.join(os.getcwd(), 'AccessFolders'))
+
+# Run code that supports older versions (Backwards compatibility)
+report = []
+
+## SUPPORT FOR v1.0.2
+for username in accessIdentities:
+  if 'settings' not in accessIdentities[username] or ('emailPref' not in accessIdentities[username]['settings']):
+    report.append('Settings data including email preferences were added to user \'{}\''.format(username))
+    accessIdentities[username]['settings'] = {
+          "emailPref": {
+              "loginNotifs": True,
+              "fileUploadNotifs": False,
+              "fileDeletionNotifs": False
+          }
+      }
+
+  if 'folderRegistered' not in accessIdentities[username]:
+    report.append('Folder registration status data was added to user \'{}\''.format(username))
+    if AFManager.checkIfFolderIsRegistered(username):
+      accessIdentities[username]['folderRegistered'] = True
+    else:
+      accessIdentities[username]['folderRegistered'] = False
+    
+  if 'AF_and_files' not in accessIdentities[username]:
+    accessIdentities[username]['AF_and_files'] = {}
+    report.append('AF Files data was added to user \'{}\''.format(username))
+    if AFManager.checkIfFolderIsRegistered(username):
+      currentDatetimeString = datetime.datetime.now().strftime(systemWideStringDateFormat)
+        
+      for filename in AFManager.getFilenames(username):
+        accessIdentities[username]['AF_and_files'][filename] = currentDatetimeString
+
+  ## SUPPORT FOR v1.0.3
+  for username in CertAuthority.registeredCertificates:
+    if 'user' not in CertAuthority.registeredCertificates[username]:
+      report.append("'user' parameter was added to unrevoked certificate of identity with username {}".format(username))
+      CertAuthority.registeredCertificates[username]['user'] = username
+  for username in CertAuthority.revokedCertificates:
+    if 'user' not in CertAuthority.revokedCertificates[username]:
+      report.append("'user' parameter was added to revoked certificate of identity with username {}".format(username))
+      CertAuthority.revokedCertificates[username]['user'] = username
+
+if len(report) != 0:
+  CertAuthority.saveCertificatesToFile(fileObject=open('certificates.txt', 'w'))
+  json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+  print()
+  print("BACKWARDS COMPATIBILITY (BC) code made the following changes:")
+  for item in report:
+    print('\t' + item)
+  print()
+
+
+# Update database records with any file deletions during terminated period
+databaseRecoveryReports = []
+for username in accessIdentities:
+  filenames = AFManager.getFilenames(username)
+
+  for file in copy.deepcopy(accessIdentities[username]['AF_and_files']):
+    if file not in filenames:
+      databaseRecoveryReports.append("File missing ('{}') from Access Folder was removed from database records for identity with username '{}'".format(file, username))
+      del accessIdentities[username]['AF_and_files'][file]
+
+  for file in filenames:
+    if file not in accessIdentities[username]['AF_and_files']:
+      databaseRecoveryReports.append("New file detected ('{}') in Access Folders was added to database records for identity with username: '{}'".format(file, username))
+      accessIdentities[username]['AF_and_files'][file] = datetime.datetime.now().strftime(systemWideStringDateFormat)
+
+## Save possible changes to database and log updates
+if databaseRecoveryReports != []:
+  json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+  print("DATABASE RECOVERY code made the following changes:")
+  for reportItem in databaseRecoveryReports:
+    print("\t " + reportItem)
+  print()
+
+
+#### START OF APP ROUTES ####
 
 ## Other pre-requisites
 @app.before_request
@@ -196,58 +263,6 @@ def bootFunction():
   tempIdentities = copy.deepcopy(accessIdentities)
   accessIdentities = expireAuthTokens(tempIdentities)
   json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
-
-  # Run code that supports older versions (Backwards compatibility)
-  report = []
-
-  ## SUPPORT FOR v1.0.2
-  for username in accessIdentities:
-    if 'settings' not in accessIdentities[username] or ('emailPref' not in accessIdentities[username]['settings']):
-      report.append('Settings data including email preferences were added to user \'{}\''.format(username))
-      accessIdentities[username]['settings'] = {
-            "emailPref": {
-                "loginNotifs": True,
-                "fileUploadNotifs": False,
-                "fileDeletionNotifs": False
-            }
-        }
-
-    if 'folderRegistered' not in accessIdentities[username]:
-      report.append('Folder registration status data was added to user \'{}\''.format(username))
-      if AFManager.checkIfFolderIsRegistered(username):
-        accessIdentities[username]['folderRegistered'] = True
-      else:
-        accessIdentities[username]['folderRegistered'] = False
-    
-    if 'AF_and_files' not in accessIdentities[username]:
-      accessIdentities[username]['AF_and_files'] = {}
-      report.append('AF Files data was added to user \'{}\''.format(username))
-      if AFManager.checkIfFolderIsRegistered(username):
-        currentDatetimeString = datetime.datetime.now().strftime(systemWideStringDateFormat)
-        
-        for filename in AFManager.getFilenames(username):
-          accessIdentities[username]['AF_and_files'][filename] = currentDatetimeString
-
-    ## SUPPORT FOR v1.0.3
-    for username in CertAuthority.registeredCertificates:
-      if 'user' not in CertAuthority.registeredCertificates[username]:
-        report.append("'user' parameter was added to unrevoked certificate of identity with username {}".format(username))
-        CertAuthority.registeredCertificates[username]['user'] = username
-    for username in CertAuthority.revokedCertificates:
-      if 'user' not in CertAuthority.revokedCertificates[username]:
-        report.append("'user' parameter was added to revoked certificate of identity with username {}".format(username))
-        CertAuthority.revokedCertificates[username]['user'] = username
-    
-    CertAuthority.saveCertificatesToFile(fileObject=open('certificates.txt', 'w'))
-        
-  json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
-
-  if len(report) != 0:
-    print()
-    print("BACKWARDS COMPATIBILITY (BC) code made the following changes:")
-    for item in report:
-      print('\t' + item)
-    print()
 
   ## Set up Access Analytics
   if AccessAnalytics.permissionCheck():
