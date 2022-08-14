@@ -227,10 +227,11 @@ def bootFunction():
       if 'user' not in CertAuthority.revokedCertificates[username]:
         report.append("'user' parameter was added to revoked certificate of identity with username {}".format(username))
         CertAuthority.revokedCertificates[username]['user'] = username
+    CertAuthority.saveCertificatesToFile(fileObject=open('certificates.txt', 'w'))
+
+  json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
   if len(report) != 0:
-    CertAuthority.saveCertificatesToFile(fileObject=open('certificates.txt', 'w'))
-    json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
     print()
     print("BACKWARDS COMPATIBILITY (BC) code made the following changes:")
     for item in report:
