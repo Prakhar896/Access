@@ -1,4 +1,3 @@
-from os import access
 from main import *
 from models import *
 import re
