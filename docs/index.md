@@ -43,7 +43,7 @@ Access is easily the biggest web server I have ever built; with Python as its ba
 
 The Access Analytics service also crunches data about the system's usage and generates savable usage reports for the administrator.
 
-The entire system unanimously acts as a complete backend and frontend system. On the website itself, when the user logs in, the user is able to manage their account, upload/download/delete files from their Access Folder and more. The UI was designed with the help of [Bootstrap](https://getbootstrap.com). Login alerts, folder registration and identity creation emails are also sent to the user. At the moment, the system has been configured and hard-coded to allow only 3 file uploads per Access Identity.
+The entire system unanimously acts as a complete backend and frontend system. On the website itself, when the user logs in, the user is able to manage their account, upload/download/delete files from their Access Folder and more. The UI was designed with the help of [Bootstrap](https://getbootstrap.com). Login alerts, folder registration and identity creation emails are also sent to the user. By default, file uploads are limited to 3. You can change this by setting `FileUploadLimit` to whatever number you want in the `.env` file.
 
 # What This Means to Me
 

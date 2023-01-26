@@ -52,7 +52,7 @@ def portalHome(certID, authToken):
             "timeLeft": timeLeft,
             "currentToken": authToken
         }
-        return render_template('portal/portalHome.html', username=check[1], sessionDetails=sessionDetails, url=request.url)
+        return render_template('portal/portalHome.html', username=check[1], sessionDetails=sessionDetails, fileUploadLimit=fileUploadLimit, url=request.url)
     else:
         return check
 
@@ -65,9 +65,9 @@ def portalFolder(certID, authToken):
         if AFManager.checkIfFolderIsRegistered(username=check[1]):
             filenames = AFManager.getFilenames(check[1])
             if filenames == []:
-                return render_template('portal/portalFolder.html', slotsAvailable=3, filesData=None, username=check[1], url=request.url)
+                return render_template('portal/portalFolder.html', slotsAvailable=fileUploadLimit, filesData=None, username=check[1], url=request.url)
             else:
-                slotsAvailable = 3 - len(filenames)
+                slotsAvailable = fileUploadLimit - len(filenames)
 
                 ## Collate files data, aka get filename plus its upload timestamp
                 collatedFilesData = {}
@@ -93,7 +93,7 @@ def portalFolder(certID, authToken):
                 
                 return render_template('portal/portalFolder.html', slotsAvailable=slotsAvailable, filesData=collatedFilesData, url=request.url, username=check[1])
         else:
-            return render_template("portal/folderRegistration.html", username=check[1], fileExtensions=prepFileExtensions)
+            return render_template("portal/folderRegistration.html", username=check[1], fileUploadLimit=fileUploadLimit, fileExtensions=prepFileExtensions)
     else:
         return check
 
@@ -117,7 +117,7 @@ def newUpload(certID, authToken):
                     flash('No selected file')
                     return redirect(request.url)
                 if file and allowed_file(file.filename):
-                    if len(AFManager.getFilenames(username=check[1])) < 3:
+                    if len(AFManager.getFilenames(username=check[1])) < fileUploadLimit:
                         filename = secure_filename(file.filename)
                         app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'AccessFolders', check[1])
                         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
@@ -178,9 +178,9 @@ def newUpload(certID, authToken):
                 else:
                     flash('Filename is not allowed. Please try again.')
                     return redirect(request.url)
-            if (3 - len(AFManager.getFilenames(username=check[1]))) == 0:
+            if (fileUploadLimit - len(AFManager.getFilenames(username=check[1]))) == 0:
                 return redirect(url_for('portalFolder', certID=certID, authToken=authToken))
-            return render_template('portal/newUpload.html', slotsAvailable=(3 - len(AFManager.getFilenames(check[1]))), fileExtensions=prepFileExtensions)
+            return render_template('portal/newUpload.html', slotsAvailable=(fileUploadLimit - len(AFManager.getFilenames(check[1]))), fileExtensions=prepFileExtensions)
         else:
             return redirect(url_for('portalFolder', certID=certID, authToken=authToken))
     else:
@@ -340,7 +340,7 @@ def idInfoAndManagement(certID, authToken):
         if targetIdentity['folderRegistered'] == False:
             AFStatusString = 'Access Folder Not Registered'
         else:
-            fileSlotsAvailable = 3 - len(targetIdentity['AF_and_files'])
+            fileSlotsAvailable = fileUploadLimit - len(targetIdentity['AF_and_files'])
             AFStatusString = 'Registered, {} File Slot(s) Free'.format(fileSlotsAvailable)
 
         idInfo = {
