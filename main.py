@@ -6,6 +6,7 @@ import datetime
 from dotenv import load_dotenv
 load_dotenv()
 from models import *
+from activation import *
 from certAuthority import *
 from AFManager import *
 from emailer import *
@@ -161,15 +162,43 @@ def bootFunction():
       sys.exit(1)
 
   # Check if system is in beta mode
+  version = None
   if not os.path.isfile(os.path.join(os.getcwd(), 'version.txt')):
-    print("MAIN: Unable to check system version! (version.txt file not present) Will ignore and attempt to proceed with boot.")
+    print("MAIN: Unable to check system version (version.txt file not present)! Please re-install Access.")
+    sys.exit(1)
   else:
     with open('version.txt', 'r') as f:
       fileData = f.read()
+      version = fileData
       if fileData.endswith("beta"):
         print("MAIN: Note! You are booting a version of Access that is in beta! Version Info: '" + fileData + "'")
       else:
         print("MAIN: Boot version detected: '" + fileData + "'")
+
+  # Check for copy activation (Activator DRM Process)
+  activationCheck = checkForActivation()
+  if activationCheck == True:
+    print("MAIN-ACTIVATOR: Access copy is activated!")
+  elif activationCheck == False:
+    print("MAIN: Access copy is not activated! Triggering copy activation process...")
+    print()
+    try:
+      initActivation("z44bzvw0", version)
+    except Exception as e:
+      print("MAIN ERROR: An error occurred in activating this copy. Error: {}".format(e))
+      print("MAIN: Boot aborted.")
+      sys.exit(1)
+  else:
+    # KVR
+    print("MAIN: This copy's license key needs to be verified (every 14 days). Triggering key verification request...")
+    print()
+    try:
+      makeKVR("z44bzvw0", version)
+    except Exception as e:
+      print("MAIN ERROR: Failed to make KVR request. Error: {}".format(e))
+      print("MAIN: Boot aborted.")
+      sys.exit(1)
+  print()
 
   # Run code that supports older versions (Backwards compatibility)
   report = []
