@@ -41,7 +41,7 @@ def makeAnIdentity():
             return "UERROR: Username cannot have spaces."
         
         # Check if email is already taken
-        if request.json['email'] in accessIdentities:
+        if request.json['email'] in [accessIdentities[x]['email'] for x in accessIdentities]:
             return "UERROR: Email already taken."
 
         # Check if otp code is valid
@@ -665,6 +665,8 @@ def updateIdentityPassword():
     This is an alert to notify that you have successfully changed you Access Identity's password as of {} on the Access Portal. You can change your password again any time in the Identity Information & Management
     (IIM) Settings pane.
 
+    Wasn't you? Click on this link to reset your password so as to recover your identity: {}
+
     Thank you for your time!
 
     Kind Regards,
@@ -672,11 +674,16 @@ def updateIdentityPassword():
 
     THIS IS AN AUTOMATED MESSAGE DELIVERED TO YOU BY THE ACCESS PORTAL. DO NOT REPLY TO THIS EMAIL.
     Copyright 2022 Prakhar Trivedi
-    """.format(targetIdentity['username'], datetime.datetime.now().strftime(systemWideStringDateFormat) + ' UTC' + time.strftime('%z'))
+    """.format(
+        targetIdentity['username'], 
+        datetime.datetime.now().strftime(systemWideStringDateFormat) + ' UTC' + time.strftime('%z'), 
+        request.host_url + url_for('passwordReset')[1::]
+    )
 
     html = render_template(
         'emails/passwordUpdated.html', 
-        username=targetIdentity['username'], 
+        username=targetIdentity['username'],
+        resetPwdLink=(request.host_url + url_for('passwordReset')[1::]),
         timestamp=datetime.datetime.now().strftime(systemWideStringDateFormat) + ' UTC' + time.strftime('%z')
         )
 
@@ -792,3 +799,130 @@ def deleteIdentity():
         print("API: Updated Access Analytics with new identity deletion.")
 
     return "SUCCESS: Identity was successfully wiped from system."
+
+@app.route('/api/sendResetKey', methods=['POST'])
+def sendResetKey():
+    global accessIdentities
+    global validOTPCodes
+
+    # Headers check
+    check = headersCheck(headers=request.headers)
+    if check != True:
+        return check
+
+    # Body check
+    if 'identityEmail' not in request.json:
+        return "ERROR: Email field not present in request body."
+
+    # Verify email
+    emails = [accessIdentities[user]['email'] for user in accessIdentities]
+    if request.json['identityEmail'] not in emails:
+        return "UERROR: Email provided is not associated with any Access Identity."
+
+    # Generate reset key
+    options = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    resetKey = ''
+    for i in range(5):
+        resetKey += random.choice(options)
+
+    # Update identity data
+    targetIdentity = obtainTargetIdentity(request.json['identityEmail'], accessIdentities)
+    identityUsername = targetIdentity['username']
+
+    accessIdentities[identityUsername]['resetKey'] = {
+        "key": resetKey,
+        "datetime": datetime.datetime.now().strftime(systemWideStringDateFormat)
+    }
+    with open('accessIdentities.txt', 'w') as f:
+        json.dump(accessIdentities, f)
+
+    # Send reset key in email
+    text = """
+    Hi {},
+
+    You recently requested to reset your identity's password on the Access Portal. For verification, please enter the password reset key below onto the portal to complete your password reset.
+
+    Password Reset Key: {}
+
+    Please note that this key is only valid for 15 minutes; after which, you will get an invalid key error when attempting to complete your password reset.
+
+    Kind Regards,
+    The Access Team
+
+    THIS IS AN AUTOMATED MESSAGE DELIVERED TO YOU BY THE ACCESS PORTAL. DO NOT REPLY TO THIS EMAIL.
+    Copyright 2022 Prakhar Trivedi
+    """.format(identityUsername, resetKey)
+
+    html = render_template(
+        'emails/passwordResetKey.html', 
+        username=identityUsername,
+        resetKey=resetKey
+        )
+
+    ## Actually send and update analytics
+    Emailer.sendEmail(targetIdentity['email'], "Password Reset Key | Access Portal", text, html)
+
+    ## Update Access Analytics
+    response = AccessAnalytics.newEmail(targetIdentity['email'], text, "Password Reset Key | Access Portal", identityUsername)
+    if isinstance(response, str):
+        if response.startswith("AAError:"):
+            print("API: There was an error in updating Analytics with new email data; Response: {}".format(response))
+        else:
+            print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
+    elif isinstance(response, bool) and response == True:
+        print("API: Successfully updated Analytics with new email data.")
+    else:
+        print("API: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
+
+    return "SUCCESS: Reset key was successfully sent to the identity's email."
+
+@app.route('/api/resetPassword', methods=['POST'])
+def resetPassword():
+    global accessIdentities
+    global validOTPCodes
+
+    # Expire any reset keys that are older than 15 minutes
+    for username in accessIdentities:
+        if 'resetKey' in accessIdentities[username]:
+            if (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['resetKey']['datetime'], systemWideStringDateFormat)) > datetime.timedelta(minutes=15):
+                del accessIdentities[username]['resetKey']
+
+    with open('accessIdentities.txt', 'w') as f:
+        json.dump(accessIdentities, f)
+
+    # Headers check
+    check = headersCheck(headers=request.headers)
+    if check != True:
+        return check
+
+    # Body check
+    if 'identityEmail' not in request.json:
+        return "ERROR: Email field not present in request body."
+    if 'resetKey' not in request.json:
+        return "ERROR: Reset key field not present in request body."
+    if 'newPassword' not in request.json:
+        return "ERROR: New password field not present in request body."
+
+    # Verify email
+    emails = [accessIdentities[user]['email'] for user in accessIdentities]
+    if request.json['identityEmail'] not in emails:
+        return "UERROR: Email provided is not associated with any Access Identity."
+
+    # Verify reset key
+    targetIdentity = obtainTargetIdentity(request.json['identityEmail'], accessIdentities)
+    identityUsername = targetIdentity['username']
+    if 'resetKey' not in targetIdentity:
+        return "UERROR: No reset key was sent to this identity. If you did get a reset key email, the key may have expired if you are entering it more than 15 minutes after the reset key email was sent to you."
+    if targetIdentity['resetKey']['key'] != request.json['resetKey']:
+        return "UERROR: Reset key is incorrect."
+
+    # Update identity data
+    accessIdentities[identityUsername]['password'] = CertAuthority.encodeToB64(request.json['newPassword'])
+    del accessIdentities[identityUsername]['resetKey']
+    ## Logout instances of user if they are logged in for security
+    if 'loggedInAuthToken' in accessIdentities[identityUsername]:
+        del accessIdentities[identityUsername]['loggedInAuthToken']
+    with open('accessIdentities.txt', 'w') as f:
+        json.dump(accessIdentities, f)
+
+    return "SUCCESS: Password was successfully reset."

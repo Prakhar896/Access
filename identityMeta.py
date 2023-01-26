@@ -20,3 +20,7 @@ def logout():
     flash('Authentication token was not provided for identity logout. Failed to perform identity logout.')
     return redirect(url_for('processError'))
   return render_template('logout.html', username=request.args['username'])
+
+@app.route('/identity/passwordReset')
+def passwordReset():
+    return render_template('passwordReset.html')
