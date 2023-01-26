@@ -84,7 +84,7 @@ I have made this project as clone-friendly as possible. Setting up and running t
 
 <img src="https://github.com/Prakhar896/ActivatorDocs/blob/main/activatorLogo.png?raw=true" alt="Activator Logo" width="350px">
 
-[Activator](https://github.com/Prakhar896/ActivatorDocs) is a product activation service that activates copies. It also provides users a unified dashboard to manage all of their activated copies across several products that conform to Activator's DRM (Digital Rights Management) process. Access is one of these products.
+[Activator](https://github.com/Prakhar896/ActivatorDocs) is a product activation service that activates copies. It also provides users a unified dashboard to manage all of your activated copies across several products that conform to Activator's DRM (Digital Rights Management) process. Access is one of these products.
 
 ### How It Works
 
