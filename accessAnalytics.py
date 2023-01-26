@@ -36,10 +36,18 @@ class AccessAnalytics:
             return True
 
     @staticmethod
-    def generateRandomID():
-        randomID = uuid.uuid4().hex
+    def generateRandomID(customLength=None):
+        if customLength == None:
+            randomID = uuid.uuid4().hex
 
-        return randomID
+            return randomID
+        else:
+            options = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+            randomID = ''
+            for i in range(customLength):
+                randomID += random.choice(options)
+
+            return randomID
 
     @staticmethod
     def prepEnvironmentForAnalytics():
@@ -726,7 +734,7 @@ END OF REPORT
                 print("AA: Report could not be saved. Aborting save...")
                 return
             
-            rel_path = "analyticsReports/aa-report-{}-{}.txt".format(datetime.datetime.now().strftime("%Y%m%dI%H:%M:%S"), AccessAnalytics.generateRandomID())
+            rel_path = "analyticsReports/aa-report-{}-{}.txt".format(datetime.datetime.now().strftime("%Y%m%dI%H%M%S"), AccessAnalytics.generateRandomID(customLength=7))
 
             try:
                 with open(rel_path, 'w') as f:
