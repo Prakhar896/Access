@@ -154,6 +154,7 @@ Then, The following variables are required to be set:
 - (OPTIONAL) `GitpodEnvironment`: This field can only be set either `True` or `False`. If you are in a [Gitpod](https://gitpod.io) Environment, setting this field to `True` will disable all emailing services of the system and will prevent emails from being sent. This allows the system to not crash in an attempt to send an email as emails cannot be sent in a [Gitpod](https://gitpod.io) Workspace.
 - `AccessAnalyticsEnabled` - This field can only be set either `True` or `False`. If set to `True`, you hereby grant the Access Analytics service permission to collect and store system usage data in a text file in the system folder. This data can be used by the admin to crunch and get reports on the system's usage.
 - `RuntimePort` - This field can be set to any integer, typically over 8000. This is the port that the system's Flask web application will run and server HTTP content on.
+- `FileUploadsLimit` - This field can be set to any integer; the default is 3. This is the maximum number of files that can be uploaded by any identity.
 - `ReplitEnvironment` (OPTIONAL) - If set to `True`, Access will re-install all dependencies. Will be required if run in a replit.com environment.
 
 --- 
