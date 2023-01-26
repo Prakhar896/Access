@@ -138,6 +138,12 @@ def bootFunction():
   global accessIdentities
   global validOTPCodes
 
+  # Replit environment
+  if 'ReplitEnvironment' in os.environ and os.environ['ReplitEnvironment'] == 'True':
+    print("Replit Environment: Installing libraries...")
+    os.system("pip install -r requirements.txt")
+    print()
+
   # Boot Authorisation
   if os.path.isfile(os.path.join(os.getcwd(), 'authorisation.txt')):
     try:
