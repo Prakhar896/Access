@@ -93,7 +93,9 @@ rootFolderEssentialFiles = [
     'portal.py',
     'updater.py',
     'requirements.txt',
-    'version.txt'
+    'version.txt',
+    'activation.py',
+    'identityMeta.py'
 ]
 
 ### Root folder essential files check
@@ -128,7 +130,8 @@ templateFoldersAndItsFiles = {
         'folderRegistered.html',
         'loginEmail.html',
         'otpEmail.html',
-        'passwordUpdated.html'
+        'passwordUpdated.html',
+        'passwordResetKey.html'
     ],
     "portal": [
         makeSubSubFilePath("settings", "certificateStatus.html"),
@@ -151,6 +154,7 @@ templateFoldersAndItsFiles = {
         'error.html',
         'loginIdentity.html',
         'logout.html',
+        'passwordReset.html',
         'renewSuccess.html',
         'unauthorised.html',
         'version.html',
@@ -185,6 +189,7 @@ supportJSFilenames = [
     'emailPref.js',
     'folderRegistration.js',
     'logout.js',
+    'passwordReset.js',
     'portalHome.js',
     'signIn.js',
     'updateEmailConfirmation.js',
@@ -262,7 +267,8 @@ environmentVariables = [
 ]
 
 nonessentialEnvVars = [
-    'GitpodEnvironment'
+    'GitpodEnvironment',
+    'ReplitEnvironment'
 ]
 
 for envVar in environmentVariables:
