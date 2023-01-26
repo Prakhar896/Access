@@ -3,6 +3,7 @@ function sendPwdResetKey() {
     const identityEmailFieldDiv = document.getElementById("identityEmailFieldDiv")
     const newPasswordEnteringSection = document.getElementById("newPasswordEnteringSection")
     const identityEmailField = document.getElementById("identityEmailField")
+    const requestNewKeyButton = document.getElementById("requestNewKeyButton")
 
     if (!identityEmailField.value || identityEmailField.value == "") {
         alert("One or more fields are empty. Please try again.")
@@ -48,7 +49,11 @@ function sendPwdResetKey() {
                                     }
                                 }, true);
                             });
-
+                            
+                            // Show request new key button
+                            setTimeout(() => {
+                                requestNewKeyButton.style.visibility = 'visible'
+                            }, 20000)
                         } else {
                             statusLabel.style.visibility = 'hidden'
                             console.log("Unknown response received from Access Servers when sending password reset key: " + response.data)
@@ -141,8 +146,8 @@ function resetPassword() {
                     statusLabel.innerText = response.data.substring("UERROR: ".length)
                     console.log("User error occurred in resetting password: " + response.data)
 
-                    const requestNewButton = document.getElementById("requestNewKeyButton")
-                    requestNewButton.style.visibility = 'visible'
+                    const requestNewKeyButton = document.getElementById("requestNewKeyButton")
+                    requestNewKeyButton.style.visibility = 'visible'
                     alert("Reset key is incorrect. If you are certain that you entered the exact key from the email that was sent and think that the key expired, click the 'Request New Key' button at the bottom.")
                 }
             } else {
