@@ -20,7 +20,7 @@ for root, dirs, files in os.walk(os.getcwd(), topdown=False):
             os.remove(os.path.join(root, name))
     for name in dirs:
         if name != 'analyticsReports' and name != 'AccessFolders' and ("AccessFolders" not in root) and (name not in ['venv', 'virt']):
-            os.rmdir(os.path.join(root, name))
+            shutil.rmtree(os.path.join(root, name))
 
 time.sleep(2)
 
