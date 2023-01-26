@@ -32,9 +32,13 @@ def makeAnIdentity():
         if 'otpCode' not in request.json:
             return "ERROR: New identity OTP field not present in body. Request failed."
 
-        # Check if username is already taken
+        # Checks for username validity
         if request.json['username'] in accessIdentities:
             return "UERROR: Username already taken."
+        elif request.json['username'] == "":
+            return "UERROR: Username cannot be blank."
+        elif " " in request.json['username']:
+            return "UERROR: Username cannot have spaces."
         
         # Check if email is already taken
         if request.json['email'] in accessIdentities:
