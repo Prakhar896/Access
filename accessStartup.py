@@ -32,7 +32,7 @@ except Exception as e:
 from accessAnalytics import *
 
 if 'FileUploadsLimit' not in os.environ:
-    print("STARTUP WARNING: Mandatory `FileUploadsLimit` environment variable is not set in .env file. The system will fall back on the default limit of `3` file uploads when booted.")
+    print("STARTUP WARNING: Mandatory `FileUploadsLimit` environment variable is not set in .env file. The system will fall back on the default limit of '3' file uploads when booted.")
     print()
 
 print("Welcome to Access Startup!")
