@@ -1,6 +1,22 @@
 import json, os, shutil, subprocess, random, datetime, copy
 
 systemWideStringDateFormat = '%Y-%m-%d %H:%M:%S'
+fileUploadLimit = 3
+if 'FileUploadsLimit' in os.environ:
+  if os.environ['FileUploadsLimit'].isdigit():
+    fileUploadLimit = int(os.environ['FileUploadsLimit'])
+  else:
+    print("-------")
+    print("MODELS: Could not set FileUploadsLimit. System will fall back on default limit of 3 file uploads.")
+    print("-------")
+    print()
+    print()
+else:
+  print("-------")
+  print("MODELS WARNING: FileUploadsLimit environment variable is not set in .env file. System will fall back on default limit of 3 file uploads.")
+  print("-------")
+  print()
+  print()
 
 def fileContent(fileName):
   with open(fileName, 'r') as f:
