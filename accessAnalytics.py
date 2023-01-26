@@ -36,18 +36,10 @@ class AccessAnalytics:
             return True
 
     @staticmethod
-    def generateRandomID(customLength=None):
-        if customLength == None:
-            randomID = uuid.uuid4().hex
+    def generateRandomID():
+        randomID = uuid.uuid4().hex
 
-            return randomID
-        else:
-            options = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-            randomID = ''
-            for i in range(customLength):
-                randomID += random.choice(options)
-
-            return randomID
+        return randomID
 
     @staticmethod
     def prepEnvironmentForAnalytics():
@@ -271,8 +263,7 @@ class AccessAnalytics:
             'File Deletion | Access Portal', 
             'File Uploaded | Access Portal',
             'Confirm Email Update | Access Portal',
-            'Password Updated | Access Portal',
-            'Password Reset Key | Access Portal'
+            'Password Updated | Access Portal'
             ]:
             return "AAError: Subject is not valid."
         
@@ -291,8 +282,6 @@ class AccessAnalytics:
             type = 'emailUpdateConfirmation'
         elif subject == 'Password Updated | Access Portal':
             type = 'passwordUpdated'
-        elif subject == 'Password Reset Key | Access Portal':
-            type = 'passwordResetKey'
         
         emailID = AccessAnalytics.generateRandomID()
 
@@ -591,8 +580,7 @@ class AccessAnalytics:
             "fileDeletionNotif": 0,
             "fileUploadNotif": 0,
             "emailUpdateConfirmation": 0,
-            "passwordUpdated": 0,
-            "passwordResetKey": 0
+            "passwordUpdated": 0
         }
 
         for emailID in loadedData["emails"]:
@@ -678,7 +666,6 @@ Total File Deletion Emails: {}
 Total File Upload Emails: {}
 Total Email Update Confirmation Emails: {}
 Total Password Updated Notification Emails: {}
-Total Password Reset Key Emails: {}
 Most Frequent Email Recipient: {}, Number of Emails Most Frequent Recipient Recived: {}
 
 OTHER METRICS
@@ -712,7 +699,6 @@ END OF REPORT
     numEmailsForEachType["fileUploadNotif"],
     numEmailsForEachType["emailUpdateConfirmation"],
     numEmailsForEachType["passwordUpdated"],
-    numEmailsForEachType["passwordResetKey"],
     mostFreqRecipient,
     numEmailsSentToFreqRecipient,
     numIdentityDeletions,
@@ -740,7 +726,7 @@ END OF REPORT
                 print("AA: Report could not be saved. Aborting save...")
                 return
             
-            rel_path = "analyticsReports/aa-report-{}-{}.txt".format(datetime.datetime.now().strftime("%Y%m%dI%H%M%S"), AccessAnalytics.generateRandomID(customLength=7))
+            rel_path = "analyticsReports/aa-report-{}-{}.txt".format(datetime.datetime.now().strftime("%Y%m%dI%H:%M:%S"), AccessAnalytics.generateRandomID())
 
             try:
                 with open(rel_path, 'w') as f:
@@ -759,6 +745,8 @@ END OF REPORT
             print()
             print("AAError: Invalid action provided. Exiting analytics...")
             return
+            
+        return
 
     @staticmethod
     def clearDataFile():

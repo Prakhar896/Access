@@ -52,7 +52,3 @@ def updatePasswordJS():
 @app.route('/assets/deleteIdentityJS')
 def deleteIdentityJS():
   return fileContent('supportJSFiles/deleteIdentity.js')
-
-@app.route('/assets/passwordResetJS')
-def passwordResetJS():
-  return fileContent('supportJSFiles/passwordReset.js')

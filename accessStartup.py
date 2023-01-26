@@ -31,21 +31,12 @@ except Exception as e:
 
 from accessAnalytics import *
 
-devMode = False
-if 'DeveloperModeEnabled' in os.environ and os.environ['DeveloperModeEnabled'] == 'True':
-  devMode = True
-
-if 'FileUploadsLimit' not in os.environ:
-    print("STARTUP WARNING: Mandatory `FileUploadsLimit` environment variable is not set in .env file. Hence, Access system will automatically fall back to a limit of `3` file uploads per identity when booted.")
-    print()
-
 print("Welcome to Access Startup!")
 print()
 print("Here you can manage and run all things Access!")
 print()
 print()
-if not devMode:
-    print("""
+print("""
 Startup Choices - What would you like to do?
 
     1) Access Boot
@@ -53,19 +44,6 @@ Startup Choices - What would you like to do?
     3) Access CheckUp
     4) Access Analytics - Crunch Data
     5) System Update Guide
-
-
-""")
-else:
-    print("""
-Startup Choices - What would you like to do?
-
-    1) Access Boot
-    2) Access Meta Settings
-    3) Access CheckUp
-    4) Access Analytics - Crunch Data
-    5) System Update Guide
-    6) Developer Tools Suite
 
 
 """)
@@ -333,19 +311,3 @@ elif choice == 5:
     That is the end of this user guide.
     Startup will now close.
     """.format(open('version.txt', 'r').read()))
-elif choice == 6:
-    if 'DeveloperModeEnabled' in os.environ and os.environ['DeveloperModeEnabled'] == "True":
-        try:
-            import devTools
-        except Exception as e:
-            print("STARTUP DEV TOOLS INITIALISER: Failed to initialise developer tools suite program, could not import module. Please ensure that the devTools.py file is present in the system. If not, update Access to a fresh copy.")
-            print("System Error Produced: {}".format(e))
-            print("Startup will now close.")
-            sys.exit(0)
-
-        devTools.toolsStartup()
-    else:
-        print()
-        print("The Developer Tools Suite is not enabled. Please set 'DeveloperModeEnabled' to 'True' in the .env file to enable the suite.")
-
-    print("STARTUP: Startup will now close.")

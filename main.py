@@ -14,7 +14,7 @@ from getpass import getpass
 
 ### APP CONFIG
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'Chute')
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'xlsx', 'mov', 'mp4'}
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'xlsx'}
 ALLOWED_EXTENSIONS_AS_LIST = [x for x in ALLOWED_EXTENSIONS]
 prepFileExtensions = ', '.join(["."+x for x in ALLOWED_EXTENSIONS_AS_LIST])
 
@@ -24,11 +24,6 @@ CORS(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
 app.secret_key = os.environ['APP_SECRET_KEY']
-
-devMode = False
-if 'DeveloperModeEnabled' in os.environ and os.environ['DeveloperModeEnabled'] == 'True':
-  devMode = True
-
 
 def allowed_file(filename):
   return ('.' in filename) and (filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS)
@@ -40,6 +35,16 @@ if not os.path.isfile('accessIdentities.txt'):
     f.write("{}")
 
 accessIdentities = json.load(open('accessIdentities.txt', 'r'))
+
+# Identity format:
+# username: {
+#   "password": "",
+#   "email": "",
+#   "sign-up-date": "",
+#   "last-login-date": "",
+#   "associatedCertID": "",
+#   "loggedInAuthToken": "" (only present if user is logged in)
+# }
 
 if not os.path.isfile('certificates.txt'):
   with open('certificates.txt', 'w') as f:
@@ -74,6 +79,27 @@ def updateAnalytics():
 @app.route('/')
 def homepage():
   return fileContent('homepage.html')
+
+@app.route('/identity/create')
+def createIdentityPage():
+  return render_template('createIdentity.html')
+
+@app.route('/identity/login/')
+def loginIdentityPage():
+  if 'email' not in request.args:
+    return render_template('loginIdentity.html', email="")
+  else:
+    return render_template('loginIdentity.html', email=request.args['email'])
+
+@app.route('/identity/logout/')
+def logout():
+  if 'username' not in request.args:
+    flash('Username was not provided for identity logout. Failed to perform identity logout.')
+    return redirect(url_for('processError'))
+  elif 'authToken' not in request.args:
+    flash('Authentication token was not provided for identity logout. Failed to perform identity logout.')
+    return redirect(url_for('processError'))
+  return render_template('logout.html', username=request.args['username'])
 
 @app.route('/security/unauthorised')
 def unauthorizedPage():
@@ -123,9 +149,6 @@ def version():
 
   return render_template('version.html', versionNum=num)
 
-# Identity Meta Transactions Service
-from identityMeta import * 
-
 # API
 from api import *
 
@@ -170,23 +193,6 @@ def bootFunction():
       else:
         print("MAIN: Boot version detected: '" + fileData + "'")
 
-  # Load certificates
-  CAresponse = CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
-  if CAError.checkIfErrorMessage(CAresponse):
-    print(CAresponse)
-    sys.exit(1)
-  else:
-    print(CAresponse)
-  
-  # Expire old certificates and save new data
-  CertAuthority.expireOldCertificates()
-  CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
-
-  ## Expire auth tokens
-  tempIdentities = copy.deepcopy(accessIdentities)
-  accessIdentities = expireAuthTokens(tempIdentities)
-  json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
-
   # Run code that supports older versions (Backwards compatibility)
   report = []
 
@@ -217,18 +223,7 @@ def bootFunction():
         
         for filename in AFManager.getFilenames(username):
           accessIdentities[username]['AF_and_files'][filename] = currentDatetimeString
-
-    ## SUPPORT FOR v1.0.3
-    for username in CertAuthority.registeredCertificates:
-      if 'user' not in CertAuthority.registeredCertificates[username]:
-        report.append("'user' parameter was added to unrevoked certificate of identity with username {}".format(username))
-        CertAuthority.registeredCertificates[username]['user'] = username
-    for username in CertAuthority.revokedCertificates:
-      if 'user' not in CertAuthority.revokedCertificates[username]:
-        report.append("'user' parameter was added to revoked certificate of identity with username {}".format(username))
-        CertAuthority.revokedCertificates[username]['user'] = username
-    CertAuthority.saveCertificatesToFile(fileObject=open('certificates.txt', 'w'))
-
+        
   json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
   if len(report) != 0:
@@ -237,6 +232,23 @@ def bootFunction():
     for item in report:
       print('\t' + item)
     print()
+
+  # Load certificates
+  CAresponse = CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
+  if CAError.checkIfErrorMessage(CAresponse):
+    print(CAresponse)
+    sys.exit(1)
+  else:
+    print(CAresponse)
+  
+  # Expire old certificates and save new data
+  CertAuthority.expireOldCertificates()
+  CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
+
+  ## Expire auth tokens
+  tempIdentities = accessIdentities
+  accessIdentities = expireAuthTokens(tempIdentities)
+  json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
   ## Set up Access Analytics
   if AccessAnalytics.permissionCheck():
