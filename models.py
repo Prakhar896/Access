@@ -24,7 +24,7 @@ def fileContent(fileName):
     return f_content
 
 def generateAuthToken():
-  letters_lst = ['a', 'e', 'w', 't', 'a', 'u', 'o', 'p', '2', '5', '6', '3', '8', '4']
+  letters_lst = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
   authTokenString = ''
   while len(authTokenString) < 10:
     authTokenString += random.choice(letters_lst)
