@@ -1,10 +1,15 @@
+import json, random, time, sys, subprocess, os, shutil, copy
+from dotenv import load_dotenv
+load_dotenv()
+# Replit environment
+if 'ReplitEnvironment' in os.environ and os.environ['ReplitEnvironment'] == 'True':
+  print("Replit Environment: Installing libraries...")
+  os.system("pip install -r requirements.txt")
+  print()
 from flask import Flask, request, render_template, send_file, redirect, url_for, flash, send_from_directory
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
-import json, random, time, sys, subprocess, os, shutil, copy
 import datetime
-from dotenv import load_dotenv
-load_dotenv()
 from models import *
 from activation import *
 from certAuthority import *
@@ -138,12 +143,6 @@ def bootFunction():
   # BOOT PRE-PROCESSING
   global accessIdentities
   global validOTPCodes
-
-  # Replit environment
-  if 'ReplitEnvironment' in os.environ and os.environ['ReplitEnvironment'] == 'True':
-    print("Replit Environment: Installing libraries...")
-    os.system("pip install -r requirements.txt")
-    print()
 
   # Boot Authorisation
   if os.path.isfile(os.path.join(os.getcwd(), 'authorisation.txt')):
