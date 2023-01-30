@@ -1,9 +1,15 @@
 import json, random, time, sys, subprocess, os, shutil, copy
-from dotenv import load_dotenv
-load_dotenv()
+try:
+  from dotenv import load_dotenv
+  load_dotenv()
+except:
+  print("Failed to import dotenv; installing dotenv...")
+  os.system("pip install python-dotenv")
+  from dotenv import load_dotenv
+  load_dotenv()
 # Replit environment
 if 'ReplitEnvironment' in os.environ and os.environ['ReplitEnvironment'] == 'True':
-  print("Replit Environment: Installing libraries...")
+  print("Installing libraries...")
   os.system("pip install -r requirements.txt")
   print()
 from flask import Flask, request, render_template, send_file, redirect, url_for, flash, send_from_directory
