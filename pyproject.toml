@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "repl_nix_Access"
+version = "0.1.0"
+description = ""
+authors = ["Drakonzai <<>>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+getmac = "^0.9.3"
+python-dotenv = "^1.0.0"
+requests = "^2.30.0"
+Werkzeug = "^2.3.4"
+Flask = "^2.3.2"
+Flask-Cors = "^3.0.10"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
