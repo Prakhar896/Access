@@ -10,7 +10,7 @@ getmac = "^0.9.3"
 python-dotenv = "^1.0.0"
 requests = "^2.30.0"
 Werkzeug = "^2.3.4"
-Flask = "^2.3.2"
+Flask = "^2.2.5"
 Flask-Cors = "^3.0.10"
 
 [tool.poetry.dev-dependencies]
