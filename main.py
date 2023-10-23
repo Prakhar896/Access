@@ -1,17 +1,10 @@
+from bootCheck import runBootCheck
+if __name__ == "__main__":
+  if not runBootCheck():
+    print("MAIN: Boot check failed. Boot aborted.")
+    exit()
+
 import json, random, time, sys, subprocess, os, shutil, copy
-try:
-  from dotenv import load_dotenv
-  load_dotenv()
-except:
-  print("Failed to import dotenv; installing dotenv...")
-  os.system("pip install python-dotenv")
-  from dotenv import load_dotenv
-  load_dotenv()
-# Replit environment
-if 'ReplitEnvironment' in os.environ and os.environ['ReplitEnvironment'] == 'True':
-  print("Installing libraries...")
-  os.system("pip install -r requirements.txt")
-  print()
 from flask import Flask, request, render_template, send_file, redirect, url_for, flash, send_from_directory
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
@@ -206,9 +199,15 @@ def bootFunction():
   print()
 
   # Run code that supports older versions (Backwards compatibility)
-  report = []
+
+  ## SUPPORT FOR v1.0.3
+  if os.environ.get("ReplitEnvironment", "nil") == "nil":
+    print("MAIN NOTICE: Detection of Replit environment with ReplitEnvironment .env variable was deprecated in v1.0.4. Refer to documentation for more information.")
+    print()
 
   ## SUPPORT FOR v1.0.2
+  report = []
+
   for username in accessIdentities:
     if 'settings' not in accessIdentities[username] or ('emailPref' not in accessIdentities[username]['settings']):
       report.append('Settings data including email preferences were added to user \'{}\''.format(username))
@@ -309,7 +308,6 @@ def bootFunction():
   print("Booting Access...")
   print()
 
-  # app.config['SERVER_NAME'] = 'prakhar.com:' + os.environ['RuntimePort']
   app.run(host='0.0.0.0', debug=False, port=int(os.environ['RuntimePort']))
 
 if __name__ == "__main__":
