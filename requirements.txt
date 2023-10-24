@@ -20,4 +20,4 @@ tomli==2.0.0
 tzdata==2021.5
 tzlocal==4.1
 urllib3==1.26.18
-Werkzeug==2.0.2
+Werkzeug==2.2.3
