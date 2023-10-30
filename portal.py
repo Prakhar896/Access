@@ -345,7 +345,7 @@ def idInfoAndManagement(certID, authToken):
 
         idInfo = {
             'email': targetIdentity['email'],
-            'passCensored': '●' * len(CertAuthority.decodeFromB64(targetIdentity['password'])),
+            'passCensored': '●' * len(Encryption.decodeFromB64(targetIdentity['password'])),
             'creationDate': datetime.datetime.strptime(targetIdentity['sign-up-date'], systemWideStringDateFormat).strftime('%d %B, %A, %Y %H:%M:%S%p') + ' UTC' + time.strftime('%z'),
             'AFStatus': AFStatusString
         }

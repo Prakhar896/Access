@@ -2,24 +2,11 @@
 from operator import index
 import random, base64
 import datetime, time, json, os, shutil, subprocess
+from models import Encryption
 
 class CertAuthority:
     registeredCertificates = []
     revokedCertificates = []
-
-    @staticmethod
-    def encodeToB64(hash):
-        hash_bytes = hash.encode("ascii")
-        b64_bytes = base64.b64encode(hash_bytes)
-        b64_string = b64_bytes.decode("ascii")
-        return b64_string
-    
-    @staticmethod
-    def decodeFromB64(encodedHash):
-        b64_bytes = encodedHash.encode("ascii")
-        hash_bytes = base64.b64decode(b64_bytes)
-        hash_string = hash_bytes.decode("ascii")
-        return hash_string
 
     @staticmethod
     def generateCertHash(user):
@@ -49,14 +36,14 @@ class CertAuthority:
         hashAsList[indexToUpdate] = '"{}"'.format(user[0])
         certHash = ''.join(hashAsList)
         # At the end: 1000 random characters, 512 random binary characters, and the user's first character, total 1002 characters
-        certHash = CertAuthority.encodeToB64(certHash)
+        certHash = Encryption.encodeToB64(certHash)
         return certHash
         
     @staticmethod
     def checkCertificateSecurity(cert):
         def checkValidity():
             try:
-                if (len(CertAuthority.decodeFromB64(cert["certificate"])) != 1002) or ('"{}"'.format(cert["user"][0]) not in CertAuthority.decodeFromB64(cert["certificate"])) or (len([i for i in list(CertAuthority.decodeFromB64(cert["certificate"])) if i == '0' or i == '1']) != 512):
+                if (len(Encryption.decodeFromB64(cert["certificate"])) != 1002) or ('"{}"'.format(cert["user"][0]) not in Encryption.decodeFromB64(cert["certificate"])) or (len([i for i in list(Encryption.decodeFromB64(cert["certificate"])) if i == '0' or i == '1']) != 512):
                     return False
                 else:
                     return True

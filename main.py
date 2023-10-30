@@ -96,7 +96,7 @@ def renewCertificate():
     flash('One or more required request arguments were not present.')
     return redirect(url_for('processError'))
 
-  if request.args['bootAuthCode'] != CertAuthority.decodeFromB64(fileContent('authorisation.txt')):
+  if request.args['bootAuthCode'] != Encryption.decodeFromB64(fileContent('authorisation.txt')):
     return render_template('unauthorised.html', message='Provided boot authorisation code is incorrect.', originURL=request.host_url)
 
   response = CertAuthority.renewCertificate(request.args['certID'])
@@ -147,7 +147,7 @@ def bootFunction():
   if os.path.isfile(os.path.join(os.getcwd(), 'authorisation.txt')):
     try:
       with open('authorisation.txt', 'r') as f:
-        decoded = CertAuthority.decodeFromB64(f.read())
+        decoded = Encryption.decodeFromB64(f.read())
         code = getpass("MAIN: Enter your Boot Authorisation Code to begin Access Boot: ")
         if code != decoded:
           print("MAIN: Boot Authorisation Code is incorrect. Main will not proceed with the boot.")

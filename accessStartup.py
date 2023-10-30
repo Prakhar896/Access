@@ -197,7 +197,7 @@ elif choice == 2:
                 time.sleep(2)
                 try:
                     with open('authorisation.txt', 'w') as f:
-                        f.write(CertAuthority.encodeToB64(code))
+                        f.write(Encryption.encodeToB64(code))
                 except Exception as e:
                     print("STARTUP: An error occurred in setting the code; Error: {}".format(e))
                     sys.exit(1)
@@ -233,7 +233,7 @@ elif choice == 2:
                     checkCode = getpass("Enter your current boot authorisation code: ")
 
                     with open('authorisation.txt', 'r') as f:
-                        if checkCode == CertAuthority.decodeFromB64(f.read()):
+                        if checkCode == Encryption.decodeFromB64(f.read()):
                             break
                         else:
                             print("Invalid code. Please try again.")
@@ -259,7 +259,7 @@ elif choice == 2:
                     checkCode = getpass("Enter your current boot authorisation code: ")
 
                     with open('authorisation.txt', 'r') as f:
-                        if checkCode == CertAuthority.decodeFromB64(f.read()):
+                        if checkCode == Encryption.decodeFromB64(f.read()):
                             break
                         else:
                             print("Invalid code. Please try again.")
@@ -272,7 +272,7 @@ elif choice == 2:
 
                 try:
                     with open('authorisation.txt', 'w') as f:
-                        f.write(CertAuthority.encodeToB64(newCode))
+                        f.write(Encryption.encodeToB64(newCode))
                 except Exception as e:
                     print("An error occurred in updating the code; Error: {}".format(e))
                     sys.exit(1)
