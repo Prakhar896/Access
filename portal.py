@@ -41,7 +41,7 @@ def portalHome(certID, authToken):
             if 'loggedInAuthToken' not in accessIdentities[username]:
                 continue
             if accessIdentities[username]['loggedInAuthToken'] == authToken:
-                numberOfMins = (10800 - (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['last-login-date'], systemWideStringDateFormat)).total_seconds()) / 60
+                numberOfMins = (10800 - (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['last-login-date'], Universal.systemWideStringDateFormat)).total_seconds()) / 60
                 numHours = int(numberOfMins / 60)
                 numMinutes = numberOfMins - (60 * numHours)
                 timeLeft = "{} Hours and {} Minutes Left".format(str(numHours), str(int(numMinutes)))
@@ -123,7 +123,7 @@ def newUpload(certID, authToken):
                         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
                         ## Update Access Identity
-                        uploadDatetime = datetime.datetime.now().strftime(systemWideStringDateFormat)
+                        uploadDatetime = datetime.datetime.now().strftime(Universal.systemWideStringDateFormat)
                         targetIdentity = {}
                         for username in accessIdentities:
                             if username == check[1]:
@@ -305,7 +305,7 @@ def certStatus(certID, authToken):
         expiryDate = targetCertificate['expiryDate']
 
         # 6)
-        daysTillExpiry = str((datetime.datetime.strptime(expiryDate, systemWideStringDateFormat) - datetime.datetime.now()).days)
+        daysTillExpiry = str((datetime.datetime.strptime(expiryDate, Universal.systemWideStringDateFormat) - datetime.datetime.now()).days)
 
         ## Complete date object
         certData = {
@@ -346,7 +346,7 @@ def idInfoAndManagement(certID, authToken):
         idInfo = {
             'email': targetIdentity['email'],
             'passCensored': '●' * len(Encryption.decodeFromB64(targetIdentity['password'])),
-            'creationDate': datetime.datetime.strptime(targetIdentity['sign-up-date'], systemWideStringDateFormat).strftime('%d %B, %A, %Y %H:%M:%S%p') + ' UTC' + time.strftime('%z'),
+            'creationDate': datetime.datetime.strptime(targetIdentity['sign-up-date'], Universal.systemWideStringDateFormat).strftime('%d %B, %A, %Y %H:%M:%S%p') + ' UTC' + time.strftime('%z'),
             'AFStatus': AFStatusString
         }
 

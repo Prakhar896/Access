@@ -230,7 +230,7 @@ def bootFunction():
       accessIdentities[username]['AF_and_files'] = {}
       report.append('AF Files data was added to user \'{}\''.format(username))
       if AFManager.checkIfFolderIsRegistered(username):
-        currentDatetimeString = datetime.datetime.now().strftime(systemWideStringDateFormat)
+        currentDatetimeString = datetime.datetime.now().strftime(Universal.systemWideStringDateFormat)
         
         for filename in AFManager.getFilenames(username):
           accessIdentities[username]['AF_and_files'][filename] = currentDatetimeString

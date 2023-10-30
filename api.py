@@ -72,8 +72,8 @@ def makeAnIdentity():
             'password': Encryption.encodeToB64(request.json['password']),
             'email': request.json['email'],
             'otpCode': request.json['otpCode'],
-            'sign-up-date': datetime.datetime.now().strftime(systemWideStringDateFormat),
-            'last-login-date': datetime.datetime.now().strftime(systemWideStringDateFormat),
+            'sign-up-date': datetime.datetime.now().strftime(Universal.systemWideStringDateFormat),
+            'last-login-date': datetime.datetime.now().strftime(Universal.systemWideStringDateFormat),
             'associatedCertID': CertAuthority.issueCertificate(request.json['username'])['certID'],
             'AF_and_files': {},
             'settings': {
@@ -129,7 +129,7 @@ def loginIdentity():
     if CAError.checkIfErrorMessage(CertAuthority.checkCertificateSecurity(identityCertificate)):
         return { "userMessage": "UERROR: The certificate associated with this identity has failed security checks. Authorisation failed.", "errorMessage": CertAuthority.checkCertificateSecurity(identityCertificate) }
 
-    accessIdentities[targetIdentity['username']]['last-login-date'] = datetime.datetime.now().strftime(systemWideStringDateFormat)
+    accessIdentities[targetIdentity['username']]['last-login-date'] = datetime.datetime.now().strftime(Universal.systemWideStringDateFormat)
     accessIdentities[targetIdentity['username']]['loggedInAuthToken'] = generateAuthToken()
     json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
@@ -153,7 +153,7 @@ def loginIdentity():
     html = render_template(
         "emails/loginEmail.html", 
         userName=targetIdentity['username'], 
-        datetime=datetime.datetime.now().strftime(systemWideStringDateFormat) + ' UTC' + time.strftime('%z'), 
+        datetime=datetime.datetime.now().strftime(Universal.systemWideStringDateFormat) + ' UTC' + time.strftime('%z'), 
         logoutLink=("{}/identity/logout?authToken={}&username={}".format(request.host_url, accessIdentities[targetIdentity['username']]['loggedInAuthToken'], targetIdentity['username']))
         )
 
@@ -676,7 +676,7 @@ def updateIdentityPassword():
     Copyright 2022 Prakhar Trivedi
     """.format(
         targetIdentity['username'], 
-        datetime.datetime.now().strftime(systemWideStringDateFormat) + ' UTC' + time.strftime('%z'), 
+        datetime.datetime.now().strftime(Universal.systemWideStringDateFormat) + ' UTC' + time.strftime('%z'), 
         request.host_url + url_for('passwordReset')[1::]
     )
 
@@ -684,7 +684,7 @@ def updateIdentityPassword():
         'emails/passwordUpdated.html', 
         username=targetIdentity['username'],
         resetPwdLink=(request.host_url + url_for('passwordReset')[1::]),
-        timestamp=datetime.datetime.now().strftime(systemWideStringDateFormat) + ' UTC' + time.strftime('%z')
+        timestamp=datetime.datetime.now().strftime(Universal.systemWideStringDateFormat) + ' UTC' + time.strftime('%z')
         )
 
     ## Actually send and update analytics
@@ -831,7 +831,7 @@ def sendResetKey():
 
     accessIdentities[identityUsername]['resetKey'] = {
         "key": resetKey,
-        "datetime": datetime.datetime.now().strftime(systemWideStringDateFormat)
+        "datetime": datetime.datetime.now().strftime(Universal.systemWideStringDateFormat)
     }
     with open('accessIdentities.txt', 'w') as f:
         json.dump(accessIdentities, f)
@@ -884,7 +884,7 @@ def resetPassword():
     # Expire any reset keys that are older than 15 minutes
     for username in accessIdentities:
         if 'resetKey' in accessIdentities[username]:
-            if (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['resetKey']['datetime'], systemWideStringDateFormat)) > datetime.timedelta(minutes=15):
+            if (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['resetKey']['datetime'], Universal.systemWideStringDateFormat)) > datetime.timedelta(minutes=15):
                 del accessIdentities[username]['resetKey']
 
     with open('accessIdentities.txt', 'w') as f:

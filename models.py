@@ -1,7 +1,6 @@
 import json, os, shutil, subprocess, random, datetime, copy, base64
 from passlib.hash import sha256_crypt as sha
 
-systemWideStringDateFormat = '%Y-%m-%d %H:%M:%S'
 fileUploadLimit = 3
 if 'FileUploadsLimit' in os.environ:
   if os.environ['FileUploadsLimit'].isdigit():
@@ -35,7 +34,7 @@ def obtainTargetIdentity(email, accessIdentities):
 
 def expireAuthTokens(accessIdentities):
   for username in accessIdentities:
-    if (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['last-login-date'], systemWideStringDateFormat)).total_seconds() >= 10800:
+    if (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['last-login-date'], Universal.systemWideStringDateFormat)).total_seconds() >= 10800:
       try:
         if 'loggedInAuthToken' in accessIdentities[username]:
           del accessIdentities[username]['loggedInAuthToken']
@@ -70,3 +69,6 @@ class Encryption:
   @staticmethod
   def convertBase64ToSHA(base64Hash):
     return Encryption.encodeToSHA256(Encryption.decodeFromB64(base64Hash))
+  
+class Universal:
+  systemWideStringDateFormat = '%Y-%m-%d %H:%M:%S'
