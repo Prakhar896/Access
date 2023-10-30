@@ -45,8 +45,8 @@ def expireAuthTokens(accessIdentities):
 
 class Encryption:
   @staticmethod
-  def encodeToB64(hash):
-    hash_bytes = hash.encode("ascii")
+  def encodeToB64(inputString):
+    hash_bytes = inputString.encode("ascii")
     b64_bytes = base64.b64encode(hash_bytes)
     b64_string = b64_bytes.decode("ascii")
     return b64_string
@@ -57,6 +57,14 @@ class Encryption:
     hash_bytes = base64.b64decode(b64_bytes)
     hash_string = hash_bytes.decode("ascii")
     return hash_string
+  
+  @staticmethod
+  def isBase64(encodedHash):
+    try:
+      hashBytes = encodedHash.encode("ascii")
+      return base64.b64encode(base64.b64decode(hashBytes)) == hashBytes
+    except Exception:
+      return False
 
   @staticmethod
   def encodeToSHA256(string):
@@ -72,3 +80,14 @@ class Encryption:
   
 class Universal:
   systemWideStringDateFormat = '%Y-%m-%d %H:%M:%S'
+  version = None
+
+  @staticmethod
+  def getVersion():
+    if not os.path.isfile(os.path.join(os.getcwd(), 'version.txt')):
+      return "Version File Not Found"
+    else:
+      with open('version.txt', 'r') as f:
+        fileData = f.read()
+        Universal.version = fileData
+        return fileData

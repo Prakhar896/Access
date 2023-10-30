@@ -160,18 +160,14 @@ def bootFunction():
       sys.exit(1)
 
   # Check if system is in beta mode
-  version = None
-  if not os.path.isfile(os.path.join(os.getcwd(), 'version.txt')):
-    print("MAIN: Unable to check system version (version.txt file not present)! Please re-install Access.")
+  versionLookup = Universal.getVersion()
+  if versionLookup == "Version File Not Found":
+    print("MAIN: Version file was not found. Boot aborted. Please re-install Access.")
     sys.exit(1)
+  elif versionLookup.endswith("beta"):
+    print("MAIN: Note! You are booting a version of Access that is in beta! Version Info: '" + versionLookup + "'")
   else:
-    with open('version.txt', 'r') as f:
-      fileData = f.read()
-      version = fileData
-      if fileData.endswith("beta"):
-        print("MAIN: Note! You are booting a version of Access that is in beta! Version Info: '" + fileData + "'")
-      else:
-        print("MAIN: Boot version detected: '" + fileData + "'")
+    print("MAIN: Boot version detected: '" + versionLookup + "'")
 
   # Check for copy activation (Activator DRM Process)
   activationCheck = checkForActivation()
@@ -199,15 +195,24 @@ def bootFunction():
   print()
 
   # Run code that supports older versions (Backwards compatibility)
+  report = []
 
   ## SUPPORT FOR v1.0.3
   if os.environ.get("ReplitEnvironment", "nil") != "nil":
     print("MAIN NOTICE: Detection of Replit environment with ReplitEnvironment .env variable was deprecated in v1.0.4. Refer to documentation for more information.")
     print()
 
-  ## SUPPORT FOR v1.0.2
-  report = []
+  for username in accessIdentities:
+    ## Check if password is in old base64 format
+    if Encryption.isBase64(accessIdentities[username]["password"]):
+      accessIdentities[username]["password"] = Encryption.convertBase64ToSHA(accessIdentities[username]["password"])
+      report.append("Password in old Base64 format for user '{}' has been updated to a more secure format.".format(username))
 
+    if ("identityVersion" not in accessIdentities[username]) or (accessIdentities[username]["identityVersion"] != Universal.version):
+      accessIdentities[username]["identityVersion"] = Universal.version
+      report.append("Updated identity version for user '{}' to '{}'".format(username, Universal.version))
+
+  ## SUPPORT FOR v1.0.2
   for username in accessIdentities:
     if 'settings' not in accessIdentities[username] or ('emailPref' not in accessIdentities[username]['settings']):
       report.append('Settings data including email preferences were added to user \'{}\''.format(username))
