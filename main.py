@@ -73,7 +73,7 @@ def updateAnalytics():
 
 @app.route('/')
 def homepage():
-  return fileContent('homepage.html')
+  return render_template('homepage.html')
 
 @app.route('/security/unauthorised')
 def unauthorizedPage():
