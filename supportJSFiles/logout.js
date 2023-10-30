@@ -60,4 +60,4 @@ setTimeout(() => {
             alert("An error occurred in connecting to Access Servers. Please try again later. Check console for more information.")
             console.log("Failed to connect to Access Servers, error: " + error)
         })
-}, 2000)
+}, 700)
