@@ -69,7 +69,7 @@ def makeAnIdentity():
 
         # Create new identity
         accessIdentities[request.json['username']] = {
-            'password': Encryption.encodeToB64(request.json['password']),
+            'password': Encryption.encodeToSHA256(request.json['password']),
             'email': request.json['email'],
             'otpCode': request.json['otpCode'],
             'sign-up-date': datetime.datetime.now().strftime(Universal.systemWideStringDateFormat),
@@ -114,7 +114,7 @@ def loginIdentity():
     if targetIdentity == {}:
         return "UERROR: Email not associated with any Access Identity."
     
-    if Encryption.decodeFromB64(targetIdentity["password"]) != request.json['password']:
+    if not Encryption.verifySHA256(request.json['password'], targetIdentity["password"]):
         return "UERROR: Password is incorrect."
     
     identityCertificate = CertAuthority.getCertificate(targetIdentity['associatedCertID'])
@@ -494,8 +494,7 @@ def confirmEmailUpdate():
         return "ERROR: No such Access Identity is associated with that certificate ID."
 
     ## Check current password
-    decodedPass = Encryption.decodeFromB64(targetIdentity['password'])
-    if decodedPass != request.json['currentPass']:
+    if not Encryption.verifySHA256(request.json['currentPass'], targetIdentity['password']):
         return "UERROR: Password is incorrect."
 
     ## Check if it is a valid email
@@ -578,8 +577,7 @@ def updateIdentityEmail():
         return "ERROR: No such Access Identity is associated with that certificate ID."
 
     ## Check current password
-    decodedPass = Encryption.decodeFromB64(targetIdentity['password'])
-    if decodedPass != request.json['currentPass']:
+    if not Encryption.verifySHA256(request.json['currentPass'], targetIdentity['password']):
         return "UERROR: Password is incorrect."
 
     ## Check if it is a valid email
@@ -635,7 +633,7 @@ def updateIdentityPassword():
         return "ERROR: No such Access Identity is associated with that certificate ID."
     
     ## Check currentPass
-    if request.json['currentPass'] != Encryption.decodeFromB64(targetIdentity['password']):
+    if not Encryption.verifySHA256(request.json['currentPass'], targetIdentity['password']):
         return "UERROR: Current password is incorrect."
 
     ## Check if password is secure enough
@@ -653,10 +651,11 @@ def updateIdentityPassword():
         return "UERROR: Password must have at least 1 special character and 1 numeric digit."
 
     # Update access identity with password, send password update email, update db, return success response
-    accessIdentities[targetIdentity['username']]['password'] = Encryption.encodeToB64(request.json['newPass'])
+    hashedNewPass = Encryption.encodeToSHA256(request.json['newPass'])
+    accessIdentities[targetIdentity['username']]['password'] = hashedNewPass
     json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
-    targetIdentity['password'] = Encryption.encodeToB64(request.json['newPass'])
+    targetIdentity['password'] = hashedNewPass
 
     ## Send email
     text = """
@@ -739,7 +738,7 @@ def deleteIdentity():
         return "UERROR: Auth token provided does not match with the one associated with the logged in identity."
     
     # Verify current password
-    if request.json['currentPass'] != Encryption.decodeFromB64(targetIdentity['password']):
+    if not Encryption.verifySHA256(request.json['currentPass'], targetIdentity['password']):
         return "UERROR: Password is incorrect."
     
     # DELETE ALL RECORDS
@@ -915,9 +914,23 @@ def resetPassword():
         return "UERROR: No reset key was sent to this identity. If you did get a reset key email, the key may have expired if you are entering it more than 15 minutes after the reset key email was sent to you."
     if targetIdentity['resetKey']['key'] != request.json['resetKey']:
         return "UERROR: Reset key is incorrect."
+    
+    ## Check if password is secure enough
+    specialCharacters = list('!@#$%^&*()_-+')
+
+    hasSpecialChar = False
+    hasNumericDigit = False
+    for char in request.json['newPassword']:
+        if char.isdigit():
+            hasNumericDigit = True
+        elif char in specialCharacters:
+            hasSpecialChar = True
+
+    if not (hasSpecialChar and hasNumericDigit):
+        return "UERROR: Password must have at least 1 special character and 1 numeric digit."
 
     # Update identity data
-    accessIdentities[identityUsername]['password'] = Encryption.encodeToB64(request.json['newPassword'])
+    accessIdentities[identityUsername]['password'] = Encryption.encodeToSHA256(request.json['newPassword'])
     del accessIdentities[identityUsername]['resetKey']
     ## Logout instances of user if they are logged in for security
     if 'loggedInAuthToken' in accessIdentities[identityUsername]:

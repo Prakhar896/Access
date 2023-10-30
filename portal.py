@@ -1,6 +1,5 @@
 from main import *
 
-
 def checkSessionCredentials(certID, authToken):
     global accessIdentities
     CertAuthority.expireOldCertificates()
@@ -345,7 +344,7 @@ def idInfoAndManagement(certID, authToken):
 
         idInfo = {
             'email': targetIdentity['email'],
-            'passCensored': '●' * len(Encryption.decodeFromB64(targetIdentity['password'])),
+            'passCensored': '●' * 5,
             'creationDate': datetime.datetime.strptime(targetIdentity['sign-up-date'], Universal.systemWideStringDateFormat).strftime('%d %B, %A, %Y %H:%M:%S%p') + ' UTC' + time.strftime('%z'),
             'AFStatus': AFStatusString
         }
