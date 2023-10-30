@@ -201,7 +201,7 @@ def bootFunction():
   # Run code that supports older versions (Backwards compatibility)
 
   ## SUPPORT FOR v1.0.3
-  if os.environ.get("ReplitEnvironment", "nil") == "nil":
+  if os.environ.get("ReplitEnvironment", "nil") != "nil":
     print("MAIN NOTICE: Detection of Replit environment with ReplitEnvironment .env variable was deprecated in v1.0.4. Refer to documentation for more information.")
     print()
 
