@@ -9,7 +9,7 @@ python = "^3.8"
 getmac = "^0.9.3"
 python-dotenv = "^1.0.0"
 requests = "^2.31.0"
-Werkzeug = "^2.2.3"
+Werkzeug = "^3.0.1"
 Flask = "^2.2.5"
 Flask-Cors = "^3.0.10"
 
