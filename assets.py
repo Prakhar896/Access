@@ -1,58 +1,61 @@
-from main import *
+from main import fileContent
+from flask import send_file, Blueprint
 
-@app.route('/assets/copyright')
+assetsBP = Blueprint('assets', __name__)
+
+@assetsBP.route('/assets/copyright')
 def copyright():
   return fileContent('copyright.js')
 
-@app.route('/assets/fancyButtons')
+@assetsBP.route('/assets/fancyButtons')
 def fancyButtonsCSS():
   return fileContent('stylesheets/fancyButtonStyle.css')
 
-@app.route('/assets/createIDJS')
+@assetsBP.route('/assets/createIDJS')
 def createIDJS():
   return fileContent('supportJSFiles/createID.js')
 
-@app.route('/assets/accessLogo')
+@assetsBP.route('/assets/accessLogo')
 def accessLogoIMG():
   # Send accessLogo.png image
   return send_file('assets/accessLogo.png', mimetype='image/png')
 
-@app.route('/assets/signinJS')
+@assetsBP.route('/assets/signinJS')
 def signinJS():
   return fileContent('supportJSFiles/signIn.js')
 
-@app.route('/assets/portalHomeJS')
+@assetsBP.route('/assets/portalHomeJS')
 def portalHomeJS():
   return fileContent('supportJSFiles/portalHome.js')
 
-@app.route('/assets/folderRegistrationJS')
+@assetsBP.route('/assets/folderRegistrationJS')
 def folderRegistrationJS():
   return fileContent('supportJSFiles/folderRegistration.js')
 
-@app.route('/assets/logoutJS')
+@assetsBP.route('/assets/logoutJS')
 def logoutJS():
   return fileContent('supportJSFiles/logout.js')
 
-@app.route('/assets/deleteFileJS')
+@assetsBP.route('/assets/deleteFileJS')
 def deleteFileJS():
   return fileContent('supportJSFiles/deleteFile.js')
 
-@app.route('/assets/emailPrefJS')
+@assetsBP.route('/assets/emailPrefJS')
 def emailPrefJS():
   return fileContent('supportJSFiles/emailPref.js')
 
-@app.route('/assets/updateEmailConfirmationJS')
+@assetsBP.route('/assets/updateEmailConfirmationJS')
 def updateEmailConfirmationJS():
   return fileContent('supportJSFiles/updateEmailConfirmation.js')
 
-@app.route('/assets/updatePasswordJS')
+@assetsBP.route('/assets/updatePasswordJS')
 def updatePasswordJS():
   return fileContent('supportJSFiles/updatePassword.js')
 
-@app.route('/assets/deleteIdentityJS')
+@assetsBP.route('/assets/deleteIdentityJS')
 def deleteIdentityJS():
   return fileContent('supportJSFiles/deleteIdentity.js')
 
-@app.route('/assets/passwordResetJS')
+@assetsBP.route('/assets/passwordResetJS')
 def passwordResetJS():
   return fileContent('supportJSFiles/passwordReset.js')

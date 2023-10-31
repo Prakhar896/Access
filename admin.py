@@ -1,5 +1,8 @@
-from main import *
+import os, sys, datetime, copy
+from flask import Flask, render_template, request, redirect, url_for, flash, Blueprint
 
-@app.route('/', subdomain='admin')
+adminBP = Blueprint('admin', __name__)
+
+@adminBP.route('/admin')
 def adminHome():
-    return "<h1>Hello, this is the Admin Subdomain</h1>"
+    return "<h1>Hello, this is the Admin Domain</h1>"

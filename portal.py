@@ -1,4 +1,8 @@
-from main import *
+from main import accessIdentities, CertAuthority, AFManager, CAError, expireAuthTokens, fileUploadLimit, AccessAnalytics, app, prepFileExtensions, allowed_file, Universal, secure_filename, Emailer
+from flask import Flask, render_template, redirect, url_for, request, Blueprint, flash, send_from_directory
+import os, datetime, time, shutil, sys, copy, json
+
+portalBP = Blueprint("portal", __name__)
 
 def checkSessionCredentials(certID, authToken):
     global accessIdentities
@@ -29,7 +33,7 @@ def checkSessionCredentials(certID, authToken):
     return render_template('unauthorised.html', message="Certificate ID provided does not match any Access Identity.", originURL=request.host_url)
 
 
-@app.route('/portal/session/<certID>/<authToken>/home')
+@portalBP.route('/portal/session/<certID>/<authToken>/home')
 def portalHome(certID, authToken):
     global accessIdentities
 
@@ -55,7 +59,7 @@ def portalHome(certID, authToken):
     else:
         return check
 
-@app.route('/portal/session/<certID>/<authToken>/folder')
+@portalBP.route('/portal/session/<certID>/<authToken>/folder')
 def portalFolder(certID, authToken):
     global accessIdentities
 
@@ -96,7 +100,7 @@ def portalFolder(certID, authToken):
     else:
         return check
 
-@app.route('/portal/session/<certID>/<authToken>/folder/newUpload', methods=['GET', 'POST'])
+@portalBP.route('/portal/session/<certID>/<authToken>/folder/newUpload', methods=['GET', 'POST'])
 def newUpload(certID, authToken):
     global accessIdentities
 
@@ -185,7 +189,7 @@ def newUpload(certID, authToken):
     else:
         return check
 
-@app.route('/portal/session/<certID>/<authToken>/folder/uploads/<name>')
+@portalBP.route('/portal/session/<certID>/<authToken>/folder/uploads/<name>')
 def download_file(certID, authToken, name):
     check = checkSessionCredentials(certID, authToken)
     if isinstance(check, list) and check[0]:
@@ -206,7 +210,7 @@ def download_file(certID, authToken, name):
     else:
         return check
 
-@app.route('/portal/session/<certID>/<authToken>/folder/deleteListing')
+@portalBP.route('/portal/session/<certID>/<authToken>/folder/deleteListing')
 def deleteListing(certID, authToken):
     check = checkSessionCredentials(certID, authToken)
 
@@ -224,7 +228,7 @@ def deleteListing(certID, authToken):
     else:
         return check
 
-@app.route('/portal/session/<certID>/<authToken>/folder/deleteFile')
+@portalBP.route('/portal/session/<certID>/<authToken>/folder/deleteFile')
 def deleteFileConfirmation(certID, authToken):
     check = checkSessionCredentials(certID, authToken)
 
@@ -246,7 +250,7 @@ def deleteFileConfirmation(certID, authToken):
 
 ### SETTINGS WEBPAGES
 
-@app.route('/portal/session/<certID>/<authToken>/settings/emailPref')
+@portalBP.route('/portal/session/<certID>/<authToken>/settings/emailPref')
 def emailPreferences(certID, authToken):
     check = checkSessionCredentials(certID, authToken)
 
@@ -255,7 +259,7 @@ def emailPreferences(certID, authToken):
     else:
         return check
 
-@app.route('/portal/session/<certID>/<authToken>/settings/certStatus')
+@portalBP.route('/portal/session/<certID>/<authToken>/settings/certStatus')
 def certStatus(certID, authToken):
     global accessIdentities
     check = checkSessionCredentials(certID, authToken)
@@ -320,7 +324,7 @@ def certStatus(certID, authToken):
     else:
         return check
 
-@app.route('/portal/session/<certID>/<authToken>/settings/idInfo')
+@portalBP.route('/portal/session/<certID>/<authToken>/settings/idInfo')
 def idInfoAndManagement(certID, authToken):
     global accessIdentities
     check = checkSessionCredentials(certID, authToken)
@@ -353,7 +357,7 @@ def idInfoAndManagement(certID, authToken):
     else:
         return check
 
-@app.route('/portal/session/<certID>/<authToken>/settings/idInfo/updateEmail')
+@portalBP.route('/portal/session/<certID>/<authToken>/settings/idInfo/updateEmail')
 def updateEmailConfirmation(certID, authToken):
     check = checkSessionCredentials(certID, authToken)
 
@@ -362,7 +366,7 @@ def updateEmailConfirmation(certID, authToken):
     else:
         return check
 
-@app.route('/portal/session/<certID>/<authToken>/settings/idInfo/updatePassword')
+@portalBP.route('/portal/session/<certID>/<authToken>/settings/idInfo/updatePassword')
 def updatePassword(certID, authToken):
     check = checkSessionCredentials(certID, authToken)
 
@@ -371,7 +375,7 @@ def updatePassword(certID, authToken):
     else:
         return check
 
-@app.route('/portal/session/<certID>/<authToken>/settings/idInfo/confirmDelete')
+@portalBP.route('/portal/session/<certID>/<authToken>/settings/idInfo/confirmDelete')
 def confirmIdentityDelete(certID, authToken):
     check = checkSessionCredentials(certID, authToken)
 

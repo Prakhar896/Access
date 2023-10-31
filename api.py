@@ -1,6 +1,8 @@
-from main import *
-from models import *
-import re
+from main import accessIdentities, validOTPCodes, fileUploadLimit, prepFileExtensions, CertAuthority, AFManager, AFMError, CAError, AccessAnalytics, Emailer, Encryption, Universal, obtainTargetIdentity, generateAuthToken
+from flask import Flask, request, render_template, Blueprint, send_file, send_from_directory, url_for, redirect
+import re, os, sys, json, random, copy, datetime, time
+
+apiBP = Blueprint('api', __name__)
 
 def headersCheck(headers):
     ## Headers check
@@ -16,11 +18,11 @@ def headersCheck(headers):
 
     return True
 
-@app.route('/api/createIdentity', methods=['POST'])
+@apiBP.route('/api/createIdentity', methods=['POST'])
 def makeAnIdentity():
     global validOTPCodes
     global accessIdentities
-    if 'Content-Type' not in request.headers or 'AccessAPIKey' not in request.headers:
+    if ('Content-Type' not in request.headers) or ('AccessAPIKey' not in request.headers):
         return "ERROR: One or more headers were not present in the API request. Request failed."
     if request.headers['Content-Type'] == 'application/json' and request.headers['AccessAPIKey'] == os.environ['AccessAPIKey']:
         if 'username' not in request.json:
@@ -94,7 +96,7 @@ def makeAnIdentity():
     else:
         return "ERROR: One or more of the request headers had incorrect values for this request. Request failed."
 
-@app.route('/api/loginIdentity', methods=['POST'])
+@apiBP.route('/api/loginIdentity', methods=['POST'])
 def loginIdentity():
     global accessIdentities
     CertAuthority.expireOldCertificates()
@@ -187,7 +189,7 @@ def loginIdentity():
 
     return "SUCCESS: Identity logged in. Auth Session Data: {}-{}".format(accessIdentities[targetIdentity['username']]['loggedInAuthToken'], targetIdentity['associatedCertID'])
     
-@app.route('/api/registerFolder', methods=['POST'])
+@apiBP.route('/api/registerFolder', methods=['POST'])
 def registerFolder():
     global accessIdentities
 
@@ -253,7 +255,7 @@ def registerFolder():
 
     return "SUCCESS: Access Folder for {} registered!".format(request.json['username'])
 
-@app.route('/api/logoutIdentity', methods=['POST'])
+@apiBP.route('/api/logoutIdentity', methods=['POST'])
 def logoutIdentity():
     global accessIdentities
 
@@ -293,7 +295,7 @@ def logoutIdentity():
     
     return "SUCCESS: Logged out user {}.".format(request.json['username'])
 
-@app.route('/api/deleteFile', methods=['POST'])
+@apiBP.route('/api/deleteFile', methods=['POST'])
 def deleteFileFromFolder():
     global accessIdentities
 
@@ -384,7 +386,7 @@ def deleteFileFromFolder():
         print("API: Unidentified response received from AFManager when executing delete file function. Response: {}".format(response))
         return "ERROR: Unknown response received from AFManager service. Check server logs for more information."
 
-@app.route('/api/userPreferences', methods=["POST"])
+@apiBP.route('/api/userPreferences', methods=["POST"])
 def fetchUserPreferences():
     global accessIdentities
 
@@ -417,7 +419,7 @@ def fetchUserPreferences():
         responseObject['responseStatus'] = "SUCCESS"
         return responseObject
 
-@app.route('/api/updateUserPreference', methods=['POST'])
+@apiBP.route('/api/updateUserPreference', methods=['POST'])
 def updateUserPreference():
     global accessIdentities
 
@@ -465,7 +467,7 @@ def updateUserPreference():
 
         return responseObject
 
-@app.route('/api/confirmEmailUpdate', methods=['POST'])
+@apiBP.route('/api/confirmEmailUpdate', methods=['POST'])
 def confirmEmailUpdate():
     global accessIdentities
     global validOTPCodes
@@ -546,7 +548,7 @@ def confirmEmailUpdate():
     return "SUCCESS: Email confirmation email was sent to {}".format(request.json['newEmail'])
 
 
-@app.route('/api/updateIdentityEmail', methods=['POST'])
+@apiBP.route('/api/updateIdentityEmail', methods=['POST'])
 def updateIdentityEmail():
     global accessIdentities
     global validOTPCodes
@@ -605,7 +607,7 @@ def updateIdentityEmail():
 
     return "SUCCESS: Email for Access Identity successfully updated."
 
-@app.route('/api/updateIdentityPassword', methods=['POST'])
+@apiBP.route('/api/updateIdentityPassword', methods=['POST'])
 def updateIdentityPassword():
     global accessIdentities
     
@@ -703,7 +705,7 @@ def updateIdentityPassword():
 
     return "SUCCESS: Password successfully updated."
 
-@app.route('/api/deleteIdentity', methods=['POST'])
+@apiBP.route('/api/deleteIdentity', methods=['POST'])
 def deleteIdentity():
     global accessIdentities
     global validOTPCodes
@@ -799,7 +801,7 @@ def deleteIdentity():
 
     return "SUCCESS: Identity was successfully wiped from system."
 
-@app.route('/api/sendResetKey', methods=['POST'])
+@apiBP.route('/api/sendResetKey', methods=['POST'])
 def sendResetKey():
     global accessIdentities
     global validOTPCodes
@@ -875,7 +877,7 @@ def sendResetKey():
 
     return "SUCCESS: Reset key was successfully sent to the identity's email."
 
-@app.route('/api/resetPassword', methods=['POST'])
+@apiBP.route('/api/resetPassword', methods=['POST'])
 def resetPassword():
     global accessIdentities
     global validOTPCodes

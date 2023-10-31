@@ -5,7 +5,7 @@ if __name__ == "__main__":
     exit()
 
 import json, random, time, sys, subprocess, os, shutil, copy
-from flask import Flask, request, render_template, send_file, redirect, url_for, flash, send_from_directory
+from flask import Flask, request, render_template, redirect, url_for, flash, Blueprint
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
 import datetime
@@ -114,29 +114,14 @@ def renewCertificate():
 
 @app.route('/version')
 def version():
-  num = 'Error in reading version data.'
-  try:
-    with open('version.txt', 'r') as f:
-      num = f.read()
-  except Exception as e:
-    print("MAIN: Error in reading version data from version.txt file when request was made to /version endpoint. Error:", e)
+  if Universal.version == None:
+    num = Universal.getVersion()
+    if num == "Version File Not Found":
+      num = "Version information could not be obtained."
+  else:
+    num = Universal.version
 
   return render_template('version.html', versionNum=num)
-
-# Identity Meta Services
-from identityMeta import *
-
-# API
-from api import *
-
-# Email OTP Service
-from emailOTP import *
-
-# Portal Service
-from portal import *
-
-# Assets
-from assets import *
 
 def bootFunction():
   # BOOT PRE-PROCESSING
@@ -163,7 +148,7 @@ def bootFunction():
   versionLookup = Universal.getVersion()
   if versionLookup == "Version File Not Found":
     print("MAIN: Version file was not found. Boot aborted. Please re-install Access.")
-    sys.exit(1)
+    # sys.exit(1)
   elif versionLookup.endswith("beta"):
     print("MAIN: Note! You are booting a version of Access that is in beta! Version Info: '" + versionLookup + "'")
   else:
@@ -298,7 +283,7 @@ def bootFunction():
     else:
       print(AAresponse)
   else:
-    print("MAIN: Notice!!! AccessAnalytics is not enabled and will not be setup and run.")
+    print("MAIN: AccessAnalytics is not enabled and will not be setup and run.")
 
   ## Port check
   if 'RuntimePort' not in os.environ:
@@ -307,6 +292,28 @@ def bootFunction():
   elif not os.environ['RuntimePort'].isdigit():
     print("MAIN: RuntimePort environment variable has an invalid value. Port value must be an integer.")
     sys.exit(1)
+
+  # Register all external routes
+
+  ## Identity Meta Services
+  from identityMeta import identityMetaBP
+  app.register_blueprint(identityMetaBP)
+
+  ## API
+  from api import apiBP
+  app.register_blueprint(apiBP)
+
+  ## Email OTP Service
+  from emailOTP import emailOTPBP
+  app.register_blueprint(emailOTPBP)
+
+  ## Portal Service
+  from portal import portalBP
+  app.register_blueprint(portalBP)
+
+  ## Assets
+  from assets import assetsBP
+  app.register_blueprint(assetsBP)
       
   print("All services are online; boot pre-processing and setup completed.")
   print()

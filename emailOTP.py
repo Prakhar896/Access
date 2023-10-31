@@ -1,8 +1,12 @@
 from email import message
-from main import *
+from main import AccessAnalytics, obtainTargetIdentity, validOTPCodes, accessIdentities
+import os, random, json
+from flask import Flask, request, render_template, Blueprint
 import smtplib, ssl, re
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+
+emailOTPBP = Blueprint('emailOTP', __name__)
 
 def sendEmailWithOTP(destEmail, otp):
     port = 465  # For SSL
@@ -53,7 +57,7 @@ Copyright 2022 Prakhar Trivedi.""".format(otp)
         except Exception as e:
             print("OTP SERVICE: There was an error in sending the OTP Email and updating the Analytics Service: {}".format(e))
 
-@app.route('/identity/createProcess/sendOTP', methods=['POST'])
+@emailOTPBP.route('/identity/createProcess/sendOTP', methods=['POST'])
 def sendOTP():
     global accessIdentities
 
