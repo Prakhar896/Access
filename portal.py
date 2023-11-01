@@ -174,7 +174,7 @@ def newUpload(certID, authToken):
                             else:
                                 print("PORTAL: Unexpected response from Analytics when attempting to update with new email data; Response: {}".format(response))
 
-                        return redirect(url_for('download_file', name=filename, certID=certID, authToken=authToken))
+                        return redirect(url_for('portal.download_file', name=filename, certID=certID, authToken=authToken))
                     else:
                         flash("No file slots available.")
                         return redirect(request.url)
@@ -182,10 +182,10 @@ def newUpload(certID, authToken):
                     flash('Filename is not allowed. Please try again.')
                     return redirect(request.url)
             if (fileUploadLimit - len(AFManager.getFilenames(username=check[1]))) == 0:
-                return redirect(url_for('portalFolder', certID=certID, authToken=authToken))
+                return redirect(url_for('portal.portalFolder', certID=certID, authToken=authToken))
             return render_template('portal/newUpload.html', slotsAvailable=(fileUploadLimit - len(AFManager.getFilenames(check[1]))), fileExtensions=prepFileExtensions)
         else:
-            return redirect(url_for('portalFolder', certID=certID, authToken=authToken))
+            return redirect(url_for('portal.portalFolder', certID=certID, authToken=authToken))
     else:
         return check
 
@@ -206,7 +206,7 @@ def download_file(certID, authToken, name):
 
             return send_from_directory(app.config["UPLOAD_FOLDER"], name)
         else:
-            return redirect(url_for('portalFolder', certID=certID, authToken=authToken))
+            return redirect(url_for('portal.portalFolder', certID=certID, authToken=authToken))
     else:
         return check
 
@@ -220,11 +220,11 @@ def deleteListing(certID, authToken):
 
             if filenames == []:
                 filenames = None
-                return redirect(url_for('portalFolder', certID=certID, authToken=authToken))
+                return redirect(url_for('portal.portalFolder', certID=certID, authToken=authToken))
 
             return render_template('portal/deleteListing.html', files=filenames)
         else:
-            return redirect(url_for('portalFolder', certID=certID, authToken=authToken))
+            return redirect(url_for('portal.portalFolder', certID=certID, authToken=authToken))
     else:
         return check
 

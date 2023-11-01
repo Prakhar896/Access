@@ -678,13 +678,13 @@ def updateIdentityPassword():
     """.format(
         targetIdentity['username'], 
         datetime.datetime.now().strftime(Universal.systemWideStringDateFormat) + ' UTC' + time.strftime('%z'), 
-        request.host_url + url_for('passwordReset')[1::]
+        request.host_url + url_for('identityMeta.passwordReset')[1::]
     )
 
     html = render_template(
         'emails/passwordUpdated.html', 
         username=targetIdentity['username'],
-        resetPwdLink=(request.host_url + url_for('passwordReset')[1::]),
+        resetPwdLink=(request.host_url + url_for('identityMeta.passwordReset')[1::]),
         timestamp=datetime.datetime.now().strftime(Universal.systemWideStringDateFormat) + ' UTC' + time.strftime('%z')
         )
 
