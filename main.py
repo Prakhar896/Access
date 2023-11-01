@@ -162,7 +162,7 @@ def bootFunction():
     print("MAIN: Access copy is not activated! Triggering copy activation process...")
     print()
     try:
-      initActivation("z44bzvw0", version)
+      initActivation("z44bzvw0", Universal.version)
     except Exception as e:
       print("MAIN ERROR: An error occurred in activating this copy. Error: {}".format(e))
       print("MAIN: Boot aborted.")
