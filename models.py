@@ -1,5 +1,7 @@
 import json, os, shutil, subprocess, random, datetime, copy, base64
 from passlib.hash import sha256_crypt as sha
+from dotenv import load_dotenv
+load_dotenv()
 
 fileUploadLimit = 3
 if 'FileUploadsLimit' in os.environ:
