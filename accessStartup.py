@@ -1,10 +1,9 @@
 import time, os, shutil
 from getpass import getpass
-from certAuthority import *
 import pkg_resources
 
 try:
-    required = {'flask', 'flask-cors'}
+    required = {'flask', 'flask-cors', 'passlib', 'getmac', 'python-dotenv'}
     installed = {pkg.key for pkg in pkg_resources.working_set}
     missing = required - installed
     if missing:
@@ -21,15 +20,15 @@ except Exception as e:
     else:
         os.system("pip install -r requirements.txt")
         print()
-        print("Startup: Successfully downloaded libraries...re-importing dotenv...")
+        print("Startup: Successfully downloaded libraries! Re-importing...")
         print()
         from dotenv import load_dotenv
         load_dotenv()
-        print()
         print("Successfully imported! Starting now...")
         print()
 
 from accessAnalytics import *
+from certAuthority import *
 
 if 'FileUploadsLimit' not in os.environ:
     print("STARTUP WARNING: Mandatory `FileUploadsLimit` environment variable is not set in .env file. The system will fall back on the default limit of '3' file uploads when booted.")
