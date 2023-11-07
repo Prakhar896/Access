@@ -35,18 +35,18 @@ def allowed_file(filename):
 
 ### Variable Creation
 
-if not os.path.isfile('accessIdentities.txt'):
+if not os.path.isfile(os.path.join(os.getcwd(), 'accessIdentities.txt')):
   with open('accessIdentities.txt', 'w') as f:
     f.write("{}")
 
 accessIdentities = json.load(open('accessIdentities.txt', 'r'))
 
-if not os.path.isfile('certificates.txt'):
+if not os.path.isfile(os.path.join(os.getcwd(), 'certificates.txt')):
   with open('certificates.txt', 'w') as f:
     f_content = """{ "registeredCertificates": {}, "revokedCertificates": {}}"""
     f.write(f_content)
 
-if not os.path.isfile('validOTPCodes.txt'):
+if not os.path.isfile(os.path.join(os.getcwd(), 'validOTPCodes.txt')):
   with open('validOTPCodes.txt', 'w') as f:
     f.write("{}")
 
