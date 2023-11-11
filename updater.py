@@ -2,7 +2,6 @@ import os, shutil, sys, json, time, requests
 from models import Universal
 
 # Check for updates
-print()
 print("Checking for updates...")
 print()
 
