@@ -294,3 +294,8 @@ General Settings: (0 to return to main menu)
                         sys.exit(1)
                     print()
                     print("Successfully updated boot authorisation code.")
+
+    elif choice == 5:
+        import updater
+        print("STARTUP: Startup will now close.")
+        sys.exit(0)
