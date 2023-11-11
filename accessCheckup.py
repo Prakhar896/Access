@@ -34,8 +34,6 @@ print("CheckUp procedures will start now...")
 print()
 ## Gather system information
 print("Gathering system information...")
-print()
-time.sleep(2)
 
 def linux_distribution():
   try:
@@ -64,30 +62,29 @@ platform.mac_ver(),
 
 ## Version Compatibility
 print("Checking for python version compatibility...")
-time.sleep(1.5)
-print()
 if sys.version_info[0] < 3:
     print(sys.version_info[0])
     print("Python version is too old. Please install Python 3.8 or higher.")
     sys.exit(1)
 
 ## Check for required files (ALL OF THEM ONE BY ONE)
-print("Checking for required files...this may take quite a second...")
-time.sleep(3)
+print("Checking for required files...")
 
 rootFolderEssentialFiles = [
     'accessAnalytics.py',
     'accessStartup.py',
+    'activation.py',
     'admin.py',
     '.env',
     'AFManager.py',
     'api.py',
     'assets.py',
+    'bootCheck.py',
     'certAuthority.py',
+    'config.py',
     'copyright.js',
     'emailer.py',
-    'emailOTP.py',
-    'homepage.html',
+    'emailOTP.py', 
     'main.py',
     'models.py',
     'portal.py',
@@ -152,12 +149,13 @@ templateFoldersAndItsFiles = {
         'baseXNav.html',
         'createIdentity.html',
         'error.html',
+        'homepage.html',
         'loginIdentity.html',
         'logout.html',
         'passwordReset.html',
         'renewSuccess.html',
         'unauthorised.html',
-        'version.html',
+        'version.html'
     ]
 }
 
@@ -226,9 +224,7 @@ if os.path.isdir(os.path.join(os.getcwd(), 'stylesheets')):
             critical_issues.append("CRTICIAL ISSUE: The essential file '{}' is not present. It should be at the path '/stylesheets/{}'.".format(filename, filename))
 
 ### NON-ESSENTIAL FILES/FOLDERS CHECK
-print()
 print("Still working on checking all files...please wait!")
-time.sleep(2)
 
 unessentialFoldersNames = [
     'AccessFolders',
@@ -245,17 +241,16 @@ dataFilenames = [
     'accessIdentities.txt',
     'analyticsData.txt',
     'certificates.txt',
-    'validOTPCodes.txt'
+    'validOTPCodes.txt',
+    'config.txt'
 ]
 
 for filename in dataFilenames:
     if not os.path.isfile(os.path.join(os.getcwd(), filename)):
         warnings.append("WARNING: The non-essential database file '{}' is not present in the root folder of the Access System. It should be at the path '/{}'".format(filename, filename))
 
-######
-print()
+### Check environment variables
 print("Checking environment variables...")
-time.sleep(1)
 
 environmentVariables = [
     'AccessAPIKey',
@@ -263,12 +258,13 @@ environmentVariables = [
     'AccessEmailPassword',
     'APP_SECRET_KEY',
     'AccessAnalyticsEnabled',
-    'RuntimePort'
+    'RuntimePort',
+    'FileUploadsLimit',
+    'LoggingEnabled'
 ]
 
 nonessentialEnvVars = [
-    'GitpodEnvironment',
-    'ReplitEnvironment'
+    'GitpodEnvironment'
 ]
 
 for envVar in environmentVariables:
@@ -290,7 +286,6 @@ for envVar in nonessentialEnvVars:
             warnings.append("WARNING: The non-essential environment variable '{}' has an invalid value. It can either be 'True' or 'False' only.".format(envVar))
 
 ### Make request to website and obtain version information
-print()
 print("Checking current system version...")
 time.sleep(2)
 
@@ -305,10 +300,10 @@ else:
             fileContent = f.read()
             parsedText = result.text.split('>')[1].split('</p')[0]
             if fileContent != parsedText:
-                critical_issues.append("VERY CRITICAL ISSUE: This Access System's version is outdated. Current system version: {}, Latest System Version: {}. Please update the system for the best performance. Please refer to the update guide in the Access Startup menu to update the system while still retaining all data.".format(fileContent, parsedText))
+                critical_issues.append("VERY CRITICAL ISSUE: Current system version ({}) is outdated; latest Access version: {}. Please update Access from Access Startup for the best performance.".format(fileContent, parsedText))
     except Exception as e:
         print()
-        print("AN ERROR OCCURRED IN CONTACTING THE WEBSITE TO OBTAIN LATEST ACCESS SYTEM VERSION INFORMATION. THE CURRENT SYSTEM VERSION'S OUTDATED STATUS CANNOT BE DETERMINED.")
+        print("AN ERROR OCCURRED IN CONTACTING THE WEBSITE TO OBTAIN LATEST ACCESS SYTEM VERSION INFORMATION. COULD NOT CHECK FOR UPDATES.")
         print("Error Info: {}".format(e))
         print()
         print("CheckUp will continue anyways...")
@@ -350,3 +345,4 @@ print()
 print()
 print("Access CheckUp has successfully completed its operations!")
 print("***PLEASE LOOK ABOVE FOR ANY CRITICAL ISSUES AND WARNINGS THAT HAVE BEEN DETECTED BY CHECKUP!!!***")
+time.sleep(3)
