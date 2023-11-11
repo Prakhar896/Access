@@ -235,6 +235,9 @@ def bootFunction():
       print('\t' + item)
     print()
 
+  # Setup Logger service
+  Logger.setup()
+
   # Load certificates
   CAresponse = CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
   if CAError.checkIfErrorMessage(CAresponse):
@@ -247,12 +250,12 @@ def bootFunction():
   CertAuthority.expireOldCertificates()
   CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
 
-  ## Expire auth tokens
+  # Expire auth tokens
   tempIdentities = accessIdentities
   accessIdentities = expireAuthTokens(tempIdentities)
   json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
 
-  ## Set up Access Analytics
+  # Set up Access Analytics
   if AccessAnalytics.permissionCheck():
     AAresponse = AccessAnalytics.prepEnvironmentForAnalytics()
     if AAresponse.startswith("AAError:"):
@@ -286,7 +289,7 @@ def bootFunction():
   else:
     print("MAIN: AccessAnalytics is not enabled and will not be setup and run.")
 
-  ## Port check
+  # Port check
   if 'RuntimePort' not in os.environ:
     print("MAIN: RuntimePort environment variable is not set in .env file. Access cannot be booted without a valid port set. Please re-boot Access after setting RuntimePort.")
     sys.exit(1)

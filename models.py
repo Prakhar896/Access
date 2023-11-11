@@ -79,7 +79,7 @@ class Encryption:
   @staticmethod
   def convertBase64ToSHA(base64Hash):
     return Encryption.encodeToSHA256(Encryption.decodeFromB64(base64Hash))
-  
+
 class Universal:
   systemWideStringDateFormat = '%Y-%m-%d %H:%M:%S'
   version = None
@@ -93,3 +93,59 @@ class Universal:
         fileData = f.read()
         Universal.version = fileData
         return fileData
+
+class Logger:
+  @staticmethod
+  def checkPermission():
+      if "LoggingEnabled" in os.environ and os.environ["LoggingEnabled"] == 'True':
+          return True
+      else:
+          return False
+
+  @staticmethod
+  def setup():
+      if Logger.checkPermission():
+          try:
+              if not os.path.exists(os.path.join(os.getcwd(), "logs.txt")):
+                  with open("logs.txt", "w") as f:
+                      f.write("{}UTC {}\n".format(datetime.datetime.now().utcnow().strftime(Universal.systemWideStringDateFormat), "LOGGER: Logger database file setup complete."))
+          except Exception as e:
+              print("LOGGER SETUP ERROR: Failed to setup logs.txt database file. Setup permissions have been granted. Error: {}".format(e))
+
+      return
+
+  @staticmethod
+  def log(message):
+      if Logger.checkPermission():
+          try:
+              with open("logs.txt", "a") as f:
+                  f.write("{}UTC {}\n".format(datetime.datetime.now().utcnow().strftime(Universal.systemWideStringDateFormat), message))
+          except Exception as e:
+              print("LOGGER LOG ERROR: Failed to log message. Error: {}".format(e))
+        
+      return
+    
+  @staticmethod
+  def destroyAll():
+      try:
+          if os.path.exists(os.path.join(os.getcwd(), "logs.txt")):
+              os.remove("logs.txt")
+      except Exception as e:
+          print("LOGGER DESTROYALL ERROR: Failed to destroy logs.txt database file. Error: {}".format(e))
+
+  @staticmethod
+  def readAll():
+      if not Logger.checkPermission():
+          return "ERROR: Logging-related services do not have permission to operate."
+      try:
+          if os.path.exists(os.path.join(os.getcwd(), "logs.txt")):
+              with open("logs.txt", "r") as f:
+                  logs = f.readlines()
+                  for logIndex in range(len(logs)):
+                      logs[logIndex] = logs[logIndex].replace("\n", "")
+                  return logs
+          else:
+              return []
+      except Exception as e:
+          print("LOGGER READALL ERROR: Failed to check and read logs.txt database file. Error: {}".format(e))
+          return "ERROR: Failed to check and read logs.txt database file. Error: {}".format(e)
