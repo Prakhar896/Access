@@ -1,4 +1,4 @@
-from main import accessIdentities, validOTPCodes, fileUploadLimit, prepFileExtensions, CertAuthority, AFManager, AFMError, CAError, AccessAnalytics, Emailer, Encryption, Universal, obtainTargetIdentity, generateAuthToken
+from main import accessIdentities, validOTPCodes, fileUploadLimit, readableFileExtensions, CertAuthority, AFManager, AFMError, CAError, AccessAnalytics, Emailer, Encryption, Universal, obtainTargetIdentity, generateAuthToken
 from flask import Flask, request, render_template, Blueprint, send_file, send_from_directory, url_for, redirect
 import re, os, sys, json, random, copy, datetime, time
 
@@ -226,9 +226,9 @@ def registerFolder():
 
     THIS IS AN AUTOMATED MESSAGE DELIVERED TO YOU BY THE ACCESS PORTAL. DO NOT REPLY TO THIS EMAIL.
     Copyright 2022 Prakhar Trivedi
-    """.format(request.json['username'], fileUploadLimit, prepFileExtensions)
+    """.format(request.json['username'], fileUploadLimit, readableFileExtensions)
 
-    html = render_template('emails/folderRegistered.html', username=request.json['username'], fileUploadLimit=fileUploadLimit, fileExtensions=prepFileExtensions)
+    html = render_template('emails/folderRegistered.html', username=request.json['username'], fileUploadLimit=fileUploadLimit, fileExtensions=readableFileExtensions)
 
     ## Send email
     Emailer.sendEmail(accessIdentities[request.json['username']]['email'], "Access Folder Registered!", text, html)

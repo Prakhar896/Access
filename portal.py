@@ -1,4 +1,4 @@
-from main import accessIdentities, CertAuthority, AFManager, CAError, expireAuthTokens, fileUploadLimit, AccessAnalytics, app, prepFileExtensions, allowed_file, Universal, secure_filename, Emailer
+from main import accessIdentities, CertAuthority, AFManager, CAError, expireAuthTokens, fileUploadLimit, AccessAnalytics, app, readableFileExtensions, allowed_file, Universal, secure_filename, Emailer, configManager
 from flask import Flask, render_template, redirect, url_for, request, Blueprint, flash, send_from_directory
 import os, datetime, time, shutil, sys, copy, json
 
@@ -96,7 +96,7 @@ def portalFolder(certID, authToken):
                 
                 return render_template('portal/portalFolder.html', slotsAvailable=slotsAvailable, filesData=collatedFilesData, url=request.url, username=check[1])
         else:
-            return render_template("portal/folderRegistration.html", username=check[1], fileUploadLimit=fileUploadLimit, fileExtensions=prepFileExtensions)
+            return render_template("portal/folderRegistration.html", username=check[1], fileUploadLimit=fileUploadLimit, fileExtensions=readableFileExtensions, allowedFileSize=str(configManager.config["allowedFileSize"]))
     else:
         return check
 
@@ -183,7 +183,7 @@ def newUpload(certID, authToken):
                     return redirect(request.url)
             if (fileUploadLimit - len(AFManager.getFilenames(username=check[1]))) == 0:
                 return redirect(url_for('portal.portalFolder', certID=certID, authToken=authToken))
-            return render_template('portal/newUpload.html', slotsAvailable=(fileUploadLimit - len(AFManager.getFilenames(check[1]))), fileExtensions=prepFileExtensions)
+            return render_template('portal/newUpload.html', slotsAvailable=(fileUploadLimit - len(AFManager.getFilenames(check[1]))), fileExtensions=readableFileExtensions)
         else:
             return redirect(url_for('portal.portalFolder', certID=certID, authToken=authToken))
     else:

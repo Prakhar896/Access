@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 from flask_cors import CORS
 import datetime
 from models import *
+from config import Config
 from activation import *
 from certAuthority import *
 from AFManager import *
@@ -18,20 +19,20 @@ from accessAnalytics import *
 from getpass import getpass
 
 ### APP CONFIG
+configManager = Config()
+
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'Chute')
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'xlsx', 'heic', 'mov', 'mp4', 'docx', 'pptx', 'py', 'swift', 'js', 'zip'}
-ALLOWED_EXTENSIONS_AS_LIST = [x for x in ALLOWED_EXTENSIONS]
-prepFileExtensions = ', '.join(["."+x for x in ALLOWED_EXTENSIONS_AS_LIST])
+readableFileExtensions = ', '.join(["."+x for x in configManager.config["fileExtensions"]])
 
 app = Flask(__name__)
 CORS(app)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
+app.config['MAX_CONTENT_LENGTH'] = configManager.config["allowedFileSize"] * 1000 * 1000
 app.secret_key = os.environ['APP_SECRET_KEY']
 
 def allowed_file(filename):
-  return ('.' in filename) and (filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS)
+  return ('.' in filename) and (filename.rsplit('.', 1)[1].lower() in configManager.config["fileExtensions"])
 
 ### Variable Creation
 
