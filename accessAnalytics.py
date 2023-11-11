@@ -75,7 +75,6 @@ class AccessAnalytics:
     @staticmethod
     def analyticsRecoveryMode():
         print()
-        print()
         print("---------")
         print("ANALYTICS RECOVERY MODE ACTIVATED")
         print()
@@ -493,7 +492,6 @@ class AccessAnalytics:
 
         print()
         print("Analysing requests data...")
-        time.sleep(3)
 
         # Metric 1
         numRequests = len(loadedData["requests"])
@@ -504,9 +502,7 @@ class AccessAnalytics:
             if request.startswith("/portal"):
                 numPortalRequests += 1
         
-        print()
         print("Analysing portal operations...")
-        time.sleep(3)
 
         # Metric 3
         numFileUploads = loadedData["fileUploads"]
@@ -529,9 +525,7 @@ class AccessAnalytics:
         # Metric 9
         numGETRequests = len(loadedData["requests"]) - numPOSTRequests
         
-        print()
         print("Analysing complex requests...")
-        time.sleep(3)
 
         # Metric 10
         numAPIRequests = 0
@@ -557,10 +551,7 @@ class AccessAnalytics:
                     authTokens.append(authToken)
         numUniqueAuthTokens = len(authTokens)
         
-        print()
         print("Analysing credentials production and utilisation...")
-        time.sleep(3
-        )
 
         # Metric 13
         numUniqueCertificationIdentificationNumbers = 0
@@ -576,9 +567,7 @@ class AccessAnalytics:
                     uniqueCertIDs.append(certID)
         numUniqueCertificationIdentificationNumbers = len(uniqueCertIDs)
 
-        print()
         print("Analysing electronic mails...")
-        time.sleep(2)
 
         # Metric 14
         numEmailsSent = len(loadedData["emails"])
@@ -616,9 +605,7 @@ class AccessAnalytics:
                 numEmailsSentToFreqRecipient = recipientAndNumberOfRespectiveEmailsSentToThem[recipient]
 
         # Metric 17
-        print()
         print("Calculating other metrics...")
-        time.sleep(2)
 
         numIdentityDeletions = 0
 
