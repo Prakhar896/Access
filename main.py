@@ -129,6 +129,9 @@ def bootFunction():
   global accessIdentities
   global validOTPCodes
 
+  # Setup Logger service
+  Logger.setup()
+
   # Boot Authorisation
   if os.path.isfile(os.path.join(os.getcwd(), 'authorisation.txt')):
     try:
@@ -136,20 +139,23 @@ def bootFunction():
         decoded = Encryption.decodeFromB64(f.read())
         code = getpass("MAIN: Enter your Boot Authorisation Code to begin Access Boot: ")
         if code != decoded:
-          print("MAIN: Boot Authorisation Code is incorrect. Main will not proceed with the boot.")
+          print("MAIN: Boot Authorisation Code is incorrect. Aborting boot.")
+          Logger.log("MAIN BOOT: Aborting due to incorrect boot auth code.")
           sys.exit(1)
         else:
           print()
     except Exception as e:
-      print("MAIN: Failed to load and ask for boot authorisation code. Error: {}".format(e))
-      print("MAIN: Main will not proceed with the boot.")
+      Logger.log("MAIN BOOT: Aborting due to loading of and prompting for boot auth code; error: {}".format(e))
+      print("MAIN: Failed to load and ask for boot authorisation code.")
+      print("MAIN: Aborting boot.")
       sys.exit(1)
 
   # Check if system is in beta mode
   versionLookup = Universal.getVersion()
   if versionLookup == "Version File Not Found":
     print("MAIN: Version file was not found. Boot aborted. Please re-install Access.")
-    # sys.exit(1)
+    Logger.log("MAIN BOOT: Aborting due to missing version file.")
+    sys.exit(1)
   elif versionLookup.endswith("beta"):
     print("MAIN: Note! You are booting a version of Access that is in beta! Version Info: '" + versionLookup + "'")
   else:
@@ -164,16 +170,19 @@ def bootFunction():
     print()
     try:
       initActivation("z44bzvw0", Universal.version)
+      Logger.log("MAIN BOOT: Activated copy and obtained license key.")
     except Exception as e:
       print("MAIN ERROR: An error occurred in activating this copy. Error: {}".format(e))
       print("MAIN: Boot aborted.")
+      Logger.log("MAIN BOOT: Activation error occurred: {}".format(e))
       sys.exit(1)
   else:
     # KVR
     print("MAIN: This copy's license key needs to be verified (every 14 days). Triggering key verification request...")
     print()
     try:
-      makeKVR("z44bzvw0", version)
+      makeKVR("z44bzvw0", Universal.version)
+      Logger.log("MAIN BOOT: Completed a KVR successfully.")
     except Exception as e:
       print("MAIN ERROR: Failed to make KVR request. Error: {}".format(e))
       print("MAIN: Boot aborted.")
@@ -235,13 +244,11 @@ def bootFunction():
       print('\t' + item)
     print()
 
-  # Setup Logger service
-  Logger.setup()
-
   # Load certificates
   CAresponse = CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
   if CAError.checkIfErrorMessage(CAresponse):
-    print(CAresponse)
+    Logger.log("MAIN BOOT: Failed to make CA load certificates; response: {}".format(CAresponse))
+    print("MAIN: Failed to load certificates from file. Please try again.")
     sys.exit(1)
   else:
     print(CAresponse)
@@ -253,7 +260,8 @@ def bootFunction():
   # Expire auth tokens
   tempIdentities = accessIdentities
   accessIdentities = expireAuthTokens(tempIdentities)
-  json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+  with open('accessIdentities.txt', 'w') as f:
+    json.dump(accessIdentities, f)
 
   # Set up Access Analytics
   if AccessAnalytics.permissionCheck():
@@ -264,9 +272,11 @@ def bootFunction():
       print("MAIN: Would you like to enable Analytics Recovery Mode?")
       recoveryModeAction = input("Type 'yes' or 'no': ")
       if recoveryModeAction == "yes":
+        Logger.log("MAIN BOOT: Access Analytics Recovery Mode was activated.")
         AccessAnalytics.analyticsRecoveryMode()
       elif recoveryModeAction == "no":
         print("MAIN: Recovery mode was not enabled. Access Boot is aborted.")
+        Logger.log("MAIN BOOT: Aborting boot due to Access Analytics environment prep failure. AA Response: {}".format(AAresponse))
         sys.exit(1)
       else:
         print("MAIN: Invalid action provided. Access Boot is aborted.")
@@ -277,9 +287,11 @@ def bootFunction():
       print("MAIN: Would you like to enable Analytics Recovery Mode?")
       recoveryModeActionTwo = input("Type 'yes' or 'no': ")
       if recoveryModeActionTwo == "yes":
+        Logger.log("MAIN BOOT: Access Analytics Recovery Mode was activated.")
         AccessAnalytics.analyticsRecoveryMode()
       elif recoveryModeActionTwo == "no":
         print("MAIN: Recovery mode was not enabled. Access Boot is aborted.")
+        Logger.log("MAIN BOOT: Aborting boot due to Access Analytics environment prep failure. AA Response: {}".format(AAresponse))
         sys.exit(1)
       else:
         print("MAIN: Invalid action provided. Access Boot is aborted.")
@@ -290,12 +302,18 @@ def bootFunction():
     print("MAIN: AccessAnalytics is not enabled and will not be setup and run.")
 
   # Port check
+  portIsValid = True
   if 'RuntimePort' not in os.environ:
     print("MAIN: RuntimePort environment variable is not set in .env file. Access cannot be booted without a valid port set. Please re-boot Access after setting RuntimePort.")
-    sys.exit(1)
+    portIsValid = False
   elif not os.environ['RuntimePort'].isdigit():
     print("MAIN: RuntimePort environment variable has an invalid value. Port value must be an integer.")
+    portIsValid = False
+  
+  if not portIsValid:
+    Logger.log("MAIN BOOT: Aborting due to invalid/missing RuntimePort .env variable.")
     sys.exit(1)
+  
 
   # Register all external routes
 
@@ -324,6 +342,7 @@ def bootFunction():
   print("Booting Access...")
   print()
 
+  Logger.log("MAIN BOOT: System successfully booted.")
   app.run(host='0.0.0.0', debug=False, port=int(os.environ['RuntimePort']))
 
 if __name__ == "__main__":
