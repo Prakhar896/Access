@@ -91,7 +91,8 @@ def makeAnIdentity():
                 "fileDeletionNotifs": False
             }
         },
-        'folderRegistered': False
+        'folderRegistered': False,
+        'identityVersion': Universal.version if Universal.version != None else "Error"
     }
 
     # Save identities to file
