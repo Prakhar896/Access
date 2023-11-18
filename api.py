@@ -119,11 +119,11 @@ def loginIdentity():
     targetIdentity = obtainTargetIdentity(request.json['email'], accessIdentities)
     
     if targetIdentity == {}:
-        return "UERROR: Email not associated with any Access Identity."
+        return "UERROR: Invalid email or password."
     
     if not Encryption.verifySHA256(request.json['password'], targetIdentity["password"]):
         Logger.log("API LOGINIDENTITY: Blocked unauthorised login attempt for '{}'.".format(targetIdentity["username"]))
-        return "UERROR: Password is incorrect."
+        return "UERROR: Invalid email or password."
     
     identityCertificate = CertAuthority.getCertificate(targetIdentity['associatedCertID'])
     if identityCertificate is None:

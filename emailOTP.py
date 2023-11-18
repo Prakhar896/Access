@@ -1,5 +1,5 @@
 from email import message
-from main import AccessAnalytics, obtainTargetIdentity, validOTPCodes, accessIdentities
+from main import AccessAnalytics, obtainTargetIdentity, validOTPCodes, accessIdentities, Logger
 import os, random, json
 from flask import Flask, request, render_template, Blueprint
 import smtplib, ssl, re
@@ -62,16 +62,16 @@ def sendOTP():
     global accessIdentities
 
     if 'Content-Type' not in request.headers:
-        return "ERROR: Content-Type header not present in request. Request failed."
+        return "ERROR: Invalid headers."
     if request.headers['Content-Type'] != 'application/json':
-        return "ERROR: Content-Type header is not application/json. Request failed."
+        return "ERROR: Invalid headers."
     if 'AccessAPIKey' not in request.headers:
-        return "ERROR: AccessAPIKey header not present in request. Request failed."
+        return "ERROR: Invalid headers."
     if request.headers['AccessAPIKey'] != os.environ['AccessAPIKey']:
-        return "ERROR: AccessAPIKey header is not correct. Request failed."
+        return "ERROR: Invalid headers."
     
     if 'email' not in request.json:
-        return "ERROR: email field not present in request. Request failed."
+        return "ERROR: Invalid request body."
     
     # Check if email field value is a valid email
     if not re.match(r"[^@]+@[^@]+\.[^@]+", request.json['email']):
@@ -81,7 +81,7 @@ def sendOTP():
 
     targetIdentity = obtainTargetIdentity(email, accessIdentities)
     if targetIdentity != {}:
-        return "UERROR: There is already a created identity associated with that email."
+        return "UERROR: There is an existing identity with that email."
 
     numbers = [str(i) for i in range(10)]
     otp = ''.join(random.choice(numbers) for i in range(6))
@@ -91,7 +91,10 @@ def sendOTP():
     else:
         print("OTP: Skipping OTP email due to Gitpod Environment...")
 
+    Logger.log("EMAILOTP: Sent OTP verification email to '{}' for identity creation.".format(email))
+
     validOTPCodes[email] = str(otp)
-    json.dump(validOTPCodes, open('validOTPCodes.txt', 'w'))
+    with open('validOTPCodes.txt', 'w') as f:
+        json.dump(validOTPCodes, f)
 
     return "OTP sent to {}".format(email)
