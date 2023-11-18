@@ -1,4 +1,4 @@
-from main import accessIdentities, validOTPCodes, fileUploadLimit, readableFileExtensions, CertAuthority, AFManager, AFMError, CAError, AccessAnalytics, Emailer, Encryption, Universal, obtainTargetIdentity, generateAuthToken
+from main import accessIdentities, validOTPCodes, fileUploadLimit, readableFileExtensions, CertAuthority, AFManager, AFMError, CAError, AccessAnalytics, Emailer, Encryption, Universal, Logger, obtainTargetIdentity, generateAuthToken
 from flask import Flask, request, render_template, Blueprint, send_file, send_from_directory, url_for, redirect
 import re, os, sys, json, random, copy, datetime, time
 
@@ -24,77 +24,82 @@ def makeAnIdentity():
     global accessIdentities
     if ('Content-Type' not in request.headers) or ('AccessAPIKey' not in request.headers):
         return "ERROR: One or more headers were not present in the API request. Request failed."
-    if request.headers['Content-Type'] == 'application/json' and request.headers['AccessAPIKey'] == os.environ['AccessAPIKey']:
-        if 'username' not in request.json:
-            return "ERROR: New identity username field not present in body. Request failed."
-        if 'password' not in request.json:
-            return "ERROR: New identity password field not present in body. Request failed."
-        if 'email' not in request.json:
-            return "ERROR: New identity email field not present in body. Request failed."
-        if 'otpCode' not in request.json:
-            return "ERROR: New identity OTP field not present in body. Request failed."
+    
+    check = headersCheck(headers=request.headers)
+    if check != True:
+        return check
 
-        # Checks for username validity
-        if request.json['username'] in accessIdentities:
-            return "UERROR: Username already taken."
-        elif request.json['username'] == "":
-            return "UERROR: Username cannot be blank."
-        elif " " in request.json['username']:
-            return "UERROR: Username cannot have spaces."
+    if 'username' not in request.json:
+        return "ERROR: New identity username field not present in body. Request failed."
+    if 'password' not in request.json:
+        return "ERROR: New identity password field not present in body. Request failed."
+    if 'email' not in request.json:
+        return "ERROR: New identity email field not present in body. Request failed."
+    if 'otpCode' not in request.json:
+        return "ERROR: New identity OTP field not present in body. Request failed."
+
+    # Checks for username validity
+    if request.json['username'] in accessIdentities:
+        return "UERROR: Username already taken."
+    elif request.json['username'] == "":
+        return "UERROR: Username cannot be blank."
+    elif " " in request.json['username']:
+        return "UERROR: Username cannot have spaces."
         
-        # Check if email is already taken
-        if request.json['email'] in [accessIdentities[x]['email'] for x in accessIdentities]:
-            return "UERROR: Email already taken."
+    # Check if email is already taken
+    if request.json['email'] in [accessIdentities[x]['email'] for x in accessIdentities]:
+        return "UERROR: Email already taken."
 
-        # Check if otp code is valid
-        if request.json['email'] not in validOTPCodes:
-            return "ERROR: OTP code could not be verified as email associated with code was not in database. This is likely due to a missing OTP email request. Request failed."
-        if request.json['otpCode'] != validOTPCodes[request.json['email']]:
-            return "UERROR: OTP code is incorrect."
+    # Check if otp code is valid
+    if request.json['email'] not in validOTPCodes:
+        Logger.log("API MAKEIDENTITY: OTP code could not be verified as email associated with code was not in database, likely due to a missing OTP email request.")
+        return "ERROR: An error occurred. Please try again."
+    if request.json['otpCode'] != validOTPCodes[request.json['email']]:
+        return "UERROR: OTP code is incorrect."
 
-        # Check if password is secure enough
-        specialCharacters = list('!@#$%^&*()_-+')
+    # Check if password is secure enough
+    specialCharacters = list('!@#$%^&*()_-+')
 
-        hasSpecialChar = False
-        hasNumericDigit = False
-        for char in request.json['password']:
-            if char.isdigit():
-                hasNumericDigit = True
-            elif char in specialCharacters:
-                hasSpecialChar = True
+    hasSpecialChar = False
+    hasNumericDigit = False
+    for char in request.json['password']:
+        if char.isdigit():
+            hasNumericDigit = True
+        elif char in specialCharacters:
+            hasSpecialChar = True
 
-        if not (hasSpecialChar and hasNumericDigit):
-            return "UERROR: Password must have at least 1 special character and 1 numeric digit."
+    if not (hasSpecialChar and hasNumericDigit):
+        return "UERROR: Password must have at least 1 special character and 1 numeric digit."
 
-        validOTPCodes.pop(request.json['email'])
-        json.dump(validOTPCodes, open('validOTPCodes.txt', 'w'))
+    validOTPCodes.pop(request.json['email'])
+    with open('validOTPCodes.txt', 'w') as f:
+        json.dump(validOTPCodes, f)
 
-        # Create new identity
-        accessIdentities[request.json['username']] = {
-            'password': Encryption.encodeToSHA256(request.json['password']),
-            'email': request.json['email'],
-            'otpCode': request.json['otpCode'],
-            'sign-up-date': datetime.datetime.now().strftime(Universal.systemWideStringDateFormat),
-            'last-login-date': datetime.datetime.now().strftime(Universal.systemWideStringDateFormat),
-            'associatedCertID': CertAuthority.issueCertificate(request.json['username'])['certID'],
-            'AF_and_files': {},
-            'settings': {
-                "emailPref": {
-                    "loginNotifs": True,
-                    "fileUploadNotifs": False,
-                    "fileDeletionNotifs": False
-                }
-            },
-            'folderRegistered': False
-        }
+    # Create new identity
+    accessIdentities[request.json['username']] = {
+        'password': Encryption.encodeToSHA256(request.json['password']),
+        'email': request.json['email'],
+        'otpCode': request.json['otpCode'],
+        'sign-up-date': datetime.datetime.now().strftime(Universal.systemWideStringDateFormat),
+        'last-login-date': datetime.datetime.now().strftime(Universal.systemWideStringDateFormat),
+        'associatedCertID': CertAuthority.issueCertificate(request.json['username'])['certID'],
+        'AF_and_files': {},
+        'settings': {
+            "emailPref": {
+                "loginNotifs": True,
+                "fileUploadNotifs": False,
+                "fileDeletionNotifs": False
+            }
+        },
+        'folderRegistered': False
+    }
 
-        # Save identities to file
-        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
-        CertAuthority.saveCertificatesToFile(fileObject=open('certificates.txt', 'w'))
+    # Save identities to file
+    json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+    CertAuthority.saveCertificatesToFile(fileObject=open('certificates.txt', 'w'))
+    Logger.log("API MAKEIDENTITY: Successfully created identity with username '{}'.".format(request.json['username']))
 
-        return "SUCCESS: Identity created."
-    else:
-        return "ERROR: One or more of the request headers had incorrect values for this request. Request failed."
+    return "SUCCESS: Identity created."
 
 @apiBP.route('/api/loginIdentity', methods=['POST'])
 def loginIdentity():
@@ -117,6 +122,7 @@ def loginIdentity():
         return "UERROR: Email not associated with any Access Identity."
     
     if not Encryption.verifySHA256(request.json['password'], targetIdentity["password"]):
+        Logger.log("API LOGINIDENTITY: Blocked unauthorised login attempt for '{}'.".format(targetIdentity["username"]))
         return "UERROR: Password is incorrect."
     
     identityCertificate = CertAuthority.getCertificate(targetIdentity['associatedCertID'])
@@ -133,7 +139,10 @@ def loginIdentity():
 
     accessIdentities[targetIdentity['username']]['last-login-date'] = datetime.datetime.now().strftime(Universal.systemWideStringDateFormat)
     accessIdentities[targetIdentity['username']]['loggedInAuthToken'] = generateAuthToken()
-    json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+    with open('accessIdentities.txt', 'w') as f:
+        json.dump(accessIdentities, f)
+
+    Logger.log("API LOGINIDENTITY: Identity '{}' signed in.".format(targetIdentity['username']))
 
     text = """
     Hi {},
@@ -212,6 +221,7 @@ def registerFolder():
 
     ## Register folder under username
     AFManager.registerFolder(request.json['username'])
+    Logger.log("API REGISTERFOLDER: Registered folder for identity '{}'.".format(request.json['username']))
 
     ## Send email
 
@@ -236,7 +246,8 @@ def registerFolder():
     ## Update Access Identity
     accessIdentities[request.json['username']]['folderRegistered'] = True
 
-    json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+    with open('accessIdentities.txt', 'w') as f:
+        json.dump(accessIdentities, f)
 
     if 'AccessAnalyticsEnabled' in os.environ and os.environ['AccessAnalyticsEnabled'] == 'True':
         return "SUCCESS: Access Folder for {} registered!".format(request.json['username'])
@@ -274,12 +285,15 @@ def logoutIdentity():
     if 'loggedInAuthToken' not in accessIdentities[request.json['username']]:
         return "UERROR: Access Identity is not logged in. Only logged in identities can be logged out."
     if request.json['authToken'] != accessIdentities[request.json['username']]['loggedInAuthToken']:
-        return "UERROR: Auth token does not match with the one associated with the logged in identity."
+        Logger.log("API LOGOUTIDENTITY: Blocked unauthorised logout attempt for '{}'.")
+        return "UERROR: Invalid credentials provided for logout."
     
     # Logout process
     try:
         del accessIdentities[request.json['username']]['loggedInAuthToken']
-        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+        with open('accessIdentities.txt', 'w') as f:
+            json.dump(accessIdentities, f)
+        Logger.log("API LOGOUTIDENTITY: Identity '{}' logged out.".format(request.json['username']))
 
         ## Update Access Analytics
         response = AccessAnalytics.newSignout()
@@ -290,8 +304,9 @@ def logoutIdentity():
                 print("API: Unexpected response when attempting to update Analytics with new sign out; Response: {}".format(response))
 
     except Exception as e:
-        print("API: An error occurred in logging out user {}: {}".format(request.json['username'], e))
-        return "ERROR: An error occurred in logging out: {}".format(e)
+        print("API: An error occurred in logging out an identity.")
+        Logger.log("API LOGOUTIDENTITY ERROR: Error in logging out '{}': {}".format(request.json['username'], e))
+        return "ERROR: An error occurred in logging out. Please try again."
     
     return "SUCCESS: Logged out user {}.".format(request.json['username'])
 
@@ -324,7 +339,8 @@ def deleteFileFromFolder():
 
     response = AFManager.deleteFile(username=request.json['username'], filename=request.json['filename'])
     if AFMError.checkIfErrorMessage(response):
-        return "ERROR: {}".format(response)
+        Logger.log("API DELETEFILE ERROR: Failed to delete file from folder; AFM response: {}".format(response))
+        return "ERROR: Failed to delete file. Please try again."
     elif response == "AFM: Successfully deleted the file.":
         ## Update Access Identity
         identityUsername = ''
@@ -338,9 +354,13 @@ def deleteFileFromFolder():
             targetIdentity["AF_and_files"].pop(request.json['filename'])
             accessIdentities[identityUsername]['AF_and_files'].pop(request.json['filename'])
         else:
+            Logger.log("API DELETEFILE WARNING: When updating '{}' with file deletion, file name was not found in identity. System will continue regardless.".format(identityUsername))
             print("API: When updating Access Identity with file deletion, file's name was not found in the identity. Recovering and continuing...")
 
-        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+        with open('accessIdentities.txt', 'w') as f:
+            json.dump(accessIdentities, f)
+
+        Logger.log("API DELETEFILE: Deleted a file for '{}'.".format(identityUsername))
 
         ## Update Access Analytics
         response = AccessAnalytics.newFileDeletion()
@@ -397,7 +417,7 @@ def fetchUserPreferences():
 
     # Body check
     if 'certID' not in request.json:
-        return "ERROR: Field 'certID' is not present in request body."
+        return "ERROR: Invalid request body."
     
     targetIdentity = {}
     for username in accessIdentities:
@@ -409,7 +429,7 @@ def fetchUserPreferences():
         return "ERROR: No such Access Identity is associated with that certificate ID."
     
     if 'resourceReq' not in request.json:
-        return "ERROR: Field 'resourceReq' is not present in request body."
+        return "ERROR: Invalid request body."
     if request.json['resourceReq'] not in ['emailPrefs']:
         return "ERROR: Invalid resource was requested."
 
@@ -442,15 +462,15 @@ def updateUserPreference():
         return "ERROR: No such Access Identity is associated with that certificate ID."
     
     if 'resourceReq' not in request.json:
-        return "ERROR: Field 'resourceReq' is not present in request body."
+        return "ERROR: Invalid request body."
     if request.json['resourceReq'] not in ['emailPrefs', 'certData', 'identityInfo']:
         return "ERROR: Invalid resource was requested."
 
     if 'preferenceName' not in request.json:
-        return "ERROR: Field 'preferenceName' not present in request body."
+        return "ERROR: Invalid request body."
 
     if 'newValue' not in request.json:
-        return "ERROR: Field 'newValue' not present in request body."
+        return "ERROR: Invalid request body."
     
     ## Update preference and respond
     if request.json['resourceReq'] == "emailPrefs":
@@ -460,12 +480,17 @@ def updateUserPreference():
         accessIdentities[targetIdentity['username']]['settings']['emailPref'][request.json['preferenceName']] = request.json['newValue']
         targetIdentity['settings']['emailPref'][request.json['preferenceName']] = request.json['newValue']
 
-        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+        with open('accessIdentities.txt', 'w') as f:
+            json.dump(accessIdentities, f)
 
         responseObject = copy.deepcopy(targetIdentity['settings']['emailPref'])
         responseObject['responseStatus'] = "SUCCESS"
+        Logger.log("API UPDATEUSERPREFERENCE: Updated preference for '{}'.".format(targetIdentity['username']))
 
         return responseObject
+    else:
+        # Temporary return before other settings resources are added
+        return "ERROR: Other settings resources are not supported currently."
 
 @apiBP.route('/api/confirmEmailUpdate', methods=['POST'])
 def confirmEmailUpdate():

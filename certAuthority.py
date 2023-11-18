@@ -189,6 +189,7 @@ class CertAuthority:
             revokedCerts = allCerts['revokedCertificates']
             CertAuthority.registeredCertificates = regCerts
             CertAuthority.revokedCertificates = revokedCerts
+            fileObject.close()
             return "Successfully loaded certificates!"
         except:
             return CAError.loadingCertsFailed
@@ -201,6 +202,7 @@ class CertAuthority:
                 'revokedCertificates': CertAuthority.revokedCertificates
             }
             json.dump(allCerts, fileObject)
+            fileObject.close()
             return "Successfully saved certificates!"
         except:
             return CAError.savingCertsFailed
