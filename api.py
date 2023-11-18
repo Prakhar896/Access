@@ -7,9 +7,9 @@ apiBP = Blueprint('api', __name__)
 def headersCheck(headers):
     ## Headers check
     if 'Content-Type' not in headers:
-        return "ERROR: Content-Type header not present in API request. Request failed."
+        return "ERROR: Invalid headers."
     if 'AccessAPIKey' not in headers:
-        return "ERROR: AccessAPIKey header not present in API request. Request failed."
+        return "ERROR: Invalid headers."
 
     if headers['Content-Type'] != 'application/json':
         return "ERROR: Content-Type header had incorrect value for this API request (expected application/json). Request failed."
@@ -30,13 +30,13 @@ def makeAnIdentity():
         return check
 
     if 'username' not in request.json:
-        return "ERROR: New identity username field not present in body. Request failed."
+        return "ERROR: Invalid request body."
     if 'password' not in request.json:
-        return "ERROR: New identity password field not present in body. Request failed."
+        return "ERROR: Invalid request body."
     if 'email' not in request.json:
-        return "ERROR: New identity email field not present in body. Request failed."
+        return "ERROR: Invalid request body."
     if 'otpCode' not in request.json:
-        return "ERROR: New identity OTP field not present in body. Request failed."
+        return "ERROR: Invalid request body."
 
     # Checks for username validity
     if request.json['username'] in accessIdentities:
@@ -112,9 +112,9 @@ def loginIdentity():
         return check
 
     if 'email' not in request.json:
-        return "ERROR: email field not present in body. Request failed."
+        return "ERROR: Invalid request body."
     if 'password' not in request.json:
-        return "ERROR: password field not present in body. Request failed."
+        return "ERROR: Invalid request body."
 
     targetIdentity = obtainTargetIdentity(request.json['email'], accessIdentities)
     
@@ -209,7 +209,7 @@ def registerFolder():
 
     # Data body check
     if 'username' not in request.json:
-        return "ERROR: Username field not present in JSON body of request."
+        return "ERROR: Invalid request body."
     if request.json['username'] not in accessIdentities:
         return "ERROR: Username not associated with any Access Identity."
     
@@ -277,9 +277,9 @@ def logoutIdentity():
     
     # Body check
     if 'username' not in request.json:
-        return "ERROR: Username field not present in request body."
+        return "ERROR: Invalid request body."
     if 'authToken' not in request.json:
-        return "ERROR: Auth Token field not present in request body."
+        return "ERROR: Invalid request body."
     if request.json['username'] not in accessIdentities:
         return "UERROR: Given username is not associated with any Access Identity."
     if 'loggedInAuthToken' not in accessIdentities[request.json['username']]:
@@ -321,11 +321,11 @@ def deleteFileFromFolder():
 
     # Body check
     if 'username' not in request.json:
-        return "ERROR: Username field is not present in request body."
+        return "ERROR: Invalid request body."
     if request.json['username'] not in accessIdentities:
         return "UERROR: Username is not associated with any Access Identity. Please try again."
     if 'filename' not in request.json:
-        return "ERROR: Filename field is not present in request body."
+        return "ERROR: Invalid request body."
 
     if not AFManager.checkIfFolderIsRegistered(username=request.json['username']):
         return "UERROR: Folder for the Access Identity associated with that username has not been registered."
@@ -450,7 +450,7 @@ def updateUserPreference():
 
     # Body check
     if 'certID' not in request.json:
-        return "ERROR: Field 'certID' is not present in request body."
+        return "ERROR: Invalid request body."
     
     targetIdentity = {}
     for username in accessIdentities:
@@ -504,11 +504,11 @@ def confirmEmailUpdate():
 
     # Body check
     if 'newEmail' not in request.json:
-        return "ERROR: 'newEmail' field not present in request body."
+        return "ERROR: Invalid request body."
     if 'currentPass' not in request.json:
-        return "ERROR: Current password field not present in request body."
+        return "ERROR: Invalid request body."
     if 'certID' not in request.json:
-        return "ERROR: Certificate ID field not present in request body."
+        return "ERROR: Invalid request body."
 
     ## Get identity from certID
     targetIdentity = {}
@@ -522,6 +522,7 @@ def confirmEmailUpdate():
 
     ## Check current password
     if not Encryption.verifySHA256(request.json['currentPass'], targetIdentity['password']):
+        Logger.log("API CONFIRMEMAILUPDATE: Blocked unauthorised attempt to send OTP verification email for identity '{}'.".format(targetIdentity['username']))
         return "UERROR: Password is incorrect."
 
     ## Check if it is a valid email
@@ -537,7 +538,8 @@ def confirmEmailUpdate():
     otp = ''.join(random.choice(numbers) for i in range(6))
 
     validOTPCodes[request.json['newEmail']] = otp
-    json.dump(validOTPCodes, open('validOTPCodes.txt', 'w'))
+    with open('validOTPCodes.txt', 'w') as f:
+        json.dump(validOTPCodes, f)
 
     # Send email
     text = """
@@ -557,6 +559,8 @@ def confirmEmailUpdate():
     html = render_template('emails/confirmEmailUpdate.html', username=targetIdentity['username'], otpCode=otp)
 
     Emailer.sendEmail(request.json['newEmail'], "Confirm Email Update | Access Portal", text, html)
+
+    Logger.log("API CONFIRMEMAILUPDATE: Sent OTP verification email for email update attempt of identity '{}'.".format(targetIdentity['username']))
 
     ## Update Access Analytics
     response = AccessAnalytics.newEmail(request.json['newEmail'], text, "Confirm Email Update | Access Portal", targetIdentity['username'])
@@ -585,13 +589,13 @@ def updateIdentityEmail():
 
     # Body check
     if 'newEmail' not in request.json:
-        return "ERROR: 'newEmail' field not present in request body."
+        return "ERROR: Invalid request body."
     if 'currentPass' not in request.json:
-        return "ERROR: Current password field not present in request body."
+        return "ERROR: Invalid request body."
     if 'certID' not in request.json:
-        return "ERROR: Certificate ID field not present in request body."
+        return "ERROR: Invalid request body."
     if 'otpCode' not in request.json:
-        return "ERROR: OTP Code field not present in request body."
+        return "ERROR: Invalid request body."
 
     ## Get identity from certID
     targetIdentity = {}
@@ -605,6 +609,7 @@ def updateIdentityEmail():
 
     ## Check current password
     if not Encryption.verifySHA256(request.json['currentPass'], targetIdentity['password']):
+        Logger.log("API UPDATEIDENTITYEMAIL: Blocked unauthorised attempt to update email for identity '{}'.".format(targetIdentity['username']))
         return "UERROR: Password is incorrect."
 
     ## Check if it is a valid email
@@ -617,18 +622,23 @@ def updateIdentityEmail():
 
     ## Check if email was sent an OTP code
     if request.json['newEmail'] not in validOTPCodes:
-        return "ERROR: No OTP code was sent to that email. Please send a confirmEmailUpdate POST request to send an OTP to the new email first."
+        return "ERROR: No OTP code was sent to that email. Please make a request to send an OTP verification email first."
 
     ## Check OTP code
     if validOTPCodes[request.json['newEmail']] != request.json['otpCode']:
+        Logger.log("API UPDATEIDENTITYEMAIL: Blocked unauthorised attempt to update email for identity '{}'.".format(targetIdentity['username']))
         return "UERROR: OTP Code is incorrect."
 
     # Update Access Identity's email, update database, delete otp code, return success response
     accessIdentities[targetIdentity['username']]['email'] = request.json['newEmail']
-    json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+    with open('accessIdentities.txt', 'w') as f:
+        json.dump(accessIdentities, f)
 
     validOTPCodes.pop(request.json['newEmail'])
-    json.dump(validOTPCodes, open('validOTPCodes.txt', 'w'))
+    with open('validOTPCodes.txt', 'w') as f:
+        json.dump(validOTPCodes, f)
+
+    Logger.log("API UPDATEIDENTITYEMAIL: Updated email for identity '{}'.".format(targetIdentity['username']))
 
     return "SUCCESS: Email for Access Identity successfully updated."
 
@@ -643,11 +653,11 @@ def updateIdentityPassword():
 
     # Body check
     if 'certID' not in request.json:
-        return "ERROR: Certificate ID field not present in request body."
+        return "ERROR: Invalid request body."
     if 'currentPass' not in request.json:
-        return "ERROR: Current password field not present in request body."
+        return "ERROR: Invalid request body."
     if 'newPass' not in request.json:
-        return "ERROR: New password field not present in request body."
+        return "ERROR: Invalid request body."
 
     ## Verify certID and obtain target identity
     targetIdentity = {}
@@ -661,6 +671,7 @@ def updateIdentityPassword():
     
     ## Check currentPass
     if not Encryption.verifySHA256(request.json['currentPass'], targetIdentity['password']):
+        Logger.log("API UPDATEIDENTITYPASSWORD: Blocked unauthorised attempt to change password for identity '{}' due to invalid current password.".format(targetIdentity['username']))
         return "UERROR: Current password is incorrect."
 
     ## Check if password is secure enough
@@ -680,9 +691,12 @@ def updateIdentityPassword():
     # Update access identity with password, send password update email, update db, return success response
     hashedNewPass = Encryption.encodeToSHA256(request.json['newPass'])
     accessIdentities[targetIdentity['username']]['password'] = hashedNewPass
-    json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+    with open('accessIdentities.txt', 'w') as f:
+        json.dump(accessIdentities, f)
 
     targetIdentity['password'] = hashedNewPass
+
+    Logger.log("API UPDATEIDENTITYPASSWORD: Updated password for identity '{}'.".format(targetIdentity['username']))
 
     ## Send email
     text = """
@@ -742,11 +756,11 @@ def deleteIdentity():
 
     # Body check
     if 'certID' not in request.json:
-        return "ERROR: Certificate ID field not present in request body."
+        return "ERROR: Invalid request body."
     if 'authToken' not in request.json:
-        return "ERROR: Auth token field not present in request body."
+        return "ERROR: Invalid request body."
     if 'currentPass' not in request.json:
-        return "ERROR: Current password field not present in request body."
+        return "ERROR: Invalid request body."
     
     # Verify certificate ID and get identity based on it
     targetIdentity = {}
@@ -760,12 +774,15 @@ def deleteIdentity():
     
     # Verify auth token
     if 'loggedInAuthToken' not in targetIdentity:
-        return "UERROR: Your login session has expired. Please re-login into your identity. (Auth token is invalid)"
+        Logger.log("API DELETEIDENTITY: Blocked delete identity attempt for '{}' due to no active login session.".format(targetIdentity['username']))
+        return "UERROR: Your login session has expired. Please re-login."
     if targetIdentity['loggedInAuthToken'] != request.json['authToken']:
-        return "UERROR: Auth token provided does not match with the one associated with the logged in identity."
+        Logger.log("API DELETEIDENTITY: Blocked delete identity attempt for '{}' due to invalid auth token.".format(targetIdentity['username']))
+        return "UERROR: Invalid credentials. Request failed."
     
     # Verify current password
     if not Encryption.verifySHA256(request.json['currentPass'], targetIdentity['password']):
+        Logger.log("API DELETEIDENTITY: Blocked delete identity attempt for '{}' due to incorrect password.".format(targetIdentity['username']))
         return "UERROR: Password is incorrect."
     
     # DELETE ALL RECORDS
@@ -776,40 +793,47 @@ def deleteIdentity():
 
     ## Delete certificate
     response = CertAuthority.permanentlyDeleteCertificate(targetIdentity['associatedCertID'])
-    if CAError.checkIfErrorMessage(response):
-        return "SYSTEMERROR: Error response received from CA when attempting to delete identity certificate: {}".format(response)
-    elif response != "Successfully deleted that certificate.":
-        return "SYSTEMERROR: An unknown response string was received from CA when attempting to delete identity certificate: {}".format(response)
+    if CAError.checkIfErrorMessage(response) or response != "Successfully deleted that certificate.":
+        Logger.log("API DELETEIDENTITY SYSTEMERROR: Error response received from CA when attempting to delete certificate for identity '{}': {}".format(targetIdentity['username'], response))
+        return "SYSTEMERROR: An internal error occurred. Please try again."
     
     ## Delete Access Folder
     if AFManager.checkIfFolderIsRegistered(targetIdentity['username']):
         afmResponse = AFManager.deleteFolder(targetIdentity['username'])
         if AFMError.checkIfErrorMessage(afmResponse):
-            return "SYSTEMERROR: Error response received from AFM when attempting to delete identity's Access Folder: {}".format(afmResponse)
+            Logger.log("API DELETEIDENTITY SYSTEMERROR: Error response received from AFM when attempting to delete Access Folder for identity '{}': {}".format(targetIdentity['username'], afmResponse))
+            return "SYSTEMERROR: An internal error occurred. Please try again."
     
     ## Delete identity records
     try:
         accessIdentities.pop(targetIdentity['username'])
     except Exception as e:
-        return "SYSTEMERROR: An error occurred in deleting identity records: {}".format(e)
+        Logger.log("API DELETEIDENTITY SYSTEMERROR: Error in deleting records for identity '{}': {}".format(targetIdentity['username'], e))
+        return "SYSTEMERROR: An internal error occurred. Please try again."
 
     ## SAVE ALL CHANGES TO DATABASE
     try:
-        json.dump(validOTPCodes, open('validOTPCodes.txt', 'w'))
+        with open('validOTPCodes.txt', 'w') as f:
+            json.dump(validOTPCodes, f)
     except Exception as e:
-        return "SYSTEMERROR: Failed to update OTP codes database with deletion of entries associated with the Access Identity; Error: {}".format(e)
+        Logger.log("API DELETEIDENTITY SYSTEMERROR: Failed to sync deletion of entries associated with identity '{}' to OTP database; error: {}".format(targetIdentity['username'], e))
+        return "SYSTEMERROR: An internal error occurred. Please try again."
 
     try:
-        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+        with open('accessIdentities.txt', 'w') as f:
+            json.dump(accessIdentities, f)
     except Exception as e:
-        return "SYSTEMERROR: Failed to update database with the deletion of the identity's records; Error: {}".format(e)
+        Logger.log("API DELETEIDENTITY SYSTEMERROR: Failed to sync deletion of '{}' to identities database; error: {}".format(e))
+        return "SYSTEMERROR: An internal error occurred. Please try again."
 
     try:
         savingDeletionCAResponse = CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
         if CAError.checkIfErrorMessage(savingDeletionCAResponse):
-            return "SYSTEMERROR: Error response received from CA when attempting to save certificate deletion to database: {}".format(savingDeletionCAResponse)
+            Logger.log("API DELETEIDENTITY SYSTEMERROR: Error response received from CA when attempting to sync deletion of certificate for identity '{}' to database; response: {}".format(targetIdentity['username'], savingDeletionCAResponse))
+            return "SYSTEMERROR: An internal error occurred. Please try again."
     except Exception as e:
-        return "SYSTEMERROR: An error occurred when attempting to update database with the deletion of the identity's certificate; Error: {}".format(e)    
+        Logger.log("API DELETEIDENTITY SYSTEMERROR: Error in deleting certificate of identity '{}' from database; error: {}".format(targetIdentity['username'], e))
+        return "SYSTEMERROR: An internal error occurred. Please try again."
     
     # Update Access Analytics
     aaResponse = AccessAnalytics.newIdentityDeletion()
@@ -823,6 +847,8 @@ def deleteIdentity():
         print("API: Unknown response received from Access Analytics when attempting to update with new identity deletion; Response: {}".format(aaResponse))
     else:
         print("API: Updated Access Analytics with new identity deletion.")
+
+    Logger.log("API DELETEIDENTITY: Successfully deleted identity '{}'.".format(targetIdentity['username']))
 
     return "SUCCESS: Identity was successfully wiped from system."
 
@@ -838,7 +864,7 @@ def sendResetKey():
 
     # Body check
     if 'identityEmail' not in request.json:
-        return "ERROR: Email field not present in request body."
+        return "ERROR: Invalid request body."
 
     # Verify email
     emails = [accessIdentities[user]['email'] for user in accessIdentities]
@@ -888,6 +914,8 @@ def sendResetKey():
     ## Actually send and update analytics
     Emailer.sendEmail(targetIdentity['email'], "Password Reset Key | Access Portal", text, html)
 
+    Logger.log("API SENDRESETKEY: Reset key sent to email associated with identity '{}'.".format(identityUsername))
+
     ## Update Access Analytics
     response = AccessAnalytics.newEmail(targetIdentity['email'], text, "Password Reset Key | Access Portal", identityUsername)
     if isinstance(response, str):
@@ -923,11 +951,11 @@ def resetPassword():
 
     # Body check
     if 'identityEmail' not in request.json:
-        return "ERROR: Email field not present in request body."
+        return "ERROR: Invalid request body."
     if 'resetKey' not in request.json:
-        return "ERROR: Reset key field not present in request body."
+        return "ERROR: Invalid request body."
     if 'newPassword' not in request.json:
-        return "ERROR: New password field not present in request body."
+        return "ERROR: Invalid request body."
 
     # Verify email
     emails = [accessIdentities[user]['email'] for user in accessIdentities]
@@ -938,8 +966,10 @@ def resetPassword():
     targetIdentity = obtainTargetIdentity(request.json['identityEmail'], accessIdentities)
     identityUsername = targetIdentity['username']
     if 'resetKey' not in targetIdentity:
+        Logger.log("API RESETPASSWORD: Blocked reset password attempt for identity '{}' due to no/expired reset key sent to associated email.".format(identityUsername))
         return "UERROR: No reset key was sent to this identity. If you did get a reset key email, the key may have expired if you are entering it more than 15 minutes after the reset key email was sent to you."
     if targetIdentity['resetKey']['key'] != request.json['resetKey']:
+        Logger.log("API RESETPASSWORD: Blocked reset password attempt for identity '{}' due to incorrect reset key.".format(identityUsername))
         return "UERROR: Reset key is incorrect."
     
     ## Check if password is secure enough
@@ -959,10 +989,14 @@ def resetPassword():
     # Update identity data
     accessIdentities[identityUsername]['password'] = Encryption.encodeToSHA256(request.json['newPassword'])
     del accessIdentities[identityUsername]['resetKey']
+
     ## Logout instances of user if they are logged in for security
     if 'loggedInAuthToken' in accessIdentities[identityUsername]:
         del accessIdentities[identityUsername]['loggedInAuthToken']
+    
     with open('accessIdentities.txt', 'w') as f:
         json.dump(accessIdentities, f)
+
+    Logger.log("API RESETPASSWORD: Reset password for identity '{}' successful. Any existing login session has been de-activated.".format(identityUsername))
 
     return "SUCCESS: Password was successfully reset."
