@@ -1,6 +1,7 @@
 import os, sys, json, random, subprocess, shutil, uuid, time
 import datetime
 from dotenv import load_dotenv
+from models import Logger
 load_dotenv()
 
 class AccessAnalytics:
@@ -74,6 +75,7 @@ class AccessAnalytics:
     
     @staticmethod
     def analyticsRecoveryMode():
+        Logger.log("AA RECOVERYMODE: Analytics recovery mode activated.")
         print()
         print("---------")
         print("ANALYTICS RECOVERY MODE ACTIVATED")

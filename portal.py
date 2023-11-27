@@ -1,4 +1,4 @@
-from main import accessIdentities, CertAuthority, AFManager, CAError, expireAuthTokens, fileUploadLimit, AccessAnalytics, app, readableFileExtensions, allowed_file, Universal, secure_filename, Emailer, configManager
+from main import accessIdentities, CertAuthority, AFManager, CAError, expireAuthTokens, fileUploadLimit, AccessAnalytics, app, readableFileExtensions, allowed_file, Universal, secure_filename, Emailer, configManager, Logger
 from flask import Flask, render_template, redirect, url_for, request, Blueprint, flash, send_from_directory
 import os, datetime, time, shutil, sys, copy, json
 
@@ -19,10 +19,12 @@ def checkSessionCredentials(certID, authToken):
                 return render_template('error.html', message="No such Access Identity certificate was found.")
 
             if targetCertificate['revoked'] == True:
+                Logger.log("PORTAL CREDCHECK: Blocked portal access attempt by identity '{}' due to certificate revocation. Reason: {}".format(username, targetCertificate['revocationReason']))
                 return render_template('unauthorised.html', message="Your Access Identity's Certificate has been revoked. Reason: {}".format(targetCertificate['revocationReason']), originURL=request.host_url)
             
             response = CertAuthority.checkCertificateSecurity(targetCertificate)
             if CAError.checkIfErrorMessage(response):
+                Logger.log("PORTAL CREDCHECK: Blocked portal access attempt by identity '{}' due to insecure certificate. Response: {}".format(username, response))
                 return render_template('unauthorised.html', message=response, originURL=request.host_url)
             elif response == CAError.validCert:
                 if 'loggedInAuthToken' in accessIdentities[username] and accessIdentities[username]['loggedInAuthToken'] == authToken:
@@ -134,7 +136,10 @@ def newUpload(certID, authToken):
 
                         targetIdentity["AF_and_files"][filename] = uploadDatetime
                         accessIdentities[check[1]]['AF_and_files'][filename] = uploadDatetime
-                        json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+                        with open('accessIdentities.txt', 'w') as f:
+                            json.dump(accessIdentities, f)
+
+                        Logger.log("PORTAL NEWUPLOAD: New file uploaded by identity '{}'.".format(check[1]))
 
                         ## Update Access Analytics
                         response = AccessAnalytics.newFileUpload()
