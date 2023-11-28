@@ -149,3 +149,58 @@ class Logger:
       except Exception as e:
           print("LOGGER READALL ERROR: Failed to check and read logs.txt database file. Error: {}".format(e))
           return "ERROR: Failed to check and read logs.txt database file. Error: {}".format(e)
+      
+  @staticmethod
+  def manageLogs():
+    permission = Logger.checkPermission()
+    if not permission:
+      print("LOGGER: Logging-related services do not have permission to operate. Set LoggingEnabled to True in .env file to enable logging.")
+      return
+    
+    print("LOGGER: Welcome to the Logging Management Console.")
+    while True:
+      print("""
+Commands:
+    read <number of lines, e.g 50 (optional)>: Reads the last <number of lines> of logs. If no number is specified, all logs will be displayed.
+    destroy: Destroys all logs.
+    exit: Exit the Logging Management Console.
+""")
+    
+      userChoice = input("Enter command: ")
+      userChoice = userChoice.lower()
+      while not userChoice.startswith("read") and (userChoice != "destroy") and (userChoice != "exit"):
+        userChoice = input("Invalid command. Enter command: ")
+        userChoice = userChoice.lower()
+    
+      if userChoice.startswith("read"):
+        allLogs = Logger.readAll()
+
+        userChoice = userChoice.split(" ")
+        logCount = 0
+        if len(userChoice) != 1:
+          try:
+            logCount = int(userChoice[1])
+            if logCount > len(allLogs):
+              logCount = len(allLogs)
+            elif logCount <= 0:
+              raise Exception("Invalid log count. Must be a positive integer above 0 lower than or equal to the total number of logs.")
+          except Exception as e:
+            print("LOGGER: Failed to read logs. Error: {}".format(e))
+            continue
+        else:
+          logCount = len(allLogs)
+
+        targetLogs = allLogs[-logCount:]
+        print()
+        print("Displaying {} log entries:".format(logCount))
+        print()
+        for log in targetLogs:
+          print("\t{}".format(log))
+      elif userChoice == "destroy":
+        Logger.destroyAll()
+        print("LOGGER: All logs destroyed.")
+      elif userChoice == "exit":
+        print("LOGGER: Exiting Logging Management Console...")
+        break
+
+    return

@@ -44,7 +44,7 @@ Startup Choices - What would you like to do?
 
     1) Access Boot
     2) Access CheckUp
-    3) Access Analytics - Crunch Data
+    3) Access Analytics - Crunch Data and Report
     4) General Settings
     5) Update Access
 """)
@@ -93,8 +93,9 @@ General Settings: (0 to return to main menu)
         2) Configure allowed file size
         3) Access Analytics - Clear Collected Data
         4) Access Analytics Recovery Mode
-        5) Factory Reset - Delete System and User Information Data Files, Access Folders, Analytics Reports
-        6) Manage Boot Authorisation Code
+        5) Manage Boot Authorisation Code
+        6) Manage Logs
+        7) Factory Reset - Delete System and User Information Data Files, Access Folders, Analytics Reports
 """)
     
         while True:
@@ -144,66 +145,6 @@ General Settings: (0 to return to main menu)
                 sys.exit(1)
             print()
         elif choice == 5:
-            ## Authorise user
-            if os.path.isfile(os.path.join(os.getcwd(), "authorisation.txt")):
-                while True:
-                    checkCode = getpass("Enter your current boot authorisation code: ")
-
-                    with open('authorisation.txt', 'r') as f:
-                        if checkCode == Encryption.decodeFromB64(f.read()):
-                            break
-                        else:
-                            print("Invalid code. Please try again.")
-                            continue
-
-            ## Delete data files
-            print()
-            print("STARTUP: Please wait a while for Startup to delete all data files...")
-            print()
-            time.sleep(2)
-
-            dataFilenames = [
-                'accessIdentities.txt',
-                'analyticsData.txt',
-                'certificates.txt',
-                'validOTPCodes.txt',
-                'authorisation.txt',
-                'config.txt'
-            ]
-
-            errorsPresent = False
-
-            for filename in dataFilenames:
-                if os.path.isfile(os.path.join(os.getcwd(), filename)):
-                    try:
-                        os.remove(os.path.join(os.getcwd(), filename))
-                    except Exception as e:
-                        print("STARTUP: There was an error in deleting the file {}; Error: {}".format(filename, e))
-                        errorsPresent = True
-
-            ## Delete AccessFolders
-            if os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders')):
-                try:
-                    shutil.rmtree('AccessFolders')
-                except Exception as e:
-                    print("STARTUP: There was an error in deleting the AccessFolders directory; Error: {}".format(e))
-                    errorsPresent = True
-        
-            ## Delete Analytics Reports
-            if os.path.isdir(os.path.join(os.getcwd(), 'analyticsReports')):
-                try:
-                    shutil.rmtree('analyticsReports')
-                except Exception as e:
-                    print("STARTUP: There was an error in deleting the analyticsReports directory; Error: {}".format(e))
-                    errorsPresent = True
-        
-            print()
-            if errorsPresent:
-                print("STARTUP: There were some errors in deleting some of the files. See above. Startup will now close to force a context update.")
-                sys.exit(1)
-            print("STARTUP: Successfully deleted all files, Access Folders and stored Access Analytics reports. Startup will now close to force a context update.")
-            sys.exit(0)
-        elif choice == 6:
             ## Manage Boot Authorisation Code
             if not os.path.isfile(os.path.join(os.getcwd(), 'authorisation.txt')):
                 ## Make new code
@@ -294,7 +235,72 @@ General Settings: (0 to return to main menu)
                         sys.exit(1)
                     print()
                     print("Successfully updated boot authorisation code.")
+        elif choice == 6:
+            ## Manage Logs
+            print("STARTUP: Activating log management...")
+            print()
+            Logger.manageLogs()
+            print()
+        elif choice == 7:
+            ## Authorise user
+            if os.path.isfile(os.path.join(os.getcwd(), "authorisation.txt")):
+                while True:
+                    checkCode = getpass("Enter your current boot authorisation code: ")
 
+                    with open('authorisation.txt', 'r') as f:
+                        if checkCode == Encryption.decodeFromB64(f.read()):
+                            break
+                        else:
+                            print("Invalid code. Please try again.")
+                            continue
+
+            ## Delete data files
+            print()
+            print("STARTUP: Please wait a while for Startup to delete all data files...")
+            print()
+            time.sleep(2)
+
+            dataFilenames = [
+                'accessIdentities.txt',
+                'analyticsData.txt',
+                'certificates.txt',
+                'validOTPCodes.txt',
+                'authorisation.txt',
+                'config.txt'
+            ]
+
+            errorsPresent = False
+
+            for filename in dataFilenames:
+                if os.path.isfile(os.path.join(os.getcwd(), filename)):
+                    try:
+                        os.remove(os.path.join(os.getcwd(), filename))
+                    except Exception as e:
+                        print("STARTUP: There was an error in deleting the file {}; Error: {}".format(filename, e))
+                        errorsPresent = True
+
+            ## Delete AccessFolders
+            if os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders')):
+                try:
+                    shutil.rmtree('AccessFolders')
+                except Exception as e:
+                    print("STARTUP: There was an error in deleting the AccessFolders directory; Error: {}".format(e))
+                    errorsPresent = True
+        
+            ## Delete Analytics Reports
+            if os.path.isdir(os.path.join(os.getcwd(), 'analyticsReports')):
+                try:
+                    shutil.rmtree('analyticsReports')
+                except Exception as e:
+                    print("STARTUP: There was an error in deleting the analyticsReports directory; Error: {}".format(e))
+                    errorsPresent = True
+        
+            print()
+            if errorsPresent:
+                print("STARTUP: There were some errors in deleting some of the files. See above. Startup will now close to force a context update.")
+                sys.exit(1)
+            print("STARTUP: Successfully deleted all files, Access Folders and stored Access Analytics reports. Startup will now close to force a context update.")
+            sys.exit(0)
     elif choice == 5:
         import updater
         print("STARTUP: Startup will now close.")
