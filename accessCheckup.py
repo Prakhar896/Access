@@ -303,7 +303,7 @@ else:
                 critical_issues.append("VERY CRITICAL ISSUE: Current system version ({}) is outdated; latest Access version: {}. Please update Access from Access Startup for the best performance.".format(fileContent, parsedText))
     except Exception as e:
         print()
-        print("AN ERROR OCCURRED IN CONTACTING THE WEBSITE TO OBTAIN LATEST ACCESS SYTEM VERSION INFORMATION. COULD NOT CHECK FOR UPDATES.")
+        print("AN ERROR OCCURRED IN CONTACTING THE WEBSITE TO OBTAIN LATEST ACCESS SYSTEM VERSION INFORMATION. COULD NOT CHECK FOR UPDATES.")
         print("Error Info: {}".format(e))
         print()
         print("CheckUp will continue anyways...")
