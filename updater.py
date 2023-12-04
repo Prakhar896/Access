@@ -1,9 +1,20 @@
-import os, shutil, sys, json, time, requests
+import os, shutil, sys, json, time, requests, subprocess
 from models import Universal
 
 # Check for updates
 print("Checking for updates...")
 print()
+
+def is_git_installed():
+    try:
+        subprocess.check_output(["git", "--version"])
+        return True
+    except Exception:
+        return False
+
+if not is_git_installed():
+    print("Git is not installed or not in the system's PATH. Updater requires a Git installation; please install Git and try again.")
+    sys.exit(1)
 
 # Get current version number
 currentVersion = Universal.getVersion()
