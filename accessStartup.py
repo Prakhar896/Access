@@ -101,7 +101,7 @@ General Settings: (0 to return to main menu)
         while True:
             try:
                 choice = int(input("Enter your choice: "))
-                if choice not in range(0, 7): raise Exception()
+                if choice not in range(0, 8): raise Exception()
                 break
             except:
                 print("Invalid choice provided.")
