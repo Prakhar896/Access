@@ -8,9 +8,9 @@ Access is many things. At its core, Access is a [Flask](https://flask.palletspro
 
 # TRY IT OUT YOURSELF NOW!!!
 
-Click on [this link](https://access.drakonzai.repl.co) to visit a live and currently working Access System by yourself. You can create your identity, upload files and in general check out the whole system by itself!
+Click on [this link](https://access.prakhar.app) to visit a live and currently working Access System by yourself. You can create your identity, upload files and in general check out the whole system by itself!
 
-Link not working? Copy this into your browser's address bar: https://access.drakonzai.repl.co
+Link not working? Copy this into your browser's address bar: https://access.prakhar.app
 
 # Download Access
 
