@@ -18,6 +18,7 @@ class BootCheck:
             "python-dotenv",
             "passlib",
             "firebase-admin",
+            "getmac"
         ]
         
         deps = BootCheck.getInstallations()
