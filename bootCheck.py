@@ -1,26 +1,63 @@
 import os
-# File to handle boot safety
-def runBootCheck():
-    ## Check for presence of requirements.txt file
-    if not os.path.isfile(os.path.join(os.getcwd(), "requirements.txt")):
-        print("WARNING: requirements.txt file was not found. This may cause booting issues if required dependencies do not exist.")
+from importlib.metadata import distributions
 
-    ## Check for replit environment
-    if os.path.isfile(os.path.join(os.getcwd(), "isInReplit.txt")):
-        print("BOOTCHECK: Replit environment detected, re-installing libraries...")
-        os.system("pip install -r requirements.txt")
-
-    ## Check for python-dotenv presence
-    try:
-        import dotenv
-    except:
-        print("ERROR: Failed to import python-dotenv. Attempting to install...")
-        os.system("pip install python-dotenv")
+class BootCheck:
+    @staticmethod
+    def getInstallations() -> list:
+        pkgs = []
+        for x in distributions():
+            pkgs.append(x.name)
+        return pkgs
     
-        try:
-            import dotenv
-        except:
-            print("ERROR: Failed to re-import python-dotenv. Please install manually.")
-            return False
+    @staticmethod
+    def checkDependencies():
+        requiredDependencies = [
+            "Flask",
+            "Flask-Cors",
+            "requests",
+            "python-dotenv",
+            "passlib",
+            "firebase-admin",
+        ]
+        
+        deps = BootCheck.getInstallations()
+        for req in requiredDependencies:
+            if req not in deps:
+                raise Exception("BOOTCHECK ERROR: Required package '{}' not found.".format(req))
+        
+        return True
     
-    return True
+    @staticmethod
+    def checkEnvVariables():
+        from dotenv import load_dotenv
+        load_dotenv()
+        
+        requiredEnvVariables = [
+            "APP_SECRET_KEY",
+            "AccessAnalyticsEnabled",
+            "RuntimePort",
+            "LOGGING_ENABLED"
+        ]
+        
+        for var in requiredEnvVariables:
+            if var not in os.environ:
+                raise Exception("BOOTCHECK ERROR: Required environment variable '{}' was not found.".format(var))
+            if var == "EMAILING_ENABLED" and os.environ[var] == "True" and ("SENDER_EMAIL" not in os.environ or "SENDER_EMAIL_APP_PASSWORD" not in os.environ):
+                raise Exception("BOOTCHECK ERROR: 'EMAILING_ENABLED' is True but 'SENDER_EMAIL' and 'SENDER_EMAIL_APP_PASSWORD' are not set.")
+            
+        optionalEnvVariables = [
+            "DEBUG_MODE"
+        ]
+        notFound = []
+        for var in optionalEnvVariables:
+            if var not in os.environ:
+                notFound.append(var)
+        
+        if len(notFound) > 0:
+            print("BOOTCHECK WARNING: Optional environment variables {} not found.".format(', '.join(notFound)))
+            
+        return True
+    
+    @staticmethod
+    def check():
+        return BootCheck.checkDependencies() and BootCheck.checkEnvVariables()

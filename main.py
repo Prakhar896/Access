@@ -1,20 +1,18 @@
-from bootCheck import runBootCheck
-if __name__ == "__main__":
-    if not runBootCheck():
-        print("MAIN: Boot check failed. Boot aborted.")
-        exit()
+from bootCheck import BootCheck
+BootCheck.check()
 
-import json, random, time, sys, subprocess, os, shutil, copy, datetime
-from flask import Flask, request, render_template, redirect, url_for, flash, Blueprint
+import os, sys, json
+from flask import Flask, request, render_template
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
-from models import *
+from models import DI, Universal, Encryption, Logger, FireConn, FireRTDB, fileContent, customRenderTemplate
 from config import Config
-from activation import *
-from AFManager import *
-from emailer import *
-from accessAnalytics import *
-from getpass import getpass
+from activation import initActivation, makeKVR
+from AFManager import AFManager, AFMError
+from emailer import Emailer
+from accessAnalytics import AccessAnalytics
+from dotenv import load_dotenv
+load_dotenv()
 
 ### APP CONFIG
 configManager = Config()
