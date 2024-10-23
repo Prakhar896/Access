@@ -1,6 +1,7 @@
 import os, sys, json, shutil, datetime, copy
 
 class Config:
+    file = "config.json"
     defaultConfig = {
         "fileExtensions": ['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'xlsx', 'heic', 'mov', 'mp4', 'docx', 'pptx', 'py', 'swift', 'js', 'zip'],
         "allowedFileSize": 16
@@ -15,20 +16,20 @@ class Config:
         return
 
     def dump(self):
-        with open("config.txt", "w") as f:
+        with open(Config.file, "w") as f:
             json.dump(self.config, f)
 
         return True
 
     def reload(self):
-        if not os.path.isfile(os.path.join(os.getcwd(), "config.txt")):
-            with open("config.txt", "w") as f:
+        if not os.path.isfile(os.path.join(os.getcwd(), Config.file)):
+            with open(Config.file, "w") as f:
                 json.dump(Config.defaultConfig, f)
 
             self.config = Config.defaultConfig
         else:
             try:
-                with open("config.txt", "r") as f:
+                with open(Config.file, "r") as f:
                     self.config = json.load(f)
             except Exception as e:
                 print("CONFIG LOAD ERROR: {}".format(e))
