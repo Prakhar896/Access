@@ -4,7 +4,7 @@ import { useState } from 'react'
 function App() {
     return (
         <Box>
-            <Heading as={"h1"}>Hello, World!</Heading>
+            <Heading as={"h1"} color={"primaryColour"}>Hello, World!</Heading>
             <Text>Welcome back!</Text>
         </Box>
     )

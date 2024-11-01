@@ -6,17 +6,17 @@ const colors = {
     }
 }
 
-const AccessTheme = {
+const AccessTheme = defineConfig({
     theme: {
         tokens: {
             colors,
             fonts: {
                 heading: {
-                    value: "monospace"
+                    value: "Roboto, sans-serif"
                 }
             }
         }
     }
-}
+})
 
 export default createSystem(defaultConfig, AccessTheme);
