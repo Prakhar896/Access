@@ -14,14 +14,24 @@ class DIRepresentable(ABC):
         pass
     
     @abstractmethod
-    def represent(self) -> Dict[str, Any]:
-        """Instance method to represent the model instance as a dictionary."""
-        pass
-    
-    @abstractmethod
     def save(self) -> bool:
         """Instance method to save the model instance, returning a success status."""
         pass
+    
+    @staticmethod
+    def ref(*params: tuple[str]) -> Ref:
+        return Ref(*params)
+    
+    def represent(self) -> Dict[str, Any]:
+        """Instance method to represent the model instance as a dictionary."""
+        try:
+            data = self.__dict__
+            if 'originRef' in data:
+                del data['originRef']
+        
+            return data
+        except:
+            return {}
     
     def __str__(self) -> str:
         return str(self.represent())

@@ -5,44 +5,6 @@ from typing import List, Dict, Any
 from database import *
 from database import DIRepresentable
 
-# class Identity(DIRepresentable):
-#     def __init__(self, id, username, password, created) -> None:
-#         self.originRef = Identity.generateRef(id)
-#         self.id = id
-#         self.username = username
-#         self.password = password
-#         self.created = created
-    
-#     @staticmethod
-#     def load(id=None, username=None) -> 'Identity | list[Identity] | None':
-#         data = DI.load(Identity.generateRef(id))
-#         if isinstance(data, DIError):
-#             return data
-
-#         return Identity(
-#             id=data['id'],
-#             username=data['username'],
-#             password=data['password'],
-#             created=data['created']
-#         )
-    
-#     def represent(self) -> Dict[str, Any]:
-#         return {
-#             'id': self.id,
-#             'username': self.username,
-#             'password': self.password,
-#             'created': self.created
-#         }
-    
-#     def save(self) -> bool:
-#         convertedData = self.represent()
-        
-#         return DI.save(convertedData, self.originRef)
-    
-#     @staticmethod
-#     def generateRef(id) -> Ref:
-#         return Ref("accounts", id)
-
 class Identity(DIRepresentable):
     def __init__(self, username, email, password, lastLogin, authToken, auditLogs, created, files, id=uuid4().hex) -> None:
         self.id = id
@@ -54,7 +16,7 @@ class Identity(DIRepresentable):
         self.auditLogs = auditLogs
         self.created = created
         self.files = files
-        self.originRef = Identity.generateRef(id)
+        self.originRef = Identity.ref(id)
         
     @staticmethod
     def rawLoad(data: dict) -> 'Identity':
@@ -100,7 +62,7 @@ class Identity(DIRepresentable):
             
             return None
         else:
-            data = DI.load(Identity.generateRef(id))
+            data = DI.load(Identity.ref(id))
             if isinstance(data, DIError):
                 raise Exception("IDENTITY LOAD ERROR: DIError occurred: {}".format(data))
             if data == None:
@@ -129,9 +91,8 @@ class Identity(DIRepresentable):
         return DI.save(convertedData, self.originRef)
     
     @staticmethod
-    def generateRef(id):
+    def ref(id):
         return Ref("accounts", id)
-    
    
 class Encryption:
     @staticmethod
