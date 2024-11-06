@@ -2,7 +2,8 @@ from models import *
 
 DI.setup()
 
-a = Identity("test", "test", "test", "test", "test", "test", "test", "test")
+john = Identity("john", "john@email.com", "1234", "2020-01-01", "1234", {}, "2020-01-01", {})
+log = AuditLog(john.id, "fileDelete", "Deleted file hello.txt")
 
 while True:
     try:
