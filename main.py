@@ -5,7 +5,7 @@ import os, sys, json
 from flask import Flask, request, render_template
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
-from models import DI, Universal, Encryption, Logger, FireConn, FireRTDB, fileContent, customRenderTemplate
+from services import DI, Universal, Encryption, Logger, FireConn, FireRTDB, fileContent, customRenderTemplate
 from config import Config
 from activation import initActivation, makeKVR
 from AFManager import AFManager, AFMError

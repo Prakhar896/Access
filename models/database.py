@@ -1,8 +1,8 @@
 import os, sys, json, shutil
 from typing import List, Dict, Any
 from abc import ABC, abstractmethod
-from utils import *
-from firebase import *
+from models.utils import *
+from models.firebase import *
 
 class DIRepresentable(ABC):
     originRef: Ref

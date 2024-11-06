@@ -1,5 +1,5 @@
 import os, shutil, sys, json, time, requests, subprocess
-from models import Universal
+from services import Universal
 
 # Check for updates
 print("Checking for updates...")

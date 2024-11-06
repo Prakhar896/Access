@@ -1,7 +1,7 @@
 import os, sys, json, random, subprocess, shutil, uuid, time
 import datetime
 from dotenv import load_dotenv
-from models import Logger
+from services import Logger
 load_dotenv()
 
 class AccessAnalytics:
