@@ -12,3 +12,4 @@ isInReplit.txt
 logs.txt
 config.json
 database.json
+serviceAccountKey.json

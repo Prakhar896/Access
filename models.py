@@ -1,195 +1,49 @@
-import json, os, shutil, subprocess, random, datetime, copy, base64, uuid
+import os, json, base64, random
 from passlib.hash import sha256_crypt as sha
-from addons import *
-from dotenv import load_dotenv
-load_dotenv()
+from typing import List, Dict, Any
+from database import *
 
-def fileContent(filePath, passAPIKey=False):
-    with open(filePath, 'r') as f:
-        f_content = f.read()
-        if passAPIKey:
-            f_content = f_content.replace("\{{ API_KEY }}", os.getenv("API_KEY"))
-        return f_content
-
-def customRenderTemplate(filePath, **kwargs):
-    with open(filePath, 'r') as f:
-        f_content = f.read()
-        for key in kwargs:
-            f_content = f_content.replace("{{ " + key + " }}", kwargs[key])
-        return f_content
-
+# class Identity(DIRepresentable):
+#     def __init__(self, id, username, password, created) -> None:
+#         self.originRef = Identity.generateRef(id)
+#         self.id = id
+#         self.username = username
+#         self.password = password
+#         self.created = created
     
-# DatabaseInterface class
-class DI:
-    '''## INTRO
-    This class (DatabaseInterface) is to provide a simple interface to work with the database.
+#     @staticmethod
+#     def load(id=None, username=None) -> 'Identity | list[Identity] | None':
+#         data = DI.load(Identity.generateRef(id))
+#         if isinstance(data, DIError):
+#             return data
 
-    All you need to do is run the `setup` method and then you are good to go. `DI` will handle all the grunt work for you, especially if you have enabled Firebase RTDB. `DI.data` is a dictionary representing the database that you can freely manipulate.
+#         return Identity(
+#             id=data['id'],
+#             username=data['username'],
+#             password=data['password'],
+#             created=data['created']
+#         )
     
-    ## Usage:
-    ```
-    from models import DI
-    DI.setup()
-
-    ## Let's create a new account under the 'accounts' top-level key
-    DI.data["accounts"]["newAccountID"] = {"name": "John Appleseed"}
-
-    ## Saves the changes to both local and cloud (if enabled) databases
-    DI.save()
-    ```
-
-    ## ADVANCED:
-    Initially, `DI.data` is a list to indicate to DI itself that it is not set-up and that a database has not been loaded onto memory. Only after setup does it becomes a dictionary.
-
-    The `setup` method creates the database file if it does not exist, and loads the database file into memory. If enabled, it connects to Firebase Realtime Database via `FireRTDB` and loads the database from there instead.
-
-    DI makes loading a 'cloud-first' strategy; it over-writes the local database with the data it fetched from Firebase RTDB. However, DI carries out a 'local-first' strategy during save; it over-writes the cloud database with the data it has in memory. Auto-repair mechanisms are in place to minimise data loss.
-
-    ## INTEGRATING FIREBASE RTDB:
+#     def represent(self) -> Dict[str, Any]:
+#         return {
+#             'id': self.id,
+#             'username': self.username,
+#             'password': self.password,
+#             'created': self.created
+#         }
     
-    DI uses `FireRTDB` to work with Firebase RTBD. In order to activate the cloud database integration, you need the following:
-    - `FireConnEnabled` set to `True` in the `.env` file
-    - `FireRTDBEnabled` set to `True` in the `.env` file
-    - `RTDB_URL` set to the URL of your Firebase RTDB in the `.env` file (obtain via going to Realtime Database on the Firebase console)
-    - `serviceAccountKey.json` file in the root directory of the project (obtain via going to Project Settings > Service Accounts on the Firebase console)
-    '''
-
-    data = []
-    syncStatus = True
-    file = "database.json"
-
-    sampleData = {
+#     def save(self) -> bool:
+#         convertedData = self.represent()
         
-    }
-
-    @staticmethod
-    def setup():
-        if not os.path.exists(os.path.join(os.getcwd(), DI.file)):
-            with open(DI.file, "w") as f:
-                json.dump(DI.sampleData, f)
-        
-        if FireRTDB.checkPermissions():
-            try:
-                if not FireConn.connected:
-                    print("DI-FIRECONN: Firebase connection not established. Attempting to connect...")
-                    response = FireConn.connect()
-                    if response != True:
-                        print("DI-FIRECONN: Failed to connect to Firebase. Aborting setup.")
-                        return response
-                    else:
-                        print("DI-FIRECONN: Firebase connection established. Firebase RTDB is enabled.")
-                else:
-                    print("DI: Firebase RTDB is enabled.")
-            except Exception as e:
-                print("DI FIRECONN ERROR: " + str(e))
-                return "Error"
-            
-        return DI.load()
+#         return DI.save(convertedData, self.originRef)
     
-    @staticmethod
-    def load():
-        try:
-            ## Check and create database file if it does not exist
-            if not os.path.exists(os.path.join(os.getcwd(), DI.file)):
-                with open(DI.file, "w") as f:
-                    json.dump(DI.sampleData, f)
+#     @staticmethod
+#     def generateRef(id) -> Ref:
+#         return Ref("accounts", id)
 
-            def loadFromLocalDBFile():
-                loadedData = []
-                # Read data from local database file
-                with open(DI.file, "r") as f:
-                    loadedData = json.load(f)
 
-                ## Carry out structure enforcement
-                changesMade = False
-                for topLevelKey in DI.sampleData:
-                    if topLevelKey not in loadedData:
-                        loadedData[topLevelKey] = DI.sampleData[topLevelKey]
-                        changesMade = True
-
-                if changesMade:
-                    # Local database structure needs to be updated
-                    with open(DI.file, "w") as f:
-                        json.dump(loadedData, f)
-
-                # Load data into DI
-                DI.data = loadedData
-                return
-
-            if FireRTDB.checkPermissions():
-                # Fetch data from RTDB
-                fetchedData = FireRTDB.getRef()
-                if isinstance(fetchedData, str) and fetchedData.startswith("ERROR"):
-                    # Trigger last resort of local database (Auto-repair)
-                    print("DI-FIRERTDB GETREF ERROR: " + fetchedData)
-                    print("DI: System will try to resort to local database to load data to prevent a crash. Attempts to sync with RTDB will continue.")
-
-                    loadFromLocalDBFile()
-                    DI.syncStatus = False
-                    return "Success"
-                
-                # Translate data for local use
-                fetchedData = FireRTDB.translateForLocal(fetchedData)
-                if isinstance(fetchedData, str) and fetchedData.startswith("ERROR"):
-                    # Trigger last resort of local database (Auto-repair)
-                    print("DI-FIRERTDB TRANSLATELOCAL ERROR: " + fetchedData)
-                    print("DI: System will try to resort to local database to load data to prevent a crash. Attempts to sync with RTDB will continue.")
-
-                    loadFromLocalDBFile()
-                    DI.syncStatus = False
-                    return "Success"
-                
-                # Carry out structure enforcement
-                changesMade = False
-                for topLevelKey in DI.sampleData:
-                    if topLevelKey not in fetchedData:
-                        fetchedData[topLevelKey] = DI.sampleData[topLevelKey]
-                        changesMade = True
-
-                if changesMade:
-                    # RTDB structure needs to be updated
-                    response = FireRTDB.setRef(FireRTDB.translateForCloud(fetchedData))
-                    if response != True:
-                        print("DI-FIRERTDB SETREF ERROR: " + response)
-                        print("DI: Failed to update RTDB structure. System will continue to avoid a crash but attempts to sync with RTDB will continue.")
-                        DI.syncStatus = False
-
-                # Write data to local db file
-                with open(DI.file, "w") as f:
-                    json.dump(fetchedData, f)
-                
-                # Load data into DI
-                DI.data = fetchedData
-            else:
-                loadFromLocalDBFile()
-                DI.syncStatus = True
-                return "Success"
-        except Exception as e:
-            print("DI ERROR: Failed to load data from database; error: {}".format(e))
-            return "Error"
-        return "Success"
     
-    @staticmethod
-    def save():
-        try:
-            with open(DI.file, "w") as f:
-                json.dump(DI.data, f)
-            DI.syncStatus = True
-
-            # Update RTDB
-            if FireRTDB.checkPermissions():
-                response = FireRTDB.setRef(FireRTDB.translateForCloud(DI.data))
-                if response != True:
-                    print("DI FIRERTDB SETREF ERROR: " + response)
-                    print("DI: System will resort to local database to prevent a crash. Attempts to sync with RTDB will continue.")
-                    DI.syncStatus = False
-                    # Continue runtime as system can function without cloud database
-        except Exception as e:
-            print("DI ERROR: Failed to save data to database; error: {}".format(e))
-            DI.syncStatus = False
-            return "Error"
-        return "Success"
-    
+   
 class Encryption:
     @staticmethod
     def encodeToB64(inputString):

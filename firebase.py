@@ -3,76 +3,6 @@ from firebase_admin import db, storage, credentials, initialize_app
 from dotenv import load_dotenv
 load_dotenv()
 
-class Cache:
-    '''A key-value persistence service.
-    
-    Usage:
-    ```
-    Cache.setup()
-    Cache.setConfigKey("username", "johnAppleseed")
-    print(Cache.readConfigKey("username")) # johnAppleseed
-    Cache.deleteConfigKey("username")
-    print(Cache.readConfigKey("username")) # Key Not Found
-    ```
-
-    NOTE: This class is not meant to be instantiated. The `setup` method must be executed before executing any other methods.
-    '''
-
-    config = None
-
-    @staticmethod
-    def setup():
-        try:
-            if not os.path.isfile(os.path.join(os.getcwd(), 'config.txt')):
-                with open('config.txt', 'w') as f:
-                    f.write("{}")
-            
-            Cache.config = json.load(open('config.txt', 'r'))
-            return "Success"
-        except Exception as e:
-            return "ERROR: Failed to check for config file and create a new one if there isn't one; error: {}".format(e)
-
-    @staticmethod
-    def setConfigKey(keyName, value):
-        '''Returns "Success" upon successful execution. Requries `setup` method to be executed first.'''
-        try:
-            Cache.config[keyName] = value
-            json.dump(Cache.config, open('config.txt', 'w'))
-            return "Success"
-        except Exception as e:
-            return "ERROR: Failed to set config key; error: {}".format(e)
-
-    @staticmethod
-    def readConfigKey(keyName):
-        '''Returns the value of the key if it exists, otherwise returns "Key Not Found". Requries `setup` method to be executed first.'''
-        try:
-            if keyName not in Cache.config:
-                return "Key Not Found"
-            return Cache.config[keyName]
-        except Exception as e:
-            return "ERROR: Failed to read config key; error: {}".format(e)
-    
-    @staticmethod
-    def deleteConfigKey(keyName):
-        '''Returns "Success" upon successful execution. Requries `setup` method to be executed first.'''
-        try:
-            if keyName not in Cache.config:
-                return "Key Not Found"
-            del Cache.config[keyName]
-            json.dump(Cache.config, open('config.txt', 'w'))
-        except Exception as e:
-            return "ERROR: Failed to delete config key; error: {}".format(e)
-        
-    @staticmethod
-    def clearConfig():
-        '''Returns "Success" upon successful execution.'''
-        try:
-            Cache.config = {}
-            json.dump(Cache.config, open('config.txt', 'w'))
-            return "Success"
-        except Exception as e:
-            return "ERROR: Failed to clear config; error: {}".format(e)
-
 class FireConn:
     '''A class that manages the admin connection to Firebase via the firebase_admin module.
     
@@ -109,7 +39,8 @@ class FireConn:
                 ## Firebase
                 cred_obj = credentials.Certificate(os.path.join(os.getcwd(), "serviceAccountKey.json"))
                 default_app = initialize_app(cred_obj, {
-                    'databaseURL': os.environ["RTDB_URL"]
+                    'databaseURL': os.environ["RTDB_URL"],
+                    'httpTimeout': 5
                 })
                 FireConn.connected = True
             except Exception as e:
@@ -159,7 +90,7 @@ class FireRTDB:
             return "ERROR: FireRTDB service operation permission denied."
         try:
             ref = db.reference(refPath)
-            ref.set({})
+            ref.delete()
         except Exception as e:
             return "ERROR: Error occurred in clearing children at that ref; error: {}".format(e)
         return True
@@ -168,30 +99,27 @@ class FireRTDB:
     def setRef(data, refPath="/"):
         '''Returns True upon successful update. Providing `refPath` is optional; will be the root reference if not provided.'''
         if not FireRTDB.checkPermissions():
-            return "ERROR: FireRTDB service operation permission denied."
+            raise Exception("ERROR: FireRTDB service operation permission denied.")
         try:
             ref = db.reference(refPath)
             ref.set(data)
         except Exception as e:
-            return "ERROR: Error occurred in setting data at that ref; error: {}".format(e)
+            raise Exception("ERROR: Error occurred in setting data at that ref; error: {}".format(e))
         return True
 
     @staticmethod
     def getRef(refPath="/"):
         '''Returns a dictionary of the data at the specified ref. Providing `refPath` is optional; will be the root reference if not provided.'''
         if not FireRTDB.checkPermissions():
-            return "ERROR: FireRTDB service operation permission denied."
+            raise Exception("ERROR: FireRTDB service operation permission denied.")
         data = None
         try:
             ref = db.reference(refPath)
             data = ref.get()
         except Exception as e:
-            return "ERROR: Error occurred in getting data from that ref; error: {}".format(e)
+            raise Exception("ERROR: Error occurred in getting data from that ref; error: {}".format(e))
         
-        if data == None:
-            return {}
-        else:
-            return data
+        return data
         
     @staticmethod
     def recursiveReplacement(obj, purpose):
@@ -229,8 +157,18 @@ class FireRTDB:
         return data
     
     @staticmethod
-    def translateForLocal(fetchedData):
+    def translateForLocal(fetchedData, rootTranslatable=False):
         '''Returns a translated data structure that can be stored locally.'''
+        if fetchedData == None:
+            return None
+        if rootTranslatable:
+            if fetchedData == 0:
+                return {}
+            elif fetchedData == 1:
+                return []
+            elif not (isinstance(fetchedData, dict) or isinstance(fetchedData, list)):
+                return fetchedData
+        
         tempData = copy.deepcopy(fetchedData)
 
         try:
@@ -245,8 +183,18 @@ class FireRTDB:
         return tempData
     
     @staticmethod
-    def translateForCloud(loadedData):
+    def translateForCloud(loadedData, rootTranslatable=False):
         '''Returns a translated data structure that can be stored in the cloud.'''
+        if loadedData == None:
+            return None
+        if rootTranslatable:
+            if loadedData == {}:
+                return 0
+            elif loadedData == []:
+                return 1
+            elif not (isinstance(loadedData, dict) or isinstance(loadedData, list)):
+                return loadedData
+
         tempData = copy.deepcopy(loadedData)
 
         # Further translation here
