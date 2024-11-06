@@ -25,13 +25,17 @@ class DIRepresentable(ABC):
     def represent(self) -> Dict[str, Any]:
         """Instance method to represent the model instance as a dictionary."""
         try:
-            data = self.__dict__
+            data = copy.deepcopy(self.__dict__)
             if 'originRef' in data:
                 del data['originRef']
         
             return data
         except:
             return {}
+        
+    def destroy(self):
+        """Instance method to destroy the model instance."""
+        return DI.save(None, self.originRef)
     
     def __str__(self) -> str:
         return str(self.represent())

@@ -2,8 +2,10 @@ from models import *
 
 DI.setup()
 
-john = Identity("john", "john@email.com", "1234", "2020-01-01", "1234", {}, "2020-01-01", {})
-log = AuditLog(john.id, "fileDelete", "Deleted file hello.txt")
+john = Identity.load(username="john")
+log1 = AuditLog(john.id, "fileDelete", "Deleted file hello.txt")
+log2 = AuditLog("someID", "fileDelete", "Deleted file hello.txt")
+log3 = AuditLog(john.id, "fileCreate", "Created file hello.txt")
 
 while True:
     try:

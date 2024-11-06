@@ -93,7 +93,10 @@ class Identity(DIRepresentable):
         return Ref("accounts", id)
     
 class AuditLog(DIRepresentable):
-    def __init__(self, accountID: str, event: str, text: str, id: str=uuid4().hex, timestamp: str=Universal.utcNowString()) -> None:
+    def __init__(self, accountID: str, event: str, text: str, id: str=None, timestamp: str=Universal.utcNowString()) -> None:
+        if id == None:
+            id = uuid4().hex
+            
         self.id = id
         self.accountID = accountID
         self.timestamp = timestamp
@@ -109,11 +112,11 @@ class AuditLog(DIRepresentable):
                 data[reqParam] = None
         
         return AuditLog(
-            data['event'],
-            data['text'],
-            data['id'],
-            data['accountID'],
-            data['timestamp']
+            accountID=data['accountID'],
+            event=data['event'],
+            text=data['text'],
+            id=data['id'],
+            timestamp=data['timestamp']
         )
     
     @staticmethod
