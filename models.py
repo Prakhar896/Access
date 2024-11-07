@@ -84,6 +84,7 @@ class Identity(DIRepresentable):
         
     def represent(self) -> Dict[str, Any]:
         auditLogs = {logID: self.auditLogs[logID].represent() for logID in self.auditLogs}
+        files = {fileID: self.files[fileID].represent() for fileID in self.files}
         
         return {
             "id": self.id,
@@ -94,7 +95,7 @@ class Identity(DIRepresentable):
             "authToken": self.authToken,
             "auditLogs": auditLogs,
             "created": self.created,
-            "files": self.files
+            "files": files
         }
         
     def save(self):
@@ -112,7 +113,7 @@ class Identity(DIRepresentable):
             raise Exception("IDENTITY DELETEAUDITLOG ERROR: Failed to delete audit log; response: {}".format(deletion))
         del self.auditLogs[logID]
         
-        return self.save()
+        return True
     
     def deleteFile(self, fileID):
         '''Deletes a file from the account's files.'''
@@ -124,7 +125,7 @@ class Identity(DIRepresentable):
             raise Exception("IDENTITY DELETEFILE ERROR: Failed to delete file; response: {}".format(deletion))
         del self.files[fileID]
         
-        return self.save()
+        return True
     
     @staticmethod
     def ref(id):
@@ -239,7 +240,7 @@ class AuditLog(DIRepresentable):
         return Ref("accounts", accountID, "auditLogs", logID)
     
 class File(DIRepresentable):
-    def __init__(self, accountID: str, name: str, blocked: bool, id: str=None, uploadedTimestamp: str=None) -> None:
+    def __init__(self, accountID: str, name: str, blocked: bool=False, id: str=None, uploadedTimestamp: str=None) -> None:
         if id == None:
             id = uuid4().hex
         if uploadedTimestamp == None:
@@ -250,7 +251,6 @@ class File(DIRepresentable):
         self.name = name
         self.uploadedTimestamp = uploadedTimestamp
         self.blocked = blocked
-        self.extension = File.getExtFrom(name)
         self.originRef = File.ref(accountID, id)
         
     @staticmethod
@@ -357,6 +357,9 @@ class File(DIRepresentable):
             "id": self.id,
             "uploadedTimestamp": self.uploadedTimestamp
         }
+    
+    def extension(self):
+        return File.getExtFrom(self.name)
     
     @staticmethod
     def ref(accountID, fileID) -> Ref:
