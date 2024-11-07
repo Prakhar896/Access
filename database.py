@@ -9,6 +9,12 @@ class DIRepresentable(ABC):
     
     @staticmethod
     @abstractmethod
+    def rawLoad(data: Dict[str, Any]) -> 'DIRepresentable':
+        """Static method to load raw data into an instance of the subclass."""
+        pass
+    
+    @staticmethod
+    @abstractmethod
     def load(**params: Any) -> 'DIRepresentable | list[DIRepresentable]':
         """Static method to load data into an instance of the subclass."""
         pass
@@ -36,6 +42,20 @@ class DIRepresentable(ABC):
     def destroy(self):
         """Instance method to destroy the model instance."""
         return DI.save(None, self.originRef)
+    
+    def reload(self):
+        """Instance method to reload the model instance from the database."""
+        
+        data = DI.load(self.originRef)
+        if isinstance(data, DIError):
+            raise Exception("DIR RELOAD ERROR: DIError occurred: {}".format(data))
+        if data == None:
+            raise Exception("DIR RELOAD ERROR: No data found at reference '{}'.".format(self.originRef))
+        if not isinstance(data, dict):
+            raise Exception("DIR RELOAD ERROR: Unexpected DI load response format; response: {}".format(data))
+        
+        self.__dict__.update(self.rawLoad(data).__dict__)
+        return True
     
     def __str__(self) -> str:
         return str(self.represent())

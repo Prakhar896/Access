@@ -2,8 +2,9 @@ from models import *
 
 DI.setup()
 
+# john = Identity("john", "john@email.com", "123456", "2024", "123456", {}, "2024", {})
 john = Identity.load(username="john")
-AuditLog(john.id, "fileCreate", "hello.txt")
+log1 = AuditLog(john.id, "fileCreate", "hello.txt")
 
 while True:
     try:

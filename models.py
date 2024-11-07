@@ -78,7 +78,7 @@ class Identity(DIRepresentable):
             return Identity.rawLoad(data)
         
     def represent(self) -> Dict[str, Any]:
-        self.auditLogs = {logID: self.auditLogs[logID].represent() for logID in self.auditLogs}
+        auditLogs = {logID: self.auditLogs[logID].represent() for logID in self.auditLogs}
         
         return {
             "id": self.id,
@@ -87,7 +87,7 @@ class Identity(DIRepresentable):
             "password": self.password,
             "lastLogin": self.lastLogin,
             "authToken": self.authToken,
-            "auditLogs": self.auditLogs,
+            "auditLogs": auditLogs,
             "created": self.created,
             "files": self.files
         }
