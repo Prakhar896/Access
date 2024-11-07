@@ -1,10 +1,11 @@
 from uuid import uuid4
 from typing import List, Dict, Any
 from database import *
+from database import DIRepresentable
 from services import Universal
 
 class Identity(DIRepresentable):
-    def __init__(self, username: str, email: str, password: str, lastLogin: str, authToken: str, auditLogs: 'Dict[str, AuditLog]', created: str, files, id=uuid4().hex) -> None:
+    def __init__(self, username: str, email: str, password: str, lastLogin: str, authToken: str, auditLogs: 'Dict[str, AuditLog]', created: str, files: 'Dict[str, File]', id=uuid4().hex) -> None:
         self.id = id
         self.username = username
         self.email = email
@@ -25,10 +26,14 @@ class Identity(DIRepresentable):
                     data[reqParam] = {}
                 else:
                     data[reqParam] = None
-                    
+        
         logs = {}
         for logID in data['auditLogs']:
             logs[logID] = AuditLog.rawLoad(data['auditLogs'][logID])
+            
+        files = {}
+        for fileID in data['files']:
+            files[fileID] = File.rawLoad(data['files'][fileID])
         
         return Identity(
             data['username'],
@@ -38,7 +43,7 @@ class Identity(DIRepresentable):
             data['authToken'],
             logs,
             data['created'],
-            data['files'],
+            files,
             data['id']
         )
     
@@ -106,6 +111,18 @@ class Identity(DIRepresentable):
         if deletion != True:
             raise Exception("IDENTITY DELETEAUDITLOG ERROR: Failed to delete audit log; response: {}".format(deletion))
         del self.auditLogs[logID]
+        
+        return self.save()
+    
+    def deleteFile(self, fileID):
+        '''Deletes a file from the account's files.'''
+        if fileID not in self.files:
+            raise Exception("IDENTITY DELETEFILE ERROR: File ID '{}' not found in account's files.".format(fileID))
+        
+        deletion = self.files[fileID].destroy()
+        if deletion != True:
+            raise Exception("IDENTITY DELETEFILE ERROR: Failed to delete file; response: {}".format(deletion))
+        del self.files[fileID]
         
         return self.save()
     
@@ -220,3 +237,127 @@ class AuditLog(DIRepresentable):
     @staticmethod
     def ref(accountID, logID) -> Ref:
         return Ref("accounts", accountID, "auditLogs", logID)
+    
+class File(DIRepresentable):
+    def __init__(self, accountID: str, name: str, blocked: bool, id: str=None, uploadedTimestamp: str=None) -> None:
+        if id == None:
+            id = uuid4().hex
+        if uploadedTimestamp == None:
+            uploadedTimestamp = Universal.utcNowString()
+            
+        self.id = id
+        self.accountID = accountID
+        self.name = name
+        self.uploadedTimestamp = uploadedTimestamp
+        self.blocked = blocked
+        self.extension = File.getExtFrom(name)
+        self.originRef = File.ref(accountID, id)
+        
+    @staticmethod
+    def getExtFrom(fileName: str):
+        return fileName.split(".")[-1]
+        
+    @staticmethod
+    def rawLoad(data: Dict[str, Any]) -> 'File':
+        requiredParams = ['accountID', 'name', 'blocked', 'id', 'uploadedTimestamp']
+        for reqParam in requiredParams:
+            if reqParam not in data:
+                data[reqParam] = None
+        
+        return File(
+            accountID=data['accountID'],
+            name=data['name'],
+            blocked=data['blocked'] == "True",
+            id=data['id'],
+            uploadedTimestamp=data['uploadedTimestamp']
+        )
+    
+    @staticmethod
+    def load(id=None, accountID=None) -> 'File | List[File] | None':
+        accountsData = DI.load(Ref("accounts"))
+        if accountsData == None:
+            return None
+        if not isinstance(accountsData, dict):
+            raise Exception("FILE LOAD ERROR: Failed to load dictionary accounts data; response: {}".format(accountsData))
+        
+        if id == None and accountID == None:
+            # Load all files
+            files: List[File] = []
+            for accountID in accountsData:
+                accountData = accountsData[accountID]
+                if "files" in accountData:
+                    for fileID in accountData["files"]:
+                        files.append(File.rawLoad(accountData["files"][fileID]))
+            
+            return files
+        elif id == None and accountID != None:
+            # Load all files for the targeted account
+            if accountID not in accountsData:
+                return None
+            
+            accountData = accountsData[accountID]
+            if "files" not in accountData:
+                return None
+            if not isinstance(accountData["files"], dict):
+                raise Exception("FILE LOAD ERROR: Corrupted files data for account '{}'; data: {}".format(accountID, accountData["files"]))
+            
+            files: List[File] = []
+            for fileID in accountData["files"]:
+                files.append(File.rawLoad(accountData["files"][fileID]))
+            
+            return files
+        elif id != None and accountID == None:
+            # Search all accounts for the targeted file
+            for accountID in accountsData:
+                accountData = accountsData[accountID]
+                if "files" in accountData:
+                    if not isinstance(accountData["files"], dict):
+                        continue
+                    for fileID in accountData["files"]:
+                        if fileID == id:
+                            return File.rawLoad(accountData["files"][fileID])
+            
+            return None
+        else:
+            # Search the targeted account for the targeted file
+            if accountID not in accountsData:
+                return None
+            
+            accountData = accountsData[accountID]
+            if "files" not in accountData:
+                return None
+            if not isinstance(accountData["files"], dict):
+                raise Exception("FILE LOAD ERROR: Corrupted files data for account '{}'; data: {}".format(accountID, accountData["files"]))
+            
+            for fileID in accountData["files"]:
+                if fileID == id:
+                    return File.rawLoad(accountData["files"][fileID])
+            
+            return None
+    
+    def save(self, checkIntegrity=True) -> bool:
+        convertedData = self.represent()
+        
+        if checkIntegrity:
+            targetAccount = DI.load(Identity.ref(self.accountID))
+            if isinstance(targetAccount, DIError):
+                raise Exception("FILE SAVE ERROR: DIError: {}".format(targetAccount))
+            if targetAccount == None:
+                raise Exception("FILE SAVE ERROR: Account not found.")
+            if not isinstance(targetAccount, dict):
+                raise Exception("FILE SAVE ERROR: Unexpected DI account load response format; response: {}".format(targetAccount))
+        
+        return DI.save(convertedData, self.originRef)
+    
+    def represent(self) -> Dict[str, Any]:
+        return {
+            "accountID": self.accountID,
+            "name": self.name,
+            "blocked": str(self.blocked),
+            "id": self.id,
+            "uploadedTimestamp": self.uploadedTimestamp
+        }
+    
+    @staticmethod
+    def ref(accountID, fileID) -> Ref:
+        return Ref("accounts", accountID, "files", fileID)
