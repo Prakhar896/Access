@@ -4,7 +4,7 @@ from database import *
 from services import Universal
 
 class Identity(DIRepresentable):
-    def __init__(self, username: str, email: str, password: str, lastLogin: str, authToken: str, auditLogs: str, created: str, files, id=uuid4().hex) -> None:
+    def __init__(self, username: str, email: str, password: str, lastLogin: str, authToken: str, auditLogs: 'Dict[str, AuditLog]', created: str, files, id=uuid4().hex) -> None:
         self.id = id
         self.username = username
         self.email = email
@@ -21,7 +21,14 @@ class Identity(DIRepresentable):
         requiredParams = ['username', 'email', 'password', 'lastLogin', 'authToken', 'auditLogs', 'created', 'files', 'id']
         for reqParam in requiredParams:
             if reqParam not in data:
-                data[reqParam] = None
+                if reqParam in ['auditLogs', 'files']:
+                    data[reqParam] = {}
+                else:
+                    data[reqParam] = None
+                    
+        logs = {}
+        for logID in data['auditLogs']:
+            logs[logID] = AuditLog.rawLoad(data['auditLogs'][logID])
         
         return Identity(
             data['username'],
@@ -29,7 +36,7 @@ class Identity(DIRepresentable):
             data['password'],
             data['lastLogin'],
             data['authToken'],
-            data['auditLogs'],
+            logs,
             data['created'],
             data['files'],
             data['id']
@@ -71,6 +78,8 @@ class Identity(DIRepresentable):
             return Identity.rawLoad(data)
         
     def represent(self) -> Dict[str, Any]:
+        self.auditLogs = {logID: self.auditLogs[logID].represent() for logID in self.auditLogs}
+        
         return {
             "id": self.id,
             "username": self.username,
@@ -87,6 +96,18 @@ class Identity(DIRepresentable):
         convertedData = self.represent()
         
         return DI.save(convertedData, self.originRef)
+    
+    def deleteAuditLog(self, logID):
+        '''Deletes an audit log from the account's audit logs.'''
+        if logID not in self.auditLogs:
+            raise Exception("IDENTITY DELETEAUDITLOG ERROR: Log ID '{}' not found in account's audit logs.".format(logID))
+        
+        deletion = self.auditLogs[logID].destroy()
+        if deletion != True:
+            raise Exception("IDENTITY DELETEAUDITLOG ERROR: Failed to delete audit log; response: {}".format(deletion))
+        del self.auditLogs[logID]
+        
+        return self.save()
     
     @staticmethod
     def ref(id):
@@ -181,7 +202,7 @@ class AuditLog(DIRepresentable):
                     return AuditLog.rawLoad(accountData["auditLogs"][logID])
             
             return None
-        
+
     def save(self, checkIntegrity=True) -> bool:
         convertedData = self.represent()
         
