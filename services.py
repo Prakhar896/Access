@@ -46,7 +46,20 @@ class Universal:
     '''This class contains universal methods and variables that can be used across the entire project. Project-wide standards and conventions (such as datetime format) are also defined here.'''
 
     systemWideStringDatetimeFormat = "%Y-%m-%d %H:%M:%S"
-    copyright = "© 2024 NYP AI. All Rights Reserved."
+    copyright = "© 2024 Prakhar Trivedi. All Rights Reserved."
+    version = None
+    
+    @staticmethod
+    def getVersion():
+        if Universal.version != None:
+            return Universal.version
+        if not os.path.isfile(os.path.join(os.getcwd(), 'version.txt')):
+            return "Version File Not Found"
+        else:
+            with open('version.txt', 'r') as f:
+                fileData = f.read()
+                Universal.version = fileData
+                return fileData
 
     @staticmethod
     def generateUniqueID(customLength=None):

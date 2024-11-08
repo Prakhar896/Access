@@ -55,8 +55,8 @@ class AccessAnalytics:
         if not AccessAnalytics.permissionCheck():
             return "AAError: Access Analytics is not enabled and given permission to operate. Set AccessAnalyticsEnabled to True in the .env file to enable Analytics."
 
-        if not os.path.isfile(os.path.join(os.getcwd(), 'analyticsData.txt')):
-            with open('analyticsData.txt', 'w') as f:
+        if not os.path.isfile(os.path.join(os.getcwd(), 'analyticsData.json')):
+            with open('analyticsData.json', 'w') as f:
                 blankObject = AccessAnalytics.blankAnalyticsObject
                 json.dump(blankObject, f)
                 AccessAnalytics.analyticsData = blankObject
@@ -64,12 +64,12 @@ class AccessAnalytics:
         else:
             ## Check if file data is damaged
             try:
-                fileData = json.load(open('analyticsData.txt', 'r'))
+                fileData = json.load(open('analyticsData.json', 'r'))
             except Exception as e:
                 return "AAError: Failed to load data in analytics file in JSON form. File might be damaged.\nError: " + str(e)
             for metric in [x for x in AccessAnalytics.blankAnalyticsObject]:
                 if not metric in fileData:
-                    return "AAError: analyticsData.txt file is damaged ('{}' metric is not present). Please delete the file and run environment prep again.".format(metric)
+                    return "AAError: analyticsData.json file is damaged ('{}' metric is not present). Please delete the file and run environment prep again.".format(metric)
             AccessAnalytics.analyticsData = fileData
             return "AA: Environment prep successful."
     
@@ -89,18 +89,18 @@ class AccessAnalytics:
 
         ## File loading error check
         try:
-            fileData = json.load(open('analyticsData.txt', 'r'))
+            fileData = json.load(open('analyticsData.json', 'r'))
         except Exception as e:
             fileLoadingError = True
             fileLoadingCheck = e
         
 
         if fileLoadingError:
-            print("Issue identified: The system was unable to properly load the 'analyticsData.txt' file in JSON form. System Error Note: {}".format(fileLoadingCheck))
+            print("Issue identified: The system was unable to properly load the 'analyticsData.json' file in JSON form. System Error Note: {}".format(fileLoadingCheck))
             print()
             print("""
             This can occur due to two things:
-            1) The file data in 'analyticsData.txt' was manually edited in a manner that caused the system's JSON engine to be unable to read the file data in JSON form.
+            1) The file data in 'analyticsData.json' was manually edited in a manner that caused the system's JSON engine to be unable to read the file data in JSON form.
             2) The file has somehow corrupted, possibly due to multiple simultaneous read and write operations.
             """)
             print()
@@ -120,10 +120,10 @@ class AccessAnalytics:
                 time.sleep(3)
 
                 try:
-                    os.remove(os.path.join(os.getcwd(), 'analyticsData.txt'))
+                    os.remove(os.path.join(os.getcwd(), 'analyticsData.json'))
 
                     # Re-write blank data
-                    with open('analyticsData.txt', 'w') as f:
+                    with open('analyticsData.json', 'w') as f:
                         blankObject = AccessAnalytics.blankAnalyticsObject
                         json.dump(blankObject, f)
                         AccessAnalytics.analyticsData = blankObject
@@ -216,7 +216,7 @@ class AccessAnalytics:
             
             ## Save updates
             try:
-                with open('analyticsData.txt', 'w') as f:
+                with open('analyticsData.json', 'w') as f:
                     json.dump(fileData, f)
                 
                 AccessAnalytics.analyticsData = fileData
@@ -307,7 +307,7 @@ class AccessAnalytics:
                 'type': type,
                 'username': usernameAttachedToEmail
             }
-            response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+            response = AccessAnalytics.saveDataToFile(open('analyticsData.json', 'w'))
             if isinstance(response, str):
                 if response.startswith("AAError:"):
                     return response
@@ -327,7 +327,7 @@ class AccessAnalytics:
         except Exception as e:
             return "AAError: Failed to append path to memory-saved analytics data. Error: {}".format(e)
 
-        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+        response = AccessAnalytics.saveDataToFile(open('analyticsData.json', 'w'))
         if isinstance(response, str):
             if response.startswith("AAError:"):
                 return response
@@ -343,7 +343,7 @@ class AccessAnalytics:
         except Exception as e:
             return "AAError: Failed to increment file uploads metric. Error: {}".format(e)
 
-        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+        response = AccessAnalytics.saveDataToFile(open('analyticsData.json', 'w'))
         if isinstance(response, str):
             if response.startswith("AAError:"):
                 return response
@@ -359,7 +359,7 @@ class AccessAnalytics:
         except Exception as e:
             return "AAError: Failed to increment file deletions metric. Error: {}".format(e)
 
-        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+        response = AccessAnalytics.saveDataToFile(open('analyticsData.json', 'w'))
         if isinstance(response, str):
             if response.startswith("AAError:"):
                 return response
@@ -375,7 +375,7 @@ class AccessAnalytics:
         except Exception as e:
             return "AAError: Failed to increment file downloads metric. Error: {}".format(e)
 
-        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+        response = AccessAnalytics.saveDataToFile(open('analyticsData.json', 'w'))
         if isinstance(response, str):
             if response.startswith("AAError:"):
                 return response
@@ -391,7 +391,7 @@ class AccessAnalytics:
         except Exception as e:
             return "AAError: Failed to increment sign ins metric. Error: {}".format(e)
 
-        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+        response = AccessAnalytics.saveDataToFile(open('analyticsData.json', 'w'))
         if isinstance(response, str):
             if response.startswith("AAError:"):
                 return response
@@ -407,7 +407,7 @@ class AccessAnalytics:
         except Exception as e:
             return "AAError: Failed to increment sign outs metric. Error: {}".format(e)
 
-        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+        response = AccessAnalytics.saveDataToFile(open('analyticsData.json', 'w'))
         if isinstance(response, str):
             if response.startswith("AAError:"):
                 return response
@@ -423,7 +423,7 @@ class AccessAnalytics:
         except Exception as e:
             return "AAError: Failed to increment post requests metric. Error: {}".format(e)
 
-        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+        response = AccessAnalytics.saveDataToFile(open('analyticsData.json', 'w'))
         if isinstance(response, str):
             if response.startswith("AAError:"):
                 return response
@@ -443,7 +443,7 @@ class AccessAnalytics:
         except Exception as e:
             return "AAError: Failed to increment identity deletions metric. Error: {}".format(e)
         
-        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
+        response = AccessAnalytics.saveDataToFile(open('analyticsData.json', 'w'))
         if isinstance(response, str):
             if response.startswith("AAError:"):
                 return response
@@ -753,11 +753,11 @@ END OF REPORT
 
     @staticmethod
     def clearDataFile():
-        if not os.path.isfile(os.path.join(os.getcwd(), 'analyticsData.txt')):
+        if not os.path.isfile(os.path.join(os.getcwd(), 'analyticsData.json')):
             return "AAError: Analytics Data file does not exist."
         
         try:
-            with open('analyticsData.txt', 'w') as f:
+            with open('analyticsData.json', 'w') as f:
                 json.dump(AccessAnalytics.blankAnalyticsObject, f)
         except Exception as e:
             return "AAError: Error in clearing the data file; Error: {}".format(e)

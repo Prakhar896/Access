@@ -2,7 +2,7 @@ virt/
 .env
 __pycache__/
 AccessFolders/
-analyticsData.txt
+analyticsData.json
 analyticsReports/
 .DS_Store
 venv/

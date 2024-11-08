@@ -1,11 +1,12 @@
 from bootCheck import BootCheck
 BootCheck.check()
 
-import os, sys, json
+import os, sys
 from flask import Flask, request, render_template
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
-from services import DI, Universal, Encryption, Logger, FireConn, FireRTDB, fileContent, customRenderTemplate
+from services import *
+from models import *
 from config import Config
 from activation import initActivation, makeKVR
 from AFManager import AFManager, AFMError
@@ -61,8 +62,42 @@ def version():
 
     return render_template('version.html', versionNum=num)
 
-if __name__ == "__main__":
-    # New bootloading coming soon
+def boot():
+    ver = Universal.getVersion()
+    if ver == "Version File Not Found":
+        print("MAIN LOAD ERROR: No system version file detected. Boot aborted.")
+        sys.exit(1)
     
+    # Set up FireConn
+    if FireConn.checkPermissions():
+        response = FireConn.connect()
+        if response != True:
+            print("MAIN LOAD WARNING: FireConn failed to connect. Error: {}".format(response))
+    
+    # Set up Database Interface
+    response = DI.setup()
+    if response != True:
+        if isinstance(response, DIError):
+            print("MAIN LOAD ERROR: DIError in DI setup: {}".format(response))
+            sys.exit(1)
+        else:
+            print("MAIN LOAD ERROR: Unknown error in setting up DI: {}".format(response))
+            sys.exit(1)
+    else:
+        print("DI: Setup complete.")
+            
+    # Set up Analytics
+    if AccessAnalytics.permissionCheck():
+        response = AccessAnalytics.prepEnvironmentForAnalytics()
+        print(response)
+        
+    # Set up Emailer
+    Emailer.checkContext()
+    
+    print()
+    print("MAIN: All services online. Booting Access 'v{}'...".format(Universal.version))
     port = os.environ.get('RuntimePort', 8000)
     app.run(host='0.0.0.0', port=port)
+
+if __name__ == "__main__":
+    boot()

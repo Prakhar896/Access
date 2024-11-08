@@ -62,7 +62,7 @@ print("Deleting all irrelevant files...")
 
 # Delete all files and folders in the current directory
 dataFilesList = [
-    'analyticsData.txt', 
+    'analyticsData.json', 
     'certificates.txt', 
     'accessIdentities.txt', 
     'validOTPCodes.txt', 

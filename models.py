@@ -29,10 +29,14 @@ class Identity(DIRepresentable):
         
         logs = {}
         for logID in data['auditLogs']:
+            if data['auditLogs'][logID] == None:
+                continue
             logs[logID] = AuditLog.rawLoad(data['auditLogs'][logID])
             
         files = {}
         for fileID in data['files']:
+            if data['files'][fileID] == None:
+                continue
             files[fileID] = File.rawLoad(data['files'][fileID])
         
         return Identity(

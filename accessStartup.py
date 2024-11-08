@@ -1,38 +1,6 @@
 import time, os, shutil
 from getpass import getpass
-import pkg_resources
-
-try:
-    required = {'flask', 'flask-cors', 'passlib', 'getmac', 'python-dotenv'}
-    installed = {pkg.key for pkg in pkg_resources.working_set}
-    missing = required - installed
-    if missing:
-        raise Exception("Missing Libraries: " + ', '.join([x for x in missing]))
-except Exception as e:
-    print("Startup Library Loading Error: {}".format(e))
-    print("Failed to import one or more libraries. Attempting to install libraries from requirements.txt...")
-    time.sleep(2)
-
-    if not os.path.isfile(os.path.join(os.getcwd(), 'requirements.txt')):
-        print()
-        print("No requirements.txt file was found. Startup cannot startup.")
-        sys.exit(1)
-    else:
-        os.system("pip install -r requirements.txt")
-        print()
-        print("Startup: Successfully downloaded libraries! Re-importing...")
-        print()
-        from dotenv import load_dotenv
-        load_dotenv()
-        print("Successfully imported! Starting now...")
-        print()
-
 from accessAnalytics import *
-
-if 'FileUploadsLimit' not in os.environ:
-    print("STARTUP WARNING: Mandatory `FileUploadsLimit` environment variable is not set in .env file. The system will fall back on the default limit of '3' file uploads when booted.")
-    print()
-
 
 print("Welcome to Access Startup!")
 print("Here you can manage and run all things Access.")
@@ -62,9 +30,8 @@ Startup Choices - What would you like to do?
         sys.exit(0)
     elif choice == 1:
         ## Begin Access Boot
-        # from main import *
-        # if __name__ == "__main__":
-        #     bootFunction()
+        import main
+        main.boot()
 
         print()
         print("STARTUP: Access Startup will now close.")
