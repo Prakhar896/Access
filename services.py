@@ -190,7 +190,7 @@ Commands:
                         try:
                             keywords = userChoice[2:]
                             for log in allLogs:
-                                logTags = log[23::]
+                                logTags = log[36::]
                                 logTags = logTags[:logTags.find(":")].upper().split(" ")
 
                                 ## Check if log contains all keywords

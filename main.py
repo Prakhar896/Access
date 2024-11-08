@@ -83,8 +83,6 @@ def boot():
         else:
             print("MAIN LOAD ERROR: Unknown error in setting up DI: {}".format(response))
             sys.exit(1)
-    else:
-        print("DI: Setup complete.")
             
     # Set up Analytics
     if AccessAnalytics.permissionCheck():

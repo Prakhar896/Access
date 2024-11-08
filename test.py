@@ -1,6 +1,7 @@
 from models import *
+from services import *
 
-DI.setup()
+# DI.setup()
 # DI.save(None, Ref())
 
 # john = Identity("john", "john@email.com", "123456", "2024", "123456", {}, "2024", {})

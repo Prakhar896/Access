@@ -1,6 +1,7 @@
 import os, sys, json, shutil
 from typing import List, Dict, Any
 from abc import ABC, abstractmethod
+from services import Logger
 from utils import *
 from firebase import *
 
@@ -78,7 +79,7 @@ class DI:
                     response = FireConn.connect()
                     if response != True:
                         print("DI-FIRECONN: Failed to connect to Firebase. Aborting setup.")
-                        return response
+                        return DIError("DI-FIRECONN ERROR: {}".format(response))
                     else:
                         print("DI-FIRECONN: Firebase connection established. Firebase RTDB is enabled.")
                 else:
@@ -98,6 +99,7 @@ class DI:
                 except Exception as e:
                     return DIError("DI SETUP ERROR: Failed to make a comprehensive copy of FireRTDB data locally. Error: {}".format(e))
         
+        print("DI: Setup complete.")
         return True
     
     @staticmethod
@@ -138,12 +140,12 @@ class DI:
                     referenceNotFound = True
                 
                 if referenceNotFound and payload == None:
-                    print("Case 0")
+                    # print("Case 0")
                     return
                 elif not referenceNotFound and payload == None:
                     # Data exists at local reference but payload is None
                     dumpRequired = True
-                    print("Case 1")
+                    # print("Case 1")
                     targetDataPointer = localData
                     
                     # Anchor on parent ref of target ref and update child ref subscripted on targetDataPointer (thus updating localData)
@@ -153,7 +155,7 @@ class DI:
                 elif referenceNotFound and payload != None:
                     # Local reference does not exist but payload is not None
                     dumpRequired = True
-                    print("Case 2")
+                    # print("Case 2")
                     
                     # Create parent branches, if they don't already exist. For the last subscript, set the payload.
                     targetDataPointer = localData
@@ -168,7 +170,7 @@ class DI:
                 elif targetDataPointer != payload:
                     # Local reference exists but data does not match with the payload
                     dumpRequired = True
-                    print("Case 3")
+                    # print("Case 3")
                     targetDataPointer = localData
                     
                     # Anchor on parent ref of target ref and update child ref subscripted on targetDataPointer (thus updating localData)
@@ -180,9 +182,9 @@ class DI:
                 with open(DI.localFile, "w") as f:
                     json.dump(localData, f)
                 
-                print("Dumped data '{}' to '{}'".format(payload, ref))
+                # print("Dumped data '{}' to '{}'".format(payload, ref))
         except Exception as e:
-            print("DI EFFICIENTFAILOVER WARNING: Failed to write data object to ref '{}' for efficient local failover; error: {}".format(ref, e))
+            Logger.log("DI EFFICIENTFAILOVER WARNING: Failed to write data object to ref '{}' for efficient local failover; error: {}".format(ref, e))
     
     @staticmethod
     def loadLocal(ref: Ref = Ref()):
@@ -194,8 +196,7 @@ class DI:
             with open(DI.localFile, "r") as f:
                 data = json.load(f)
         except Exception as e:
-            print("DI LOADLOCAL ERROR: Failed to load JSON data from local file; error: {}".format(e))
-            return DIError("DI LOADLOCAL ERROR: Failed to load data from local file.")
+            return DIError("DI LOADLOCAL ERROR: Failed to load JSON data from file; error: {}".format(e))
         
         try:
             for subscriptIndex in range(len(ref.subscripts)):
@@ -203,8 +204,7 @@ class DI:
         except KeyError:
             return None
         except Exception as e:
-            print("DI LOADLOCAL ERROR: Failed to retrieve target ref; error: {}".format(e))
-            return DIError("DI LOADLOCAL ERROR: Failed to retrieve target ref.")
+            return DIError("DI LOADLOCAL ERROR: Failed to retrieve target ref; error: {}".format(e))
         
         return data
     
@@ -215,6 +215,7 @@ class DI:
                 return True
         
         DI.unsyncedRefs.append(ref)
+        Logger.log("DI NEWUNSYNCEDREF WARNING: New unsynced ref added: '{}'".format(ref))
         return True
     
     @staticmethod
@@ -234,7 +235,7 @@ class DI:
             try:
                 localSave = DI.loadLocal(unsyncedRef)
                 if isinstance(localSave, DIError):
-                    print("DI SYNC ERROR: Failed to load local ref '{}'; error: {}".format(unsyncedRef, localSave))
+                    Logger.log("DI SYNC ERROR: Failed to load local ref '{}'; error: {}".format(unsyncedRef, localSave))
                 if localSave != None:
                     # Firebase considers None values as removal of the object, so if the unsynced data is not a data removal, translate it for Firebase compatibility
                     localSave = FireRTDB.translateForCloud(localSave, rootTranslatable=True)
@@ -246,13 +247,12 @@ class DI:
                     res = FireRTDB.setRef(localSave, str(unsyncedRef))
                 
                 if res == True:
-                    # DI.unsyncedRefs.pop(unsyncedRefIndex)
                     syncedRefs.append(DI.unsyncedRefs[unsyncedRefIndex])
                 else:
                     errors = True
             except Exception as e:
                 errors = True
-                print("DI SYNC ERROR: Failed to sync local ref '{}' to FireRTDB; error: {}".format(unsyncedRef, e))
+                Logger.log("DI SYNC ERROR: Failed to sync local ref '{}' to FireRTDB; error: {}".format(unsyncedRef, e))
                 
         for ref in syncedRefs:
             DI.unsyncedRefs.remove(ref)
@@ -263,6 +263,7 @@ class DI:
         else:
             # All unsynced references are synced and Firebase-first can be used safely
             DI.syncStatus = True
+            Logger.log("DI SYNC: All unsynced refs synced to Firebase.")
             return True
 
     @staticmethod
@@ -273,7 +274,7 @@ class DI:
         if FireRTDB.checkPermissions():
             # Cloud enabled
             if not FireConn.connected:
-                print("DI LOAD WARNING: FireRTDB is enabled but Firebase connection is not established; falling back on local load.")
+                Logger.log("DI LOAD WARNING: FireRTDB is enabled but Firebase connection is not established; falling back on local load.")
                 return DI.loadLocal(ref)
             elif not DI.syncStatus:
                 # Unsync-ed state, unsafe for FB operations
@@ -289,7 +290,7 @@ class DI:
             
             return data
         except Exception as e:
-            print("DI LOAD WARNING: Failed to load from FireRTDB; error: '{}'. Falling back to local...".format(e))
+            Logger.log("DI LOAD WARNING: Failed to load from FireRTDB; error: '{}'. Falling back to local...".format(e))
             return DI.loadLocal(ref)
     
     @staticmethod
@@ -301,7 +302,7 @@ class DI:
         if not FireRTDB.checkPermissions():
             return True
         if not FireConn.connected:
-            print("DI SAVE WARNING: Save only persisted locally; FireRTDB enabled but connection is not established.")
+            Logger.log("DI SAVE WARNING: Save only persisted locally; FireRTDB enabled but connection is not established.")
             return True
         if not DI.syncStatus:
             # Unsync-ed state, unsafe for FB operations
@@ -319,11 +320,11 @@ class DI:
             if res != True:
                 DI.syncStatus = False
                 DI.newUnsyncedRef(ref)
-                print("DI SAVE WARNING: Save only persisted locally; FireRTDB save failed.")
+                Logger.log("DI SAVE WARNING: Save only persisted locally; FireRTDB save failed.")
             
         except Exception as e:
             DI.syncStatus = False
             DI.newUnsyncedRef(ref)
-            print("DI SAVE WARNING: Save only persisted locally; error in FireRTDB save: {}".format(e))
+            Logger.log("DI SAVE WARNING: Save only persisted locally; error in FireRTDB save: {}".format(e))
         
         return True
