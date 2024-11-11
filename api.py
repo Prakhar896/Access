@@ -142,6 +142,8 @@ def loginIdentity(user: Identity | None=None):
         Logger.log("IDENTITY LOGIN ERROR: Failed to find identity. Error: {}".format(e))
         return "ERROR: Failed to process request. Please try again.", 500
     
+    if not account.emailVerified:
+        return "UERROR: Email not verified. Please verify your email first.", 400
     if not Encryption.verifySHA256(password, account.password):
         return "UERROR: Invalid credentials.", 400
     
