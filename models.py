@@ -5,7 +5,10 @@ from database import DIRepresentable
 from services import Universal
 
 class Identity(DIRepresentable):
-    def __init__(self, username: str, email: str, password: str, lastLogin: str, authToken: str, auditLogs: 'Dict[str, AuditLog]', created: str, files: 'Dict[str, File]', id=uuid4().hex) -> None:
+    def __init__(self, username: str, email: str, password: str, lastLogin: str, authToken: str, auditLogs: 'Dict[str, AuditLog]', otpCode: str, created: str, files: 'Dict[str, File]', id: str=None) -> None:
+        if id == None:
+            id = uuid4().hex
+        
         self.id = id
         self.username = username
         self.email = email
@@ -13,13 +16,14 @@ class Identity(DIRepresentable):
         self.lastLogin = lastLogin
         self.authToken = authToken
         self.auditLogs = auditLogs
+        self.otpCode = otpCode
         self.created = created
         self.files = files
         self.originRef = Identity.ref(id)
         
     @staticmethod
     def rawLoad(data: dict) -> 'Identity':
-        requiredParams = ['username', 'email', 'password', 'lastLogin', 'authToken', 'auditLogs', 'created', 'files', 'id']
+        requiredParams = ['username', 'email', 'password', 'lastLogin', 'authToken', 'auditLogs', 'otpCode', 'created', 'files', 'id']
         for reqParam in requiredParams:
             if reqParam not in data:
                 if reqParam in ['auditLogs', 'files']:
@@ -40,15 +44,16 @@ class Identity(DIRepresentable):
             files[fileID] = File.rawLoad(data['files'][fileID])
         
         return Identity(
-            data['username'],
-            data['email'],
-            data['password'],
-            data['lastLogin'],
-            data['authToken'],
-            logs,
-            data['created'],
-            files,
-            data['id']
+            username=data['username'],
+            email=data['email'],
+            password=data['password'],
+            lastLogin=data['lastLogin'],
+            authToken=data['authToken'],
+            auditLogs=logs,
+            otpCode=data['otpCode'],
+            created=data['created'],
+            files=files,
+            id=data['id']
         )
     
     @staticmethod
@@ -98,6 +103,7 @@ class Identity(DIRepresentable):
             "lastLogin": self.lastLogin,
             "authToken": self.authToken,
             "auditLogs": auditLogs,
+            "otpCode": self.otpCode,
             "created": self.created,
             "files": files
         }

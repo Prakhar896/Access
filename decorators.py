@@ -7,7 +7,7 @@ def debug(func):
     """Print the function signature and return value"""
     @functools.wraps(func)
     def wrapper_debug(*args, **kwargs):
-        if not os.environ.get("DEBUG_MODE", "False") == "True":
+        if not os.environ.get("DECORATOR_DEBUG_MODE", "False") == "True":
             return func(*args, **kwargs)
         
         args_repr = [repr(a) for a in args]
