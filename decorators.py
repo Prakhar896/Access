@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, url_for, redirect, session
-from main import Identity, Logger, Universal
+from models import Identity, Logger, Universal
 import os, functools, time, datetime
 from dotenv import load_dotenv
 load_dotenv()
@@ -125,7 +125,7 @@ def checkSession(_func=None, *, strict=False, provideIdentity=False):
                 
                 if code != 200 and strict:
                     return msg, code
-                elif code == 200 and provideIdentity and user != None:
+                elif provideIdentity and user != None:
                     return func(user, *args, **kwargs)
                 else:
                     return func(*args, **kwargs)
@@ -144,7 +144,7 @@ def checkSession(_func=None, *, strict=False, provideIdentity=False):
             
             # If strict mode, verify the session by trying to load the user based on it.
             user = None
-            if strict:
+            if strict or provideIdentity:
                 try:
                     # Load the user by passing in the session's authToken
                     user = Identity.load(authToken=session["authToken"])

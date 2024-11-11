@@ -7,7 +7,6 @@ from werkzeug.utils import secure_filename
 from flask_cors import CORS
 from services import *
 from models import *
-from decorators import *
 from config import Config
 from activation import initActivation, makeKVR
 from AFManager import AFManager, AFMError

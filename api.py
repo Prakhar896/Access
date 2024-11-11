@@ -1,6 +1,9 @@
 import os, re
-from flask import Flask, request, render_template, Blueprint, send_file, send_from_directory, url_for, redirect, session
-from main import jsonOnly, checkAPIKey, enforceSchema, Identity, Encryption, Universal, AuditLog, Logger, Emailer
+from flask import Flask, request, render_template, Blueprint, url_for, redirect, session
+from models import Identity, Logger, Universal, AuditLog
+from services import Encryption
+from emailer import Emailer
+from decorators import *
 
 apiBP = Blueprint('api', __name__)
 
@@ -112,7 +115,11 @@ def newIdentity():
     ("usernameOrEmail", str),
     ("password", str)
 )
-def loginIdentity():
+@checkSession(provideIdentity=True)
+def loginIdentity(user: Identity | None=None):
+    if isinstance(user, Identity):
+        return "SUCCESS: Already logged in to '{}'. Log out first.".format(user.username), 200
+    
     # Preprocess data
     usernameOrEmail: str = request.json["usernameOrEmail"].strip()
     password: str = request.json["password"].strip()
