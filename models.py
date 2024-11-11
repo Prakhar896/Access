@@ -29,6 +29,8 @@ class Identity(DIRepresentable):
             if reqParam not in data:
                 if reqParam in ['auditLogs', 'files']:
                     data[reqParam] = {}
+                elif reqParam == 'emailVerified':
+                    data[reqParam] = False
                 else:
                     data[reqParam] = None
         

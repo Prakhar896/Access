@@ -167,3 +167,53 @@ def loginIdentity(user: Identity | None=None):
     session["sessionStart"] = account.lastLogin
     
     return "SUCCESS: Logged in successfully.", 200
+
+@apiBP.route("/identity/verifyOTP", methods=["POST"])
+@jsonOnly
+@checkAPIKey
+@enforceSchema(
+    ("usernameOrEmail", str),
+    ("otpCode", str)
+)
+def verifyOTP():
+    # Preprocess data
+    usernameOrEmail: str = request.json["usernameOrEmail"].strip()
+    otpCode: str = request.json["otpCode"].strip()
+    
+    if len(usernameOrEmail) == 0 or len(otpCode) == 0:
+        return "UERROR: Username/email and OTP code cannot be empty.", 400
+    
+    # Check if email is even valid
+    if "@" in usernameOrEmail:
+        if not re.match("^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", usernameOrEmail):
+            return "UERROR: Email is not in the correct format.", 400
+    
+    # Check if account exists and verify OTP
+    account = None
+    try:
+        account = Identity.load(username=usernameOrEmail, email=usernameOrEmail)
+        if not isinstance(account, Identity):
+            return "UERROR: Invalid credentials.", 401
+    except Exception as e:
+        Logger.log("IDENTITY OTP VERIFY ERROR: Failed to find identity. Error: {}".format(e))
+        return "ERROR: Failed to process request. Please try again.", 500
+    
+    if account.emailVerified and account.otpCode != None:
+        account.emailVerified = None
+        account.otpCode = None
+        account.save()
+        
+        session.clear()
+        return "UERROR: Something went wrong. Please verify your email and login again.", 401
+    if account.emailVerified:
+        return "UERROR: Email already verified.", 400
+    if account.otpCode == None:
+        return "UERROR: No OTP code to verify.", 400
+    if account.otpCode != otpCode:
+        return "UERROR: Invalid OTP code.", 401
+    
+    account.otpCode = None
+    account.emailVerified = True
+    account.save()
+    
+    return "SUCCESS: Email verified successfully.", 200
