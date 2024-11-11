@@ -1,5 +1,6 @@
-from flask import Flask, request, render_template, url_for, redirect
-import os, functools, time
+from flask import Flask, request, render_template, url_for, redirect, session
+from main import Identity, Logger, Universal
+import os, functools, time, datetime
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -111,3 +112,68 @@ def enforceSchema(*expectedArgs):
         return wrapper_enforceSchema
     
     return decorator_enforceSchema
+
+def checkSession(_func=None, *, strict=False, provideIdentity=False):
+    def decorator_checkSession(func):
+        @functools.wraps(func)
+        @debug
+        def wrapper_checkSession(*args, **kwargs):
+            # Helper function to handle return cases
+            def handleReturn(msg: str, code: int, user: Identity | None=None, clearSessionForErrorCodes: bool = True):                
+                if code != 200 and clearSessionForErrorCodes and len(session.keys()) != 0:
+                    session.clear()
+                
+                if code != 200 and strict:
+                    return msg, code
+                elif code == 200 and provideIdentity and user != None:
+                    return func(user, *args, **kwargs)
+                else:
+                    return func(*args, **kwargs)
+            
+            # List of required parameters in a session
+            requiredParams = ["username", "authToken", "sessionStart"]
+            
+            # Check if session parameters match up
+            if len(session.keys()) != len(requiredParams):
+                return handleReturn("ERROR: Invalid session.", 401)
+            
+            # Check if session is corrupted
+            for param in requiredParams:
+                if param not in session:
+                    return handleReturn("ERROR: Invalid session.", 401)
+            
+            # If strict mode, verify the session by trying to load the user based on it.
+            user = None
+            if strict:
+                try:
+                    # Load the user by passing in the session's authToken
+                    user = Identity.load(authToken=session["authToken"])
+                    if not isinstance(user, Identity):
+                        # If the user was not found, reset the session and return an error.
+                        return handleReturn("ERROR: Invalid session.", 401)
+                except Exception as e:
+                    Logger.log("CHECKSESSION ERROR: Failed to load user for strict auth token verification. Error: {}".format(e))
+                    return handleReturn("ERROR: Invalid session.", 401)
+                    
+                try:
+                    # Check the session start time for expiration cases
+                    if not isinstance(user.lastLogin, str):
+                        return handleReturn("ERROR: Invalid session.", 401)
+                    if (Universal.utcNow() - Universal.fromUTC(user.lastLogin)).total_seconds() > 7200:
+                        ## Session expired
+                        user.authToken = None
+                        user.save()
+                        return handleReturn("ERROR: Session expired.", 401)
+                except Exception as e:
+                    Logger.log("CHECKSESSION ERROR: Failed to process session expiration status. Error: {}".format(e))
+                    return handleReturn("ERROR: Invalid session.", 401)
+            
+            # Let handleReturn handle the success case
+            return handleReturn("SUCCESS: Session verified.", 200, user)
+        
+        return wrapper_checkSession
+
+    if _func is None:
+        return decorator_checkSession
+    else:
+        return decorator_checkSession(_func)

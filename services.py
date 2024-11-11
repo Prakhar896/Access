@@ -76,6 +76,10 @@ class Universal:
     @staticmethod
     def utcNowString():
         return datetime.datetime.now(datetime.timezone.utc).isoformat()
+    
+    @staticmethod
+    def fromUTC(utcString):
+        return datetime.datetime.fromisoformat(utcString)
         
 class Logger:
     file = "logs.txt"

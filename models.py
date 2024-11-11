@@ -57,7 +57,7 @@ class Identity(DIRepresentable):
         )
     
     @staticmethod
-    def load(id=None, username=None, email=None) -> 'Identity | List[Identity] | None':
+    def load(id=None, username=None, email=None, authToken=None) -> 'Identity | List[Identity] | None':
         if id == None:
             data = DI.load(Ref("accounts"))
             if data == None:
@@ -69,7 +69,7 @@ class Identity(DIRepresentable):
             for id in data:
                 identities[id] = Identity.rawLoad(data[id])
             
-            if username == None and email == None:
+            if username == None and email == None and authToken == None:
                 return list(identities.values())
             
             for identityID in identities:
@@ -77,6 +77,8 @@ class Identity(DIRepresentable):
                 if username != None and targetIdentity.username == username:
                     return targetIdentity
                 elif email != None and targetIdentity.email == email:
+                    return targetIdentity
+                elif authToken != None and targetIdentity.authToken == authToken:
                     return targetIdentity
             
             return None

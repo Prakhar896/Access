@@ -1,5 +1,5 @@
 import os, re
-from flask import Flask, request, render_template, Blueprint, send_file, send_from_directory, url_for, redirect
+from flask import Flask, request, render_template, Blueprint, send_file, send_from_directory, url_for, redirect, session
 from main import jsonOnly, checkAPIKey, enforceSchema, Identity, Encryption, Universal, AuditLog, Logger, Emailer
 
 apiBP = Blueprint('api', __name__)
@@ -19,7 +19,7 @@ def newIdentity():
     password: str = request.json["password"].strip()
     
     # Validate data
-    if not re.match("^[a-zA-Z0-9]{1,12}$", username):
+    if not re.match("^[a-zA-Z0-9]{1,12}$", username) or not username.isalnum():
         return "UERROR: Username must be alphanumeric with no spaces and no longer than 12 characters.", 400
     if not re.match("^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", email):
         return "UERROR: Email is not in the correct format.", 400
@@ -104,3 +104,57 @@ def newIdentity():
     )
     
     return "SUCCESS: Identity created. Verify email via OTP code dispatched.", 200
+
+@apiBP.route("/identity/login", methods=["POST"])
+@jsonOnly
+@checkAPIKey
+@enforceSchema(
+    ("usernameOrEmail", str),
+    ("password", str)
+)
+def loginIdentity():
+    # Preprocess data
+    usernameOrEmail: str = request.json["usernameOrEmail"].strip()
+    password: str = request.json["password"].strip()
+    
+    if len(usernameOrEmail) == 0 or len(password) == 0:
+        return "UERROR: Username or password cannot be empty.", 400
+    
+    # Check if email is even valid
+    if "@" in usernameOrEmail:
+        if not re.match("^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", usernameOrEmail):
+            return "UERROR: Email is not in the correct format.", 400
+    
+    # Check if account exists and verify password
+    account = None
+    try:
+        account = Identity.load(username=usernameOrEmail, email=usernameOrEmail)
+        if not isinstance(account, Identity):
+            return "UERROR: Invalid credentials.", 400
+    except Exception as e:
+        Logger.log("IDENTITY LOGIN ERROR: Failed to find identity. Error: {}".format(e))
+        return "ERROR: Failed to process request. Please try again.", 500
+    
+    if not Encryption.verifySHA256(password, account.password):
+        return "UERROR: Invalid credentials.", 400
+    
+    # Generate auth token
+    authToken = Universal.generateUniqueID(customLength=12)
+    account.authToken = authToken
+    account.lastLogin = Universal.utcNowString()
+    
+    loginEvent = AuditLog(
+        accountID=account.id,
+        event="Login",
+        text="Logged in from IP address '{}'.".format(request.remote_addr)
+    )
+    account.auditLogs[loginEvent.id] = loginEvent
+    
+    account.save()
+    
+    # Update user session
+    session["username"] = account.username
+    session["authToken"] = authToken
+    session["sessionStart"] = account.lastLogin
+    
+    return "SUCCESS: Logged in successfully.", 200
