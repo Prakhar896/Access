@@ -2,11 +2,12 @@ from bootCheck import BootCheck
 BootCheck.check()
 
 import os, sys
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, send_from_directory, redirect, url_for
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
 from services import *
 from models import *
+from decorators import *
 from config import Config
 from activation import initActivation, makeKVR
 from AFManager import AFManager, AFMError
@@ -31,6 +32,13 @@ app.secret_key = os.environ['APP_SECRET_KEY']
 def allowed_file(filename):
     return ('.' in filename) and (filename.rsplit('.', 1)[1].lower() in configManager.config["fileExtensions"])
 
+availableAssets = []
+if os.path.isdir(os.path.join(os.getcwd(), "assets")):
+    for file in os.listdir(os.path.join(os.getcwd(), "assets")):
+        availableAssets.append(file)
+
+print("MAIN BOOT: Assets available: " + ", ".join(availableAssets))
+
 ## Other pre-requisites
 @app.before_request
 def updateAnalytics():
@@ -45,11 +53,6 @@ def updateAnalytics():
             if isinstance(postResponse, str):
                 if postResponse.startswith("AAError:"):
                     print(postResponse)
-  
-
-@app.route('/')
-def homepage():
-    return 'A better Access is coming soon.'
 
 @app.route('/version')
 def version():
@@ -61,6 +64,16 @@ def version():
         num = Universal.version
 
     return render_template('version.html', versionNum=num)
+
+@app.errorhandler(404)
+def page_not_found(e):
+    if request.path.startswith("/assets") or request.path.startswith("/src/assets") or request.path.startswith("/favicon.ico"):
+        Logger.log("404 AT: {}".format(request.path))
+        asset = request.path.split("/")[-1]
+        if asset in availableAssets:
+            return send_from_directory(os.path.join(os.getcwd(), "assets"), asset)
+        return "ERROR: Asset not found.", 404
+    return redirect(url_for('index'))
 
 def boot():
     ver = Universal.getVersion()
@@ -91,6 +104,12 @@ def boot():
         
     # Set up Emailer
     Emailer.checkContext()
+    
+    # Blueprint regirstrations
+    
+    ## API
+    from api import apiBP
+    app.register_blueprint(apiBP)
     
     print()
     print("MAIN: All services online. Booting Access 'v{}'...".format(Universal.version))
