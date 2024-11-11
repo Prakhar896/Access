@@ -5,7 +5,7 @@ from database import DIRepresentable
 from services import Universal
 
 class Identity(DIRepresentable):
-    def __init__(self, username: str, email: str, password: str, lastLogin: str, authToken: str, auditLogs: 'Dict[str, AuditLog]', otpCode: str, created: str, files: 'Dict[str, File]', id: str=None) -> None:
+    def __init__(self, username: str, email: str, password: str, lastLogin: str, authToken: str, auditLogs: 'Dict[str, AuditLog]', otpCode: str, emailVerified: bool, created: str, files: 'Dict[str, File]', id: str=None) -> None:
         if id == None:
             id = uuid4().hex
         
@@ -17,13 +17,14 @@ class Identity(DIRepresentable):
         self.authToken = authToken
         self.auditLogs = auditLogs
         self.otpCode = otpCode
+        self.emailVerified = emailVerified
         self.created = created
         self.files = files
         self.originRef = Identity.ref(id)
         
     @staticmethod
     def rawLoad(data: dict) -> 'Identity':
-        requiredParams = ['username', 'email', 'password', 'lastLogin', 'authToken', 'auditLogs', 'otpCode', 'created', 'files', 'id']
+        requiredParams = ['username', 'email', 'password', 'lastLogin', 'authToken', 'auditLogs', 'otpCode', 'emailVerified', 'created', 'files', 'id']
         for reqParam in requiredParams:
             if reqParam not in data:
                 if reqParam in ['auditLogs', 'files']:
@@ -51,6 +52,7 @@ class Identity(DIRepresentable):
             authToken=data['authToken'],
             auditLogs=logs,
             otpCode=data['otpCode'],
+            emailVerified=data['emailVerified'] == "True",
             created=data['created'],
             files=files,
             id=data['id']
@@ -106,6 +108,7 @@ class Identity(DIRepresentable):
             "authToken": self.authToken,
             "auditLogs": auditLogs,
             "otpCode": self.otpCode,
+            "emailVerified": str(self.emailVerified),
             "created": self.created,
             "files": files
         }
