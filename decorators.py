@@ -7,6 +7,9 @@ def debug(func):
     """Print the function signature and return value"""
     @functools.wraps(func)
     def wrapper_debug(*args, **kwargs):
+        if not os.environ.get("DEBUG_MODE", "False") == "True":
+            return func(*args, **kwargs)
+        
         args_repr = [repr(a) for a in args]
         kwargs_repr = [f"{k}={repr(v)}" for k, v in kwargs.items()]
         signature = ", ".join(args_repr + kwargs_repr)
@@ -44,6 +47,7 @@ def cache(func):
 def jsonOnly(func):
     """Enforce the request to be in JSON format. 400 error if otherwise."""
     @functools.wraps(func)
+    @debug
     def wrapper_jsonOnly(*args, **kwargs):
         if not request.is_json:
             return "ERROR: Invalid request format.", 400
@@ -55,6 +59,7 @@ def jsonOnly(func):
 def checkAPIKey(func):
     """Check if the request has the correct API key. 401 error if otherwise."""
     @functools.wraps(func)
+    @debug
     def wrapper_checkAPIKey(*args, **kwargs):
         if ("APIKey" in os.environ) and (("APIKey" not in request.headers) or (request.headers["APIKey"] != os.environ.get("APIKey", None))):
             return "ERROR: Request unauthorised.", 401
@@ -88,6 +93,7 @@ def enforceSchema(*expectedArgs):
     """
     def decorator_enforceSchema(func):
         @functools.wraps(func)
+        @debug
         def wrapper_enforceSchema(*args, **kwargs):
             jsonData = request.get_json()
             for expectedTuple in expectedArgs:
