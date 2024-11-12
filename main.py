@@ -15,6 +15,8 @@ from accessAnalytics import AccessAnalytics
 from dotenv import load_dotenv
 load_dotenv()
 
+Universal.initAsync()
+
 ### APP CONFIG
 configManager = Config()
 
