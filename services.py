@@ -44,12 +44,15 @@ class AsyncProcessor:
         """
         if trigger == None: trigger = Trigger()
         
+        job = None
         if trigger.immediate:
-            self.scheduler.add_job(function, args=args, kwargs=kwargs)
+            job = self.scheduler.add_job(function, args=args, kwargs=kwargs)
             self.log("Job for '{}' added with immediate trigger.".format(function.__name__))
         else:
-            self.scheduler.add_job(function, 'interval', seconds=trigger.seconds, minutes=trigger.minutes, hours=trigger.hours, args=args, kwargs=kwargs)
+            job = self.scheduler.add_job(function, 'interval', seconds=trigger.seconds, minutes=trigger.minutes, hours=trigger.hours, args=args, kwargs=kwargs)
             self.log("Job for '{}' added with trigger: {} seconds, {} minutes, {} hours.".format(function.__name__, trigger.seconds, trigger.minutes, trigger.hours))
+            
+        return job.id
 
 class Encryption:
     @staticmethod

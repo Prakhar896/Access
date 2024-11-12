@@ -1,7 +1,7 @@
 import os, re
 from flask import Flask, request, render_template, Blueprint, url_for, redirect, session
 from models import Identity, Logger, Universal, AuditLog, EmailVerification
-from services import Encryption
+from services import Encryption, Universal
 from emailer import Emailer
 from decorators import *
 
@@ -20,7 +20,8 @@ def dispatchEmailVerification(destEmail: str, otpCode: str):
     {}
     """.format(otpCode, Universal.copyright)
     
-    Emailer.sendEmail(
+    Universal.asyncProcessor.addJob(
+        Emailer.sendEmail,
         destEmail=destEmail,
         subject="Verify Email | Access",
         altText=text,
@@ -30,7 +31,6 @@ def dispatchEmailVerification(destEmail: str, otpCode: str):
             copyright=Universal.copyright
         )
     )
-    print("Function done.")
 
 @apiBP.route("/identity/new", methods=["POST"])
 @jsonOnly
