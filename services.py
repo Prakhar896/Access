@@ -1,5 +1,55 @@
-import os, json, base64, random, datetime, uuid
+import os, json, base64, random, datetime, uuid, functools
+from apscheduler.schedulers.background import BackgroundScheduler
 from passlib.hash import sha256_crypt as sha
+
+class Trigger:
+    def __init__(self, seconds=None, minutes=None, hours=None) -> None:
+        self.immediate = seconds == None and minutes == None and hours == None
+        self.seconds = seconds if seconds != None else 0
+        self.minutes = minutes if minutes != None else 0
+        self.hours = hours if hours != None else 0
+
+class AsyncProcessor:
+    """
+    Async processor uses the `apscheduler` library to run functions asynchronously. Specific intervals can be set if needed as well.
+    """
+    
+    def __init__(self, paused=False, logging=True) -> None:
+        self.id = uuid.uuid4().hex
+        self.scheduler = BackgroundScheduler()
+        self.scheduler.start(paused=paused)
+        self.logging = logging
+        
+        self.log("Scheduler initialised in {} mode.".format("paused" if paused else "active"))
+        
+    def log(self, message):
+        if self.logging == True:
+            Logger.log("ASYNCPROCESSOR: {}: {}".format(self.id, message))
+    
+    def shutdown(self):
+        self.scheduler.shutdown()
+        self.log("Scheduler shutdown.")
+    
+    def pause(self):
+        self.scheduler.pause()
+        self.log("Scheduler paused.")
+    
+    def resume(self):
+        self.scheduler.resume()
+        self.log("Scheduler resumed.")
+    
+    def addJob(self, function, trigger: Trigger=None, *args, **kwargs):
+        """
+        Adds a job to the scheduler.
+        """
+        if trigger == None: trigger = Trigger()
+        
+        if trigger.immediate:
+            self.scheduler.add_job(function, args=args, kwargs=kwargs)
+            self.log("Job for '{}' added with immediate trigger.".format(function.__name__))
+        else:
+            self.scheduler.add_job(function, 'interval', seconds=trigger.seconds, minutes=trigger.minutes, hours=trigger.hours, args=args, kwargs=kwargs)
+            self.log("Job for '{}' added with trigger: {} seconds, {} minutes, {} hours.".format(function.__name__, trigger.seconds, trigger.minutes, trigger.hours))
 
 class Encryption:
     @staticmethod
@@ -48,6 +98,11 @@ class Universal:
     systemWideStringDatetimeFormat = "%Y-%m-%d %H:%M:%S"
     copyright = "© 2024 Prakhar Trivedi. All Rights Reserved."
     version = None
+    asyncProcessor: AsyncProcessor = None
+    
+    @staticmethod
+    def initAsync():
+        Universal.asyncProcessor = AsyncProcessor()
     
     @staticmethod
     def getVersion():
