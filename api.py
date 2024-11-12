@@ -1,6 +1,6 @@
 import os, re
 from flask import Flask, request, render_template, Blueprint, url_for, redirect, session
-from models import Identity, Logger, Universal, AuditLog
+from models import Identity, Logger, Universal, AuditLog, EmailVerification
 from services import Encryption
 from emailer import Emailer
 from decorators import *
@@ -63,12 +63,10 @@ def newIdentity():
             email=request.json["email"],
             password=Encryption.encodeToSHA256(request.json["password"]),
             lastLogin=None,
-            authToken=None,
-            auditLogs={},
-            otpCode=otpCode,
-            created=Universal.utcNowString(),
-            files={}
+            authToken=None
         )
+        account.emailVerification.otpCode = otpCode
+        account.emailVerification.dispatchTimestamp = Universal.utcNowString()
         
         accountCreatedLog = AuditLog(
             accountID=account.id,
@@ -142,8 +140,8 @@ def loginIdentity(user: Identity | None=None):
         Logger.log("IDENTITY LOGIN ERROR: Failed to find identity. Error: {}".format(e))
         return "ERROR: Failed to process request. Please try again.", 500
     
-    if not account.emailVerified:
-        return "UERROR: Email not verified. Please verify your email first.", 400
+    # if not account.emailVerification.verified:
+    #     return "UERROR: Email not verified. Please verify your email first.", 400
     if not Encryption.verifySHA256(password, account.password):
         return "UERROR: Invalid credentials.", 400
     
@@ -198,22 +196,30 @@ def verifyOTP():
         Logger.log("IDENTITY OTP VERIFY ERROR: Failed to find identity. Error: {}".format(e))
         return "ERROR: Failed to process request. Please try again.", 500
     
-    if account.emailVerified and account.otpCode != None:
-        account.emailVerified = None
-        account.otpCode = None
-        account.save()
+    verificationInfo = account.emailVerification
+    if verificationInfo.verified and verificationInfo.otpCode != None:
+        verificationInfo.otpCode = None
+        verificationInfo.otpCode = None
+        verificationInfo.save()
         
         session.clear()
         return "UERROR: Something went wrong. Please verify your email and login again.", 401
-    if account.emailVerified:
+    if verificationInfo.verified:
         return "UERROR: Email already verified.", 400
-    if account.otpCode == None:
+    if verificationInfo.otpCode == None:
         return "UERROR: No OTP code to verify.", 400
-    if account.otpCode != otpCode:
+    if verificationInfo.otpCode != otpCode:
         return "UERROR: Invalid OTP code.", 401
     
-    account.otpCode = None
-    account.emailVerified = True
-    account.save()
+    verificationInfo.otpCode = None
+    verificationInfo.dispatchTimestamp = None
+    verificationInfo.verified = True
+    verificationInfo.save()
     
     return "SUCCESS: Email verified successfully.", 200
+
+# @apiBP.route("/identity/resendEmailVerification", methods=["POST"])
+# @checkAPIKey
+# @checkSession(provideIdentity=True)
+# def resendEmailVerification(user: Identity | None=None):
+#     pass

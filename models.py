@@ -3,11 +3,16 @@ from typing import List, Dict, Any
 from database import *
 from database import DIRepresentable
 from services import Universal
+from utils import Ref
 
 class Identity(DIRepresentable):
-    def __init__(self, username: str, email: str, password: str, lastLogin: str, authToken: str, auditLogs: 'Dict[str, AuditLog]', otpCode: str, emailVerified: bool, created: str, files: 'Dict[str, File]', id: str=None) -> None:
+    def __init__(self, username: str, email: str, password: str, lastLogin: str, authToken: str, auditLogs: 'Dict[str, AuditLog]'={}, emailVerification: 'EmailVerification'=None, created: str=None, files: 'Dict[str, File]'={}, id: str=None) -> None:
         if id == None:
             id = uuid4().hex
+        if emailVerification == None:
+            emailVerification = EmailVerification(id)
+        if created == None:
+            created = Universal.utcNowString()
         
         self.id = id
         self.username = username
@@ -16,18 +21,17 @@ class Identity(DIRepresentable):
         self.lastLogin = lastLogin
         self.authToken = authToken
         self.auditLogs = auditLogs
-        self.otpCode = otpCode
-        self.emailVerified = emailVerified
+        self.emailVerification = emailVerification
         self.created = created
         self.files = files
         self.originRef = Identity.ref(id)
         
     @staticmethod
     def rawLoad(data: dict) -> 'Identity':
-        requiredParams = ['username', 'email', 'password', 'lastLogin', 'authToken', 'auditLogs', 'otpCode', 'emailVerified', 'created', 'files', 'id']
+        requiredParams = ['username', 'email', 'password', 'lastLogin', 'authToken', 'auditLogs', 'emailVerification', 'created', 'files', 'id']
         for reqParam in requiredParams:
             if reqParam not in data:
-                if reqParam in ['auditLogs', 'files']:
+                if reqParam in ['auditLogs', 'files', 'emailVerification']:
                     data[reqParam] = {}
                 elif reqParam == 'emailVerified':
                     data[reqParam] = False
@@ -46,6 +50,8 @@ class Identity(DIRepresentable):
                 continue
             files[fileID] = File.rawLoad(data['files'][fileID])
         
+        emailVerification = EmailVerification.rawLoad(data['emailVerification'], data['id'])
+        
         return Identity(
             username=data['username'],
             email=data['email'],
@@ -53,8 +59,7 @@ class Identity(DIRepresentable):
             lastLogin=data['lastLogin'],
             authToken=data['authToken'],
             auditLogs=logs,
-            otpCode=data['otpCode'],
-            emailVerified=data['emailVerified'] == "True",
+            emailVerification=emailVerification,
             created=data['created'],
             files=files,
             id=data['id']
@@ -66,6 +71,8 @@ class Identity(DIRepresentable):
             data = DI.load(Ref("accounts"))
             if data == None:
                 return None
+            if isinstance(data, DIError):
+                raise Exception("IDENTITY LOAD ERROR: DIError occurred: {}".format(data))
             if not isinstance(data, dict):
                 raise Exception("IDENTITY LOAD ERROR: Failed to load dictionary accounts data; response: {}".format(data))
 
@@ -109,8 +116,7 @@ class Identity(DIRepresentable):
             "lastLogin": self.lastLogin,
             "authToken": self.authToken,
             "auditLogs": auditLogs,
-            "otpCode": self.otpCode,
-            "emailVerified": str(self.emailVerified),
+            "emailVerification": self.emailVerification.represent(),
             "created": self.created,
             "files": files
         }
@@ -148,10 +154,68 @@ class Identity(DIRepresentable):
     def ref(id):
         return Ref("accounts", id)
     
+class EmailVerification(DIRepresentable):
+    def __init__(self, accountID: str, verified: bool=False, otpCode: str=None, dispatchTimestamp: str=None) -> None:
+        self.accountID = accountID
+        self.verified = verified
+        self.otpCode = otpCode
+        self.dispatchTimestamp = dispatchTimestamp
+        self.originRef = EmailVerification.ref(accountID)
+        
+    @staticmethod
+    def rawLoad(data: Dict[str, Any], accountID: str) -> 'EmailVerification':
+        requiredParams = ['verified', 'otpCode', 'dispatchTimestamp']
+        for reqParam in requiredParams:
+            if reqParam not in data:
+                if reqParam == 'verified':
+                    data[reqParam] = False
+                else:
+                    data[reqParam] = None
+        
+        return EmailVerification(
+            accountID=accountID,
+            verified=data['verified'] == "True",
+            otpCode=data['otpCode'],
+            dispatchTimestamp=data['dispatchTimestamp']
+        )
+    
+    @staticmethod
+    def load(accountID: str) -> 'EmailVerification | None':
+        data = DI.load(EmailVerification.ref(accountID))
+        if data == None:
+            return None
+        if isinstance(data, DIError):
+            raise Exception("EMAILVERIFICATION LOAD ERROR: DIError occurred: {}".format(data))
+        if not isinstance(data, dict):
+            raise Exception("EMAILVERIFICATION LOAD ERROR: Unexpected DI load response format; response: {}".format(data))
+        
+        return EmailVerification.rawLoad(data, accountID)
+    
+    def represent(self) -> Dict[str, Any]:
+        return {
+            "verified": str(self.verified),
+            "otpCode": self.otpCode,
+            "dispatchTimestamp": self.dispatchTimestamp
+        }
+    
+    def save(self) -> bool:
+        convertedData = self.represent()
+        
+        return DI.save(convertedData, self.originRef)
+    
+    def destroy(self):
+        return DI.save({}, self.originRef)
+    
+    @staticmethod
+    def ref(accountID: str) -> Ref:
+        return Ref("accounts", accountID, "emailVerification")
+    
 class AuditLog(DIRepresentable):
-    def __init__(self, accountID: str, event: str, text: str, id: str=None, timestamp: str=Universal.utcNowString()) -> None:
+    def __init__(self, accountID: str, event: str, text: str, id: str=None, timestamp: str=None) -> None:
         if id == None:
             id = uuid4().hex
+        if timestamp == None:
+            timestamp = Universal.utcNowString()
             
         self.id = id
         self.accountID = accountID
