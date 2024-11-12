@@ -112,6 +112,9 @@ def boot():
     from api import apiBP
     app.register_blueprint(apiBP)
     
+    if len(sys.argv) > 1 and sys.argv[1] == "r":
+        print(DI.save(None))
+    
     print()
     print("MAIN: All services online. Booting Access 'v{}'...".format(Universal.version))
     port = os.environ.get('RuntimePort', 8000)

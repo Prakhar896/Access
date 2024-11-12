@@ -234,6 +234,8 @@ def resendEmailVerification(user: Identity | None=None):
         
         ## Check if email is even valid
         usernameOrEmail = request.json["usernameOrEmail"].strip()
+        if len(usernameOrEmail) == 0:
+            return "UERROR: Username/email cannot be empty.", 400
         if "@" in usernameOrEmail:
             if not re.match("^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", usernameOrEmail):
                 return "UERROR: Email is not in the correct format.", 400
