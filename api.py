@@ -180,6 +180,17 @@ def logout(user: Identity):
     session.clear()
     return "SUCCESS: Logged out successfully.", 200
 
+@apiBP.route("/identity/session", methods=["GET"])
+@checkSession(strict=True)
+def getSession():
+    return {
+        "message": "SUCCESS: Session parameters retrieved.",
+        "session": {
+            "username": session["username"],
+            "sessionStart": session["sessionStart"]
+        }
+    }
+
 @apiBP.route("/identity/verifyOTP", methods=["POST"])
 @jsonOnly
 @checkAPIKey
