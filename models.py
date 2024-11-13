@@ -1,7 +1,6 @@
 from uuid import uuid4
 from typing import List, Dict, Any
 from database import *
-from database import DIRepresentable
 from services import Universal
 from utils import Ref
 

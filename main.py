@@ -36,7 +36,8 @@ def allowed_file(filename):
 availableAssets = []
 if os.path.isdir(os.path.join(os.getcwd(), "assets")):
     for file in os.listdir(os.path.join(os.getcwd(), "assets")):
-        availableAssets.append(file)
+        if os.path.isfile(os.path.join(os.getcwd(), "assets", file)):
+            availableAssets.append(file)
 
 print("MAIN BOOT: Assets available: " + ", ".join(availableAssets))
 
@@ -57,24 +58,16 @@ def updateAnalytics():
 
 @app.route('/version')
 def version():
-    if Universal.version == None:
-        num = Universal.getVersion()
-        if num == "Version File Not Found":
-            num = "Version information could not be obtained."
-    else:
-        num = Universal.version
-
-    return render_template('version.html', versionNum=num)
+    return render_template('version.html', versionNum="Version information could not be obtained." if Universal.version == None else Universal.version)
 
 @app.errorhandler(404)
 def page_not_found(e):
     if request.path.startswith("/assets") or request.path.startswith("/src/assets") or request.path.startswith("/favicon.ico"):
-        Logger.log("404 AT: {}".format(request.path))
         asset = request.path.split("/")[-1]
         if asset in availableAssets:
             return send_from_directory(os.path.join(os.getcwd(), "assets"), asset)
         return "ERROR: Asset not found.", 404
-    return redirect(url_for('index'))
+    return redirect(url_for('version'))
 
 def boot():
     ver = Universal.getVersion()

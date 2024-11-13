@@ -4,6 +4,11 @@ import os, functools, time, datetime
 from dotenv import load_dotenv
 load_dotenv()
 
+class CheckSessionOutput:
+    def __init__(self, reason: str, outputValue) -> None:
+        self.reason = reason
+        self.outputValue = outputValue
+
 def debug(func):
     """Print the function signature and return value"""
     @functools.wraps(func)
@@ -19,6 +24,17 @@ def debug(func):
         print(f"{func.__name__}() returned {repr(value)}")
         return value
     return wrapper_debug
+
+def sessionCheckDebug(func):
+    """Examine how the session was checked."""
+    @functools.wraps(func)
+    def wrapper_sessionCheckDebug(*args, **kwargs):
+        res: CheckSessionOutput = func(*args, **kwargs)
+        if os.environ.get("DECORATOR_DEBUG_MODE", "False") == "True":
+            print("CHECKSESSION DEBUG: Return: {}, Reason: {}".format(res.outputValue, res.reason))
+        return res.outputValue
+    
+    return wrapper_sessionCheckDebug
 
 def slow_down(_func=None, *, rate=1):
     """Sleep given amount of seconds before calling the function"""
@@ -117,59 +133,65 @@ def checkSession(_func=None, *, strict=False, provideIdentity=False):
     def decorator_checkSession(func):
         @functools.wraps(func)
         @debug
+        @sessionCheckDebug
         def wrapper_checkSession(*args, **kwargs):
             # Helper function to handle return cases
-            def handleReturn(msg: str, code: int, user: Identity | None=None, clearSessionForErrorCodes: bool = True):                
+            def handleReturn(msg: str, code: int, reason: str=None, user: Identity | None=None, clearSessionForErrorCodes: bool = True):
                 if code != 200 and clearSessionForErrorCodes and len(session.keys()) != 0:
                     session.clear()
                 
                 if code != 200 and strict:
-                    return msg, code
+                    return CheckSessionOutput(reason, (msg, code))
                 elif provideIdentity and user != None:
-                    return func(user, *args, **kwargs)
+                    return CheckSessionOutput(reason, func(user, *args, **kwargs))
                 else:
-                    return func(*args, **kwargs)
+                    return CheckSessionOutput(reason, func(*args, **kwargs))
             
             # List of required parameters in a session
-            requiredParams = ["username", "authToken", "sessionStart"]
+            requiredParams = ["aID", "username", "authToken", "sessionStart"]
             
             # Check if session parameters match up
             if len(session.keys()) != len(requiredParams):
-                return handleReturn("ERROR: Invalid session.", 401)
+                return handleReturn("ERROR: Invalid session.", 401, reason="Session parameter count mismatch.")
             
             # Check if session is corrupted
             for param in requiredParams:
                 if param not in session:
-                    return handleReturn("ERROR: Invalid session.", 401)
+                    return handleReturn("ERROR: Invalid session.", 401, reason="Session parameter '{}' missing.".format(param))
             
             # If strict mode, verify the session by trying to load the user based on it.
             user = None
             if strict or provideIdentity:
                 try:
                     # Load the user by passing in the session's authToken
-                    user = Identity.load(authToken=session["authToken"])
+                    user = Identity.load(id=session["aID"])
                     if not isinstance(user, Identity):
                         # If the user was not found, reset the session and return an error.
-                        return handleReturn("ERROR: Invalid session.", 401)
+                        return handleReturn("ERROR: Invalid session.", 401, reason="User not found.")
+                    if user.authToken != session["authToken"]:
+                        # If the authToken does not match, reset the session and return an error.
+                        user.authToken = None
+                        user.save()
+                        return handleReturn("ERROR: Invalid session.", 401, reason="AuthToken mismatch.")
                 except Exception as e:
                     Logger.log("CHECKSESSION ERROR: Failed to load user for strict auth token verification. Error: {}".format(e))
-                    return handleReturn("ERROR: Invalid session.", 401)
+                    return handleReturn("ERROR: Invalid session.", 401, reason="Exception in user loading.")
                     
                 try:
                     # Check the session start time for expiration cases
                     if not isinstance(user.lastLogin, str):
-                        return handleReturn("ERROR: Invalid session.", 401)
+                        return handleReturn("ERROR: Invalid session.", 401, reason="Invalid lastLogin.")
                     if (Universal.utcNow() - Universal.fromUTC(user.lastLogin)).total_seconds() > 7200:
                         ## Session expired
                         user.authToken = None
                         user.save()
-                        return handleReturn("ERROR: Session expired.", 401)
+                        return handleReturn("ERROR: Session expired.", 401, reason="Session expired.")
                 except Exception as e:
                     Logger.log("CHECKSESSION ERROR: Failed to process session expiration status. Error: {}".format(e))
-                    return handleReturn("ERROR: Invalid session.", 401)
+                    return handleReturn("ERROR: Invalid session.", 401, reason="Exception in session expiration.")
             
             # Let handleReturn handle the success case
-            return handleReturn("SUCCESS: Session verified.", 200, user)
+            return handleReturn("SUCCESS: Session verified.", 200, reason="Session valid.", user=user)
         
         return wrapper_checkSession
 

@@ -164,11 +164,21 @@ def loginIdentity(user: Identity | None=None):
     account.save()
     
     # Update user session
+    session["aID"] = account.id
     session["username"] = account.username
     session["authToken"] = authToken
     session["sessionStart"] = account.lastLogin
     
     return "SUCCESS: Logged in successfully.", 200
+
+@apiBP.route("/identity/logout", methods=["GET"])
+@checkSession(strict=True, provideIdentity=True)
+def logout(user: Identity):
+    user.authToken = None
+    user.save()
+    
+    session.clear()
+    return "SUCCESS: Logged out successfully.", 200
 
 @apiBP.route("/identity/verifyOTP", methods=["POST"])
 @jsonOnly
