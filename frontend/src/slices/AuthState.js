@@ -26,7 +26,7 @@ const authSlice = createSlice({
 export const { setUsername, setLoaded, setError } = authSlice.actions;
 
 export const fetchSession = () => async (dispatch) => {
-    console.log('Fetching session...');
+    // console.log('Fetching session...');
     dispatch(setLoaded(false));
     try {
         const response = await server.get('/identity/session');
@@ -36,17 +36,23 @@ export const fetchSession = () => async (dispatch) => {
         dispatch(setUsername(response.data.username));
         dispatch(setLoaded(true));
     } catch (err) {
-        console.log('Error fetching session:', err);
+        var e = null;
         if (err.response && err.response.data && typeof err.response.data === 'string') {
             dispatch(setError(err.response.data));
+            e = err.response.data;
         } else if (err.message && typeof err.message === 'string') {
             dispatch(setError(err.message));
+            e = err.message;
         } else if (typeof err === 'string') {
             dispatch(setError(err));
+            e = err;
         } else {
             dispatch(setError('An unknown error occurred.'));
+            e = 'An unknown error occurred.';
         }
         dispatch(setLoaded(true));
+
+        console.log("Error fetching session:", e);
     }
 };
 
