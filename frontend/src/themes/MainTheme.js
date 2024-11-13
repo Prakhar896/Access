@@ -5,7 +5,8 @@ const colors = {
 }
 
 const MainTheme = extendTheme({
-    colors,
+    initialColorMode: 'dark',
+    useSystemColorMode: true,
     components: {
         Button: {
             baseStyle: {

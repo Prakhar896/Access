@@ -1,20 +1,17 @@
-import { Box, Button, Heading, Text } from '@chakra-ui/react'
+import { Box, Button, Heading, Image, Text, useColorMode } from '@chakra-ui/react'
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
+import colouredLogo from '/logo/svg/logo-color.svg';
 
 function Home() {
-    const [count, setCount] = useState(0)
-    const { username, error } = useSelector(state => state.auth)
-    
-    const increment = () => { setCount(count + 1) }
+    const { colorMode, toggleColorMode } = useColorMode();
 
     return (
-        <Box p={20}>
-            <Heading as={"h1"}>{!username ? "Hello!": "Hi " + username + "!"}</Heading>
-            <Text>Welcome back!</Text>
-            {error && <Text color={'red'}>{error}</Text>}
-            <Text>{count}</Text>
-            <Button onClick={increment} variant={'Default'}>Increment</Button>
+        <Box mt={{ base: '20px', lg: '30px' }} display={'flex'} flexDirection={'row'} maxW={'100%'} p={'10px'}>
+            <Image src={colouredLogo} alt={'Logo'} maxH={'100px'} rounded={'xl'} />
+            <Button onClick={toggleColorMode} variant={'Default'}>
+                Toggle {colorMode === 'light' ? 'Dark' : 'Light'}
+            </Button>
         </Box>
     )
 }

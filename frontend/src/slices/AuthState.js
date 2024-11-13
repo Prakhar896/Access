@@ -23,36 +23,41 @@ const authSlice = createSlice({
     },
 });
 
-export const { setUsername, setLoaded, setError } = authSlice.actions;
-
-export const fetchSession = () => async (dispatch) => {
-    // console.log('Fetching session...');
-    dispatch(setLoaded(false));
+export const retrieveSession = async () => {
     try {
         const response = await server.get('/identity/session');
         if (!response.data || !response.data.username) {
             throw new Error('Invalid response: ' + JSON.stringify(response.data));
         }
-        dispatch(setUsername(response.data.username));
-        dispatch(setLoaded(true));
+        return { username: response.data.username };
     } catch (err) {
         var e = null;
         if (err.response && err.response.data && typeof err.response.data === 'string') {
-            dispatch(setError(err.response.data));
             e = err.response.data;
         } else if (err.message && typeof err.message === 'string') {
-            dispatch(setError(err.message));
             e = err.message;
         } else if (typeof err === 'string') {
-            dispatch(setError(err));
             e = err;
         } else {
-            dispatch(setError('An unknown error occurred.'));
             e = 'An unknown error occurred.';
         }
-        dispatch(setLoaded(true));
 
         console.log("Error fetching session:", e);
+
+        return { error: e };
+    }
+}
+
+export const { setUsername, setLoaded, setError } = authSlice.actions;
+
+export const fetchSession = () => async (dispatch) => {
+    // console.log('Fetching session...');
+    dispatch(setLoaded(false));
+    const response = await retrieveSession();
+    if (response.username) {
+        dispatch(setUsername(response.username));
+    } else {
+        dispatch(setError(response.error));
     }
 };
 

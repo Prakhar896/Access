@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import { ChakraProvider } from '@chakra-ui/react'
+import { ChakraProvider, ColorModeScript } from '@chakra-ui/react'
 import { configureStore } from '@reduxjs/toolkit'
 import Layout from './Layout.jsx'
 import universalReducer from './slices/UniversalState.js'
@@ -22,6 +22,7 @@ const store = configureStore({
 createRoot(document.getElementById('root')).render(
     <Provider store={store}>
         <ChakraProvider theme={MainTheme} toastOptions={{ defaultOptions: { position: 'bottom-right' } }}>
+            <ColorModeScript initialColorMode={MainTheme.config.initialColorMode} />
             <BrowserRouter>
                 <Routes>
                     <Route path='/' element={<Layout />}>
