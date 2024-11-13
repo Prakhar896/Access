@@ -102,8 +102,8 @@ def boot():
     # Blueprint regirstrations
     
     ## API
-    from api import apiBP
-    app.register_blueprint(apiBP)
+    from identity import identityBP
+    app.register_blueprint(identityBP)
     
     if len(sys.argv) > 1 and sys.argv[1] == "r":
         print(DI.save(None))

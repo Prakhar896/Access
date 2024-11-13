@@ -5,7 +5,7 @@ from services import Encryption, Universal
 from emailer import Emailer
 from decorators import *
 
-apiBP = Blueprint('api', __name__)
+identityBP = Blueprint('api', __name__)
 
 def dispatchEmailVerification(destEmail: str, otpCode: str):
     text = """
@@ -32,7 +32,7 @@ def dispatchEmailVerification(destEmail: str, otpCode: str):
         )
     )
 
-@apiBP.route("/identity/new", methods=["POST"])
+@identityBP.route("/identity/new", methods=["POST"])
 @jsonOnly
 @checkAPIKey
 @enforceSchema(
@@ -110,7 +110,7 @@ def newIdentity():
     
     return "SUCCESS: Identity created. Verify email via OTP code dispatched.", 200
 
-@apiBP.route("/identity/login", methods=["POST"])
+@identityBP.route("/identity/login", methods=["POST"])
 @jsonOnly
 @checkAPIKey
 @enforceSchema(
@@ -171,7 +171,7 @@ def loginIdentity(user: Identity | None=None):
     
     return "SUCCESS: Logged in successfully.", 200
 
-@apiBP.route("/identity/logout", methods=["GET"])
+@identityBP.route("/identity/logout", methods=["GET"])
 @checkSession(strict=True, provideIdentity=True)
 def logout(user: Identity):
     user.authToken = None
@@ -180,7 +180,7 @@ def logout(user: Identity):
     session.clear()
     return "SUCCESS: Logged out successfully.", 200
 
-@apiBP.route("/identity/session", methods=["GET"])
+@identityBP.route("/identity/session", methods=["GET"])
 @checkSession(strict=True)
 def getSession():
     return {
@@ -191,7 +191,7 @@ def getSession():
         }
     }
 
-@apiBP.route("/identity/verifyOTP", methods=["POST"])
+@identityBP.route("/identity/verifyOTP", methods=["POST"])
 @jsonOnly
 @checkAPIKey
 @enforceSchema(
@@ -243,7 +243,7 @@ def verifyOTP():
     
     return "SUCCESS: Email verified successfully.", 200
 
-@apiBP.route("/identity/resendEmailVerification", methods=["POST"])
+@identityBP.route("/identity/resendEmailVerification", methods=["POST"])
 @checkAPIKey
 @checkSession(provideIdentity=True)
 def resendEmailVerification(user: Identity | None=None):
