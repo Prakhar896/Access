@@ -3,7 +3,7 @@
  * @param {import("@chakra-ui/react").CreateToastFnReturn} toast
  */
 export default (toast) => {
-    const showToast = (title, description, duration = 5000, isClosable = true, status = 'info', icon = null) => {
+    const showToast = (title, description, status = 'info', duration = 5000, isClosable = true, icon = null) => {
         if (!["success", "warning", "error", "info"].includes(status)) {
             status = "info"
         }
