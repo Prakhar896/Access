@@ -9,7 +9,7 @@ function Home() {
     const navigate = useNavigate();
 
     const toSignup = () => {
-        navigate('/login');
+        navigate('/signup');
     }
 
     return (
