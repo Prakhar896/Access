@@ -32,6 +32,8 @@ function SignUp() {
             );
     };
 
+    const buttonDisabled = !usernameInput || !email || !password || !confirmPassword;
+
     const requestOTP = () => {
         if (!usernameInput || !email || !password || !confirmPassword) {
             showToast('Please fill in all fields', '', 'error');
@@ -139,7 +141,7 @@ function SignUp() {
                             <Input placeholder='Re-enter your password' type='password' value={confirmPassword} onChange={handleConfirmPasswordChange} required />
                         </FormControl>
                     </VStack>
-                    <Button variant={'Default'} w={{ base: 'xs', md: 'md', lg: 'lg' }} mt={'10%'} onClick={requestOTP} isLoading={requestOTPLoading}>Get Started</Button>
+                    <Button variant={!buttonDisabled ? 'Default': 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} mt={'10%'} onClick={requestOTP} isDisabled={buttonDisabled} isLoading={requestOTPLoading}>Get Started</Button>
                 </Box>
                 <Spacer />
             </Box>
