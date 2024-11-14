@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import configureShowToast from '../components/showToast';
 
-function Login() {
+function SignUp() {
     const navigate = useNavigate();
     const toast = useToast();
     const showToast = configureShowToast(toast);
@@ -42,6 +42,10 @@ function Login() {
                             <FormLabel>Password</FormLabel>
                             <Input placeholder='Uppercase and numeric letters required' type='password' required />
                         </FormControl>
+                        <FormControl id='confirmPassword' required>
+                            <FormLabel>Confirm Password</FormLabel>
+                            <Input placeholder='Re-enter your password' type='confirmPassword' required />
+                        </FormControl>
                     </VStack>
                     <Button variant={'Default'} w={{ base: 'xs', md: 'md', lg: 'lg'}} mt={'10%'}>Get Started</Button>
                 </Box>
@@ -51,4 +55,4 @@ function Login() {
     )
 }
 
-export default Login
+export default SignUp
