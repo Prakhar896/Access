@@ -7,6 +7,7 @@ const colors = {
 const MainTheme = extendTheme({
     initialColorMode: 'dark',
     useSystemColorMode: true,
+    colors,
     components: {
         Button: {
             baseStyle: {
@@ -23,7 +24,8 @@ const MainTheme = extendTheme({
                     fontWeight: 'bold',
                     _hover: {
                         bg: '#ebedf0',
-                        color: 'primaryColour'
+                        color: 'primaryColour',
+                        boxShadow: 'md'
                     }
                 }
             }
