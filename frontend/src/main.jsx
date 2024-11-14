@@ -11,6 +11,7 @@ import MainTheme from './themes/MainTheme.js'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Version from './pages/Version.jsx'
 import Home from './pages/Home.jsx'
+import Login from './pages/Login.jsx'
 
 const store = configureStore({
     reducer: {
@@ -27,6 +28,7 @@ createRoot(document.getElementById('root')).render(
                 <Routes>
                     <Route path='/' element={<Layout />}>
                         <Route index element={<Home />} />
+                        <Route path='/login' element={<Login />} />
                     </Route>
                 </Routes>
             </BrowserRouter>
