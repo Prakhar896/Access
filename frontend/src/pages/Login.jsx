@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import colouredLogo from '/logo/svg/logo-color.svg';
 import { AbsoluteCenter, Box, Button, Center, FormControl, FormLabel, Heading, Image, Input, Spacer, Spinner, Text, useMediaQuery, useToast, VStack } from '@chakra-ui/react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import configureShowToast from '../components/showToast';
 import server from '../networking';
 
@@ -110,7 +110,9 @@ function Login() {
         <Box display={'flex'} flexDirection={'column'} justifyContent={'center'} maxW={'100%'} p={!limitedScreen ? '10px' : '0px'}>
             <Box display={'flex'} flexDirection={'column'} justifyContent={'space-between'} alignItems={'center'} mt={!limitedScreen ? '10%' : '20%'}>
                 <Spacer />
-                <Image src={colouredLogo} alt={'Logo'} maxH={'100px'} rounded={'xl'} />
+                <Link to={'/'}>
+                    <Image src={colouredLogo} alt={'Logo'} maxH={'100px'} rounded={'xl'} />
+                </Link>
                 <Spacer />
                 <Box display={'flex'} flexDir={'column'} justifyContent={'left'} alignItems={'center'} maxW={limitedScreen ? '70%' : '50%'} p={!limitedScreen ? '10px' : '0px'} mt={limitedScreen ? '20px' : '0px'}>
                     <Heading as={'h1'} size={'xl'}>Jump back in</Heading>

@@ -119,7 +119,9 @@ function SignUp() {
         <Box display={'flex'} flexDirection={'column'} justifyContent={'center'} maxW={'100%'} p={!limitedScreen ? '10px' : '0px'}>
             <Box display={'flex'} flexDirection={'column'} justifyContent={'space-between'} alignItems={'center'} mt={!limitedScreen ? '10%' : '20%'}>
                 <Spacer />
-                <Image src={colouredLogo} alt={'Logo'} maxH={'100px'} rounded={'xl'} />
+                <Link to={'/'}>
+                    <Image src={colouredLogo} alt={'Logo'} maxH={'100px'} rounded={'xl'} />
+                </Link>
                 <Spacer />
                 <Box display={'flex'} flexDir={'column'} justifyContent={'left'} alignItems={'center'} maxW={limitedScreen ? '70%' : '50%'} p={!limitedScreen ? '10px' : '0px'} mt={limitedScreen ? '20px' : '0px'}>
                     <Heading as={'h1'} size={'xl'}>Create an account</Heading>
