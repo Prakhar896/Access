@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import colouredLogo from '/logo/svg/logo-color.svg';
 import { AbsoluteCenter, Box, Button, Center, FormControl, FormLabel, Heading, Image, Input, Spacer, Spinner, Text, useMediaQuery, useToast, VStack } from '@chakra-ui/react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import configureShowToast from '../components/showToast';
 import server from '../networking';
 
@@ -58,51 +58,51 @@ function SignUp() {
             email: emailAddress,
             password: passwordText
         })
-        .then(response => {
-            if (response.status == 200) {
-                if (response.data && typeof response.data == "string") {
-                    if (response.data.startsWith("SUCCESS")) {
-                        showToast('Success', 'Please check your email for the verification link.', 'success');
-                    } else if (response.data.startsWith("UERROR")) {
-                        console.log("User error occurred in new identity creation; response:", response.data);
-                        showToast("Something went wrong", response.data.substring("UERROR: ".length), 'error');
+            .then(response => {
+                if (response.status == 200) {
+                    if (response.data && typeof response.data == "string") {
+                        if (response.data.startsWith("SUCCESS")) {
+                            showToast('Success', 'Please check your email for the verification link.', 'success');
+                        } else if (response.data.startsWith("UERROR")) {
+                            console.log("User error occurred in new identity creation; response:", response.data);
+                            showToast("Something went wrong", response.data.substring("UERROR: ".length), 'error');
+                        } else {
+                            console.log("Unknown response from server in new identity creation; response:", response.data);
+                            showToast("Something went wrong", "An error occurred. Please try again.", 'error');
+                        }
                     } else {
-                        console.log("Unknown response from server in new identity creation; response:", response.data);
+                        console.log("Unexpected response in new identity creation; response:", response.data);
                         showToast("Something went wrong", "An error occurred. Please try again.", 'error');
                     }
                 } else {
-                    console.log("Unexpected response in new identity creation; response:", response.data);
+                    console.log("Non-200 status code in new identity creation; response:", response.data);
                     showToast("Something went wrong", "An error occurred. Please try again.", 'error');
                 }
-            } else {
-                console.log("Non-200 status code in new identity creation; response:", response.data);
-                showToast("Something went wrong", "An error occurred. Please try again.", 'error');
-            }
 
-            setRequestOTPLoading(false);
-        })
-        .catch(err => {
-            if (err.response && err.response.data && typeof err.response.data == "string") {
-                if (err.response.data.startsWith("UERROR")) {
-                    console.log("User error occurred in new identity creation; response:", err.response.data);
-                    showToast("Something went wrong", err.response.data.substring("UERROR: ".length), 'error');
-                } else if (err.response.data.startsWith("ERROR")) {
-                    console.log("Error occurred in new identity creation; response:", err.response.data);
-                    showToast("Something went wrong", "Failed to create account. Please try again.", 'error');
+                setRequestOTPLoading(false);
+            })
+            .catch(err => {
+                if (err.response && err.response.data && typeof err.response.data == "string") {
+                    if (err.response.data.startsWith("UERROR")) {
+                        console.log("User error occurred in new identity creation; response:", err.response.data);
+                        showToast("Something went wrong", err.response.data.substring("UERROR: ".length), 'error');
+                    } else if (err.response.data.startsWith("ERROR")) {
+                        console.log("Error occurred in new identity creation; response:", err.response.data);
+                        showToast("Something went wrong", "Failed to create account. Please try again.", 'error');
+                    } else {
+                        console.log("Unknown response from server in new identity creation; response:", err.response.data);
+                        showToast("Something went wrong", "An error occurred. Please try again.", 'error');
+                    }
+                } else if (err.message) {
+                    console.log("Error occurred in new identity creation; message:", err.message);
+                    showToast("Something went wrong", "An error occurred. Please try again.", 'error');
                 } else {
-                    console.log("Unknown response from server in new identity creation; response:", err.response.data);
+                    console.log("Unknown error occurred in new identity creation; error:", err);
                     showToast("Something went wrong", "An error occurred. Please try again.", 'error');
                 }
-            } else if (err.message) {
-                console.log("Error occurred in new identity creation; message:", err.message);
-                showToast("Something went wrong", "An error occurred. Please try again.", 'error');
-            } else {
-                console.log("Unknown error occurred in new identity creation; error:", err);
-                showToast("Something went wrong", "An error occurred. Please try again.", 'error');
-            }
 
-            setRequestOTPLoading(false);
-        })
+                setRequestOTPLoading(false);
+            })
     }
 
     useEffect(() => {
@@ -141,7 +141,10 @@ function SignUp() {
                             <Input placeholder='Re-enter your password' type='password' value={confirmPassword} onChange={handleConfirmPasswordChange} required />
                         </FormControl>
                     </VStack>
-                    <Button variant={!buttonDisabled ? 'Default': 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} mt={'10%'} onClick={requestOTP} isDisabled={buttonDisabled} isLoading={requestOTPLoading}>Get Started</Button>
+                    <VStack mt={'10%'}>
+                        <Text>Already have an account? <Button variant={'link'} color={'black'} onClick={() => navigate('/login')}>Login here.</Button></Text>
+                        <Button variant={!buttonDisabled ? 'Default' : 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} onClick={requestOTP} isDisabled={buttonDisabled} isLoading={requestOTPLoading}>Get Started</Button>
+                    </VStack>
                 </Box>
                 <Spacer />
             </Box>

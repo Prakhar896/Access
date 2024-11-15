@@ -124,7 +124,10 @@ function Login() {
                             <Input onKeyUp={handleFieldEnter} placeholder='Uppercase and numeric letters required' type='password' value={password} onChange={handlePasswordChange} required />
                         </FormControl>
                     </VStack>
-                    <Button variant={!buttonDisabled ? 'Default': 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} mt={'10%'} onClick={login} isDisabled={buttonDisabled} isLoading={loginLoading}>Sign in</Button>
+                    <VStack mt={'10%'}>
+                        <Text>Not a user yet? <Button variant={'link'} color={'black'} onClick={() => navigate('/signup')} >Sign up here.</Button></Text>
+                        <Button variant={!buttonDisabled ? 'Default': 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} onClick={login} isDisabled={buttonDisabled} isLoading={loginLoading}>Sign in</Button>
+                    </VStack>
                 </Box>
                 <Spacer />
             </Box>
