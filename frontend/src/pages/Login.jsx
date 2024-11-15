@@ -54,6 +54,7 @@ function Login() {
                 if (response.data && typeof response.data == "string") {
                     if (response.data.startsWith("SUCCESS")) {
                         showToast('Success', 'Logged in successfully!', 'success');
+                        navigate('/portal/files');
                     } else if (response.data.startsWith("UERROR")) {
                         console.log("User error occurred in login; response:", response.data);
                         showToast("Something went wrong", response.data.substring("UERROR: ".length), 'error');
