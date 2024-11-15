@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import colouredLogo from '/logo/svg/logo-color.svg';
 import { AbsoluteCenter, Box, Button, Center, FormControl, FormLabel, Heading, Image, Input, ScaleFade, Spacer, Spinner, Text, useMediaQuery, useToast, VStack } from '@chakra-ui/react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import configureShowToast from '../components/showToast';
 import server from '../networking';
 import { fetchSession } from '../slices/AuthState';
@@ -11,13 +11,14 @@ import CentredSpinner from '../components/CentredSpinner';
 function Login() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const { state } = useLocation();
     const toast = useToast();
     const showToast = configureShowToast(toast);
     const { username, loaded, error } = useSelector(state => state.auth);
     const [limitedScreen] = useMediaQuery("(max-width: 800px)");
 
     const [loginLoading, setLoginLoading] = useState(false);
-    const [usernameOrEmail, setUsernameOrEmail] = useState('');
+    const [usernameOrEmail, setUsernameOrEmail] = useState(state && state.email ? state.email : '');
     const [password, setPassword] = useState('');
 
     const handleUsernameOrEmailChange = (e) => { setUsernameOrEmail(e.target.value); }
