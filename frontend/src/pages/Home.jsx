@@ -1,4 +1,4 @@
-import { Box, Button, Heading, Image, Spacer, Spinner, Text, useColorMode, useMediaQuery } from '@chakra-ui/react'
+import { Box, Button, ButtonGroup, Heading, Image, Spacer, Spinner, Text, useColorMode, useMediaQuery } from '@chakra-ui/react'
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
 import colouredLogo from '/logo/svg/logo-color.svg';
@@ -10,6 +10,10 @@ function Home() {
 
     const toSignup = () => {
         navigate('/signup');
+    }
+
+    const toLogin = () => {
+        navigate('/login');
     }
 
     return (
@@ -26,7 +30,10 @@ function Home() {
                     <br />
                     <Text>Access offers a variety of unique features like audit logs, share links and much more. What're you waiting for?</Text>
                     <br />
-                    <Button variant={'Default'} size={'lg'} mt={'20px'} onClick={toSignup}>Get Started</Button>
+                    <ButtonGroup variant='Default' spacing='6'>
+                        <Button onClick={toSignup} w={{ base: 'fit-content', lg: '120px'}}>Sign up</Button>
+                        <Button onClick={toLogin} w={{ base: 'fit-content', lg: '120px'}}>Login</Button>
+                    </ButtonGroup>
                 </Box>
                 <Spacer />
             </Box>
