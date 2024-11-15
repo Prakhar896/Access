@@ -2,7 +2,7 @@
  * Usage: showToast(title, description, duration, isClosable, status, icon)
  * @param {import("@chakra-ui/react").CreateToastFnReturn} toast
  */
-export default (toast) => {
+export const configureShowToast = (toast) => {
     const showToast = (title, description, status = 'info', duration = 5000, isClosable = true, icon = null) => {
         if (!["success", "warning", "error", "info"].includes(status)) {
             status = "info"
@@ -25,3 +25,5 @@ export default (toast) => {
 
     return showToast
 }
+
+export default configureShowToast;
