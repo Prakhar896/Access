@@ -201,6 +201,7 @@ def getSession():
 @enforceSchema(
     ("otpCode", str)
 )
+@slow_down(rate=5)
 def verifyOTP():
     # Preprocess data
     if "userID" not in request.json and "usernameOrEmail" not in request.json:
@@ -210,11 +211,11 @@ def verifyOTP():
     usernameOrEmail: str = request.json["usernameOrEmail"].strip() if "usernameOrEmail" in request.json else None
     otpCode: str = request.json["otpCode"].strip()
     
-    if len(usernameOrEmail) == 0 or len(otpCode) == 0:
-        return "UERROR: Username/email and OTP code cannot be empty.", 400
+    if (userID == None and usernameOrEmail == None) or len(otpCode) == 0:
+        return "ERROR: Invalid request.", 400
     
     # Check if email is even valid
-    if "@" in usernameOrEmail:
+    if usernameOrEmail != None and "@" in usernameOrEmail:
         if not re.match("^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", usernameOrEmail):
             return "UERROR: Email is not in the correct format.", 400
     
@@ -239,9 +240,9 @@ def verifyOTP():
     if verificationInfo.verified:
         return "UERROR: Email already verified.", 400
     if verificationInfo.otpCode == None:
-        return "UERROR: No OTP code to verify.", 400
+        return "UERROR: No code to verify.", 400
     if verificationInfo.otpCode != otpCode:
-        return "UERROR: Invalid OTP code.", 401
+        return "UERROR: Invalid verification code.", 401
     
     verificationInfo.otpCode = None
     verificationInfo.dispatchTimestamp = None

@@ -15,20 +15,25 @@ function VerifyEmail() {
     const [messageColour, setMessageColour] = useState('black');
     const [messageHidden, setMessageHidden] = useState(true);
     const [codeInputHidden, setCodeInputHidden] = useState(true);
+    const [codeLengthHitOnce, setCodeLengthHitOnce] = useState(false);
     const [verificationLoading, setVerificationLoading] = useState(false);
     const [limitedScreen] = useMediaQuery("(max-width: 800px)");
     const toast = useToast()
     const showToast = configureShowToast(toast);
-    const dispatch = useDispatch();
-    const { username, loaded, error } = useSelector(state => state.auth);
+    const { loaded } = useSelector(state => state.auth);
     const [code, setCode] = useState(searchParams.get('code') || '');
     const [userID, setUserID] = useState(searchParams.get('id') || '');
     const [email, setEmail] = useState('');
 
     const buttonDisabled = !code || !userID;
 
-    const handleCodeChange = (e) => { setCode(e.target.value); };
-    const handleFieldEnter = () => { verifyOTP(); };
+    const handleCodeChange = (e) => {
+        if (e.target.value.length === 6 && !codeLengthHitOnce) {
+            setCodeLengthHitOnce(true);
+        }
+        setCode(e.target.value);
+    };
+    const handleFieldEnter = (e) => { if (e.key === 'Enter') { verifyOTP(); } }
     const updateMessageField = (message, status) => {
         setMessage(message);
         setMessageHidden(false);
@@ -42,18 +47,73 @@ function VerifyEmail() {
         }
     }
 
-    const verifyOTP = () => {
+    const verifyOTP = (id = structuredClone(userID)) => {
+        if (!id) {
+            updateMessageField('Invalid verification link.', 'error');
+            return;
+        }
         if (code.length !== 6) {
-            updateMessageField('Invalid verification code', 'error');
+            updateMessageField('Invalid verification code.', 'error');
             setCodeInputHidden(false);
             return;
         }
 
         setVerificationLoading(true);
+        setMessageHidden(true);
+        server.post('/identity/verifyOTP', {
+            userID: id,
+            otpCode: code
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    if (response.data && typeof response.data === 'string') {
+                        if (response.data.startsWith('SUCCESS')) {
+                            showToast('Email verified!', 'You can now sign in.', 'success');
+                            navigate('/login', {
+                                state: {
+                                    email: email
+                                }
+                            });
+                        } else {
+                            console.log("Unknown response from server in login; response:", response.data);
+                            showToast('Something went wrong', "Couldn't verify email. Please try again.", 'error');
+                        }
+                    } else {
+                        console.log("Unexpected response in login; response:", response.data);
+                        showToast('Something went wrong', "Couldn't verify email. Please try again.", 'error');
+                    }
+                } else {
+                    console.log("Non-200 status code in login; response:", response.data);
+                    showToast('Something went wrong', "Couldn't verify email. Please try again.", 'error');
+                }
+
+                setVerificationLoading(false);
+                setCodeInputHidden(false);
+            })
+            .catch(err => {
+                if (err.response && err.response.data && typeof err.response.data == "string") {
+                    if (err.response.data.startsWith("UERROR")) {
+                        console.log("User error occurred in login; response:", err.response.data);
+                        updateMessageField(err.response.data.substring("UERROR: ".length), 'error');
+                    } else {
+                        console.log("Error occurred in login; response:", err.response.data);
+                        showToast('Something went wrong', "Couldn't verify email. Please try again.", 'error');
+                    }
+                } else if (err.message) {
+                    console.log("Error occurred in login; message:", err.message);
+                    showToast('Something went wrong', "Couldn't verify email. Please try again.", 'error');
+                } else {
+                    console.log("Unknown error occurred in login; error:", err);
+                    showToast('Something went wrong', "Couldn't verify email. Please try again.", 'error');
+                }
+
+                setVerificationLoading(false);
+                setCodeInputHidden(false);
+            })
     }
 
     useEffect(() => {
-        var id = userID;
+        var id = structuredClone(userID);
         if (state) {
             if (state.userID) {
                 setUserID(state.userID);
@@ -73,9 +133,15 @@ function VerifyEmail() {
             setCodeInputHidden(false);
             return
         } else {
-            verifyOTP();
+            verifyOTP(id);
         }
     }, [])
+
+    useEffect(() => {
+        if (codeLengthHitOnce) {
+            verifyOTP();
+        }
+    }, [code])
 
     if (!loaded) {
         return <CentredSpinner />
@@ -101,7 +167,7 @@ function VerifyEmail() {
                             </VStack>
                             <VStack mt={'10%'} spacing={'20px'}>
                                 <Text color={messageColour} hidden={messageHidden} >{message}</Text>
-                                <Button variant={!buttonDisabled ? 'Default' : 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} onClick={verifyOTP} isDisabled={buttonDisabled} isLoading={verificationLoading} loadingText={'Verifying...'}>Sign in</Button>
+                                <Button variant={!buttonDisabled ? 'Default' : 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} onClick={() => verifyOTP()} isDisabled={buttonDisabled} isLoading={verificationLoading} loadingText={'Verifying...'}>Verify</Button>
                             </VStack>
                         </Box>
                     </ScaleFade>
