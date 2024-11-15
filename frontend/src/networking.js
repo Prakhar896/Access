@@ -9,6 +9,7 @@ instance.interceptors.request.use((config) => {
     if (config.method == "post") {
         config.headers["Content-Type"] = "application/json"
     }
+    config.withCredentials = true;
 
     return config;
 }, (err) => {

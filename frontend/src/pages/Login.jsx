@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import colouredLogo from '/logo/svg/logo-color.svg';
 import { AbsoluteCenter, Box, Button, Center, FormControl, FormLabel, Heading, Image, Input, Spacer, Spinner, Text, useMediaQuery, useToast, VStack } from '@chakra-ui/react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import configureShowToast from '../components/showToast';
 import server from '../networking';
+import { fetchSession } from '../slices/AuthState';
 
 function Login() {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const toast = useToast();
     const showToast = configureShowToast(toast);
     const { username, loaded, error } = useSelector(state => state.auth);
@@ -54,6 +56,7 @@ function Login() {
                 if (response.data && typeof response.data == "string") {
                     if (response.data.startsWith("SUCCESS")) {
                         showToast('Success', 'Logged in successfully!', 'success');
+                        dispatch(fetchSession());
                         navigate('/portal/files');
                     } else if (response.data.startsWith("UERROR")) {
                         console.log("User error occurred in login; response:", response.data);
@@ -99,6 +102,7 @@ function Login() {
 
     useEffect(() => {
         if (username) {
+            showToast("You're already signed in", '', 'info');
             navigate('/');
         }
     }, [username, loaded])

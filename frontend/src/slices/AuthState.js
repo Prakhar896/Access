@@ -26,10 +26,10 @@ const authSlice = createSlice({
 export const retrieveSession = async () => {
     try {
         const response = await server.get('/identity/session');
-        if (!response.data || !response.data.username) {
+        if (!response.data || !response.data.session) {
             throw new Error('Invalid response: ' + JSON.stringify(response.data));
         }
-        return { username: response.data.username };
+        return response.data.session;
     } catch (err) {
         var e = null;
         if (err.response && err.response.data && typeof err.response.data === 'string') {
