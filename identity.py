@@ -202,7 +202,6 @@ def getSession():
 @enforceSchema(
     ("otpCode", str)
 )
-@slow_down(rate=5)
 def verifyOTP():
     # Preprocess data
     if "userID" not in request.json and "usernameOrEmail" not in request.json:
@@ -230,25 +229,40 @@ def verifyOTP():
         Logger.log("IDENTITY OTP VERIFY ERROR: Failed to find identity. Error: {}".format(e))
         return "ERROR: Failed to process request. Please try again.", 500
     
-    verificationInfo = account.emailVerification
-    if verificationInfo.verified and verificationInfo.otpCode != None:
-        verificationInfo.otpCode = None
-        verificationInfo.otpCode = None
-        verificationInfo.save()
+    if account.emailVerification.verified and account.emailVerification.otpCode != None:
+        account.emailVerification.otpCode = None
+        account.emailVerification.otpCode = None
+        account.emailVerification.save()
         
         session.clear()
         return "UERROR: Something went wrong. Please verify your email and login again.", 401
-    if verificationInfo.verified:
+    if account.emailVerification.verified:
         return "UERROR: Email already verified.", 400
-    if verificationInfo.otpCode == None:
+    if account.emailVerification.otpCode == None:
         return "UERROR: No code to verify.", 400
-    if verificationInfo.otpCode != otpCode:
+    if account.emailVerification.otpCode != otpCode:
         return "UERROR: Invalid verification code.", 401
     
-    verificationInfo.otpCode = None
-    verificationInfo.dispatchTimestamp = None
-    verificationInfo.verified = True
-    verificationInfo.save()
+    account.emailVerification.otpCode = None
+    account.emailVerification.dispatchTimestamp = None
+    account.emailVerification.verified = True
+    
+    emailVerifiedLog = AuditLog(
+        accountID=account.id,
+        event="EmailVerified",
+        text="Email verified successfully."
+    )
+    
+    if not AFManager.checkIfFolderIsRegistered(account.id):
+        res = AFManager.registerFolder(account.id)
+        if isinstance(res, AFMError):
+            Logger.log("IDENTITY VERIFYOTP ERROR: Failed to register folder for account '{}'. Error: {}".format(account.id, res))
+        else:
+            folderRegisteredLog = AuditLog(account.id, "DirectoryRegistered", "Registered storage directory for account.")
+            account.auditLogs[folderRegisteredLog.id] = folderRegisteredLog
+    
+    account.auditLogs[emailVerifiedLog.id] = emailVerifiedLog
+    account.save()
     
     return "SUCCESS: Email verified successfully.", 200
 
@@ -293,8 +307,5 @@ def resendEmailVerification(user: Identity | None=None):
     user.emailVerification.save()
     
     dispatchEmailVerification(user.email, otpCode)
-    
-    # Register directory
-    
     
     return "SUCCESS: Email verification OTP code dispatched.", 200
