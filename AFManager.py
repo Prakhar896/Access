@@ -65,6 +65,19 @@ class AFManager:
             return filenames
         else:
             return AFMError("Folder does not exist.")
+        
+    @staticmethod
+    def renameFile(userID, filename, newFilename: str):
+        if not AFManager.checkIfFolderIsRegistered(userID):
+            return AFMError("Folder does not exist.")
+        if not os.path.isfile(AFManager.userFilePath(userID, filename)):
+            return AFMError("File does not exist.")
+        
+        try:
+            os.rename(AFManager.userFilePath(userID, filename), AFManager.userFilePath(userID, newFilename))
+            return True
+        except Exception as e:
+            return AFMError("Error occurred in renaming file: {}".format(e))
 
     @staticmethod
     def deleteFile(userID, filename):
