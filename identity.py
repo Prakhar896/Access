@@ -108,7 +108,10 @@ def newIdentity():
     # Dispatch OTP verification email
     dispatchEmailVerification(account.email, otpCode)
     
-    return "SUCCESS: Identity created. Verify email via OTP code dispatched.", 200
+    return {
+        "message": "SUCCESS: Identity created. Verify email via OTP code dispatched.",
+        "aID": account.id
+    }, 200
 
 @identityBP.route("/identity/login", methods=["POST"])
 @jsonOnly
@@ -186,6 +189,7 @@ def getSession():
     return {
         "message": "SUCCESS: Session parameters retrieved.",
         "session": {
+            "aID": session["aID"],
             "username": session["username"],
             "sessionStart": session["sessionStart"]
         }
@@ -195,12 +199,15 @@ def getSession():
 @jsonOnly
 @checkAPIKey
 @enforceSchema(
-    ("usernameOrEmail", str),
     ("otpCode", str)
 )
 def verifyOTP():
     # Preprocess data
-    usernameOrEmail: str = request.json["usernameOrEmail"].strip()
+    if "userID" not in request.json and "usernameOrEmail" not in request.json:
+        return "ERROR: Invalid request.", 400
+    
+    userID: str = request.json["userID"].strip() if "userID" in request.json else None
+    usernameOrEmail: str = request.json["usernameOrEmail"].strip() if "usernameOrEmail" in request.json else None
     otpCode: str = request.json["otpCode"].strip()
     
     if len(usernameOrEmail) == 0 or len(otpCode) == 0:
@@ -214,7 +221,7 @@ def verifyOTP():
     # Check if account exists and verify OTP
     account = None
     try:
-        account = Identity.load(username=usernameOrEmail, email=usernameOrEmail)
+        account = Identity.load(id=userID, username=usernameOrEmail, email=usernameOrEmail)
         if not isinstance(account, Identity):
             return "UERROR: Account not found.", 404
     except Exception as e:

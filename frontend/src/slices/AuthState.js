@@ -66,7 +66,9 @@ export const fetchSession = (handler=null) => async (dispatch) => {
     }
     dispatch(setLoaded(true));
     
-    handler(response);
+    if (handler) {
+        handler(response);
+    }
 };
 
 export default authSlice.reducer;

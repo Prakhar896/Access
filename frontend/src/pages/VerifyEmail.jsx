@@ -22,16 +22,17 @@ function VerifyEmail() {
     const dispatch = useDispatch();
     const { username, loaded, error } = useSelector(state => state.auth);
     const [code, setCode] = useState(searchParams.get('code') || '');
-    const [userID, setUserID] = useState(searchParams.get('userID') || '');
+    const [userID, setUserID] = useState(searchParams.get('id') || '');
+    const [email, setEmail] = useState('');
 
     const buttonDisabled = !code || !userID;
-    
+
     const handleCodeChange = (e) => { setCode(e.target.value); };
     const handleFieldEnter = () => { verifyOTP(); };
     const updateMessageField = (message, status) => {
         setMessage(message);
         setMessageHidden(false);
-        
+
         if (status === 'error') {
             setMessageColour('red');
         } else if (status === 'success') {
@@ -53,9 +54,14 @@ function VerifyEmail() {
 
     useEffect(() => {
         var id = userID;
-        if (state && state.userID) {
-            setUserID(state.userID);
-            id = state.userID;
+        if (state) {
+            if (state.userID) {
+                setUserID(state.userID);
+                id = state.userID;
+            }
+            if (state.email) {
+                setEmail(state.email);
+            }
         }
 
         if (!id) {
@@ -93,10 +99,9 @@ function VerifyEmail() {
                                     <Input onKeyUp={handleFieldEnter} placeholder='Check your inbox' type='text' w={{ base: 'xs', md: 'md', lg: 'lg' }} value={code} onChange={handleCodeChange} disabled={verificationLoading} required />
                                 </FormControl>
                             </VStack>
-                            {verificationLoading && <Spinner />}
                             <VStack mt={'10%'} spacing={'20px'}>
                                 <Text color={messageColour} hidden={messageHidden} >{message}</Text>
-                                <Button variant={!buttonDisabled ? 'Default' : 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} onClick={verifyOTP} isDisabled={buttonDisabled} isLoading={verificationLoading}>Sign in</Button>
+                                <Button variant={!buttonDisabled ? 'Default' : 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} onClick={verifyOTP} isDisabled={buttonDisabled} isLoading={verificationLoading} loadingText={'Verifying...'}>Sign in</Button>
                             </VStack>
                         </Box>
                     </ScaleFade>
