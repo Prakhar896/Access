@@ -1,88 +1,92 @@
 import os, shutil
+from services import Logger
 
 class AFManager:
+    rootDir = "Directories"
+    
+    @staticmethod
+    def rootDirPath():
+        return os.path.join(os.getcwd(), AFManager.rootDir)
+    
+    @staticmethod
+    def userDirPath(userID):
+        return os.path.join(os.getcwd(), AFManager.rootDir, userID)
+    
+    @staticmethod
+    def userFilePath(userID, filename):
+        return os.path.join(os.getcwd(), AFManager.rootDir, userID, filename)
+    
+    @staticmethod
+    def setup():
+        if not os.path.isdir(AFManager.rootDirPath()):
+            try:
+                os.mkdir(AFManager.rootDirPath())
+                Logger.log("AFM: Root directory created.")
+            except Exception as e:
+                Logger.log("AFM: Error occurred in creating root directory: {}".format(e))
+                return False
+        return True
 
     @staticmethod
-    def registerFolder(username):
-        if os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders', username)):
-            return AFMError.folderAlreadyRegistered
+    def registerFolder(userID):
+        if os.path.isdir(AFManager.userDirPath(userID)):
+            return AFMError("Folder already exists.")
         
         try:
-            os.mkdir(os.path.join(os.getcwd(), 'AccessFolders', username))
-            print("AFM: User {} registered an Access Folder.".format(username))
+            os.mkdir(AFManager.userDirPath(userID))
+            Logger.log("AFM: Directory registered for user '{}'.".format(userID))
         except Exception as e:
-            print("AFMError: {}".format(e))
-            return AFMError.unknownError
-        return "Access Folder for {} registered.".format(username)
+            return AFMError("Error occurred in creating folder: {}".format(e))
+        
+        return True
 
     @staticmethod
-    def checkIfFolderIsRegistered(username):
-        if os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders', username)):
+    def checkIfFolderIsRegistered(userID):
+        if os.path.isdir(AFManager.userDirPath(userID)):
             return True
         else:
             return False
 
     @staticmethod
-    def deleteFolder(username):
-
-        if os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders', username)):
+    def deleteFolder(userID):
+        if AFManager.checkIfFolderIsRegistered(userID):
             try:
-                shutil.rmtree(os.path.join(os.getcwd(), 'AccessFolders', username), ignore_errors=True)
+                shutil.rmtree(AFManager.userDirPath(userID), ignore_errors=True)
                 return True
             except Exception as e:
-                print("AFMError: {}".format(e))
-                return AFMError.unknownError
+                return AFMError("Error occurred in deleting folder: {}".format(e))
         else:
-            return AFMError.folderDoesNotExist
+            return AFMError("Folder does not exist.")
 
     @staticmethod
-    def getFilenames(username):
-        if os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders', username)):
-            filenames = [f for f in os.listdir(os.path.join(os.getcwd(), 'AccessFolders', username)) if os.path.isfile(os.path.join(os.path.join(os.getcwd(), 'AccessFolders', username), f))]
-            if filenames == []:
-                filenames = []
+    def getFilenames(userID):
+        if AFManager.checkIfFolderIsRegistered(userID):
+            filenames = [f for f in os.listdir(AFManager.userDirPath(userID)) if os.path.isfile(AFManager.userFilePath(userID, f))]
             return filenames
         else:
-            return AFMError.folderDoesNotExist
+            return AFMError("Folder does not exist.")
 
     @staticmethod
-    def deleteFile(username, filename):
-        if os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders', username)):
-            if os.path.isfile(os.path.join(os.getcwd(), 'AccessFolders', username, filename)):
+    def deleteFile(userID, filename):
+        if AFManager.checkIfFolderIsRegistered(userID):
+            if os.path.isfile(AFManager.userFilePath(userID, filename)):
                 try:
-                    os.remove(os.path.join(os.getcwd(), 'AccessFolders', username, filename))
-                    return "AFM: Successfully deleted the file."
+                    os.remove(AFManager.userFilePath(userID, filename))
+                    return True
                 except Exception as e:
-                    print("AFM: Error occurred in deleting file {} of {}: {}".format(filename, username, e))
-                    return AFMError.deleteFileError
+                    return AFMError("Error occurred in deleting file: {}".format(e))
             else:
-                return AFMError.fileDoesNotExist
+                return AFMError("File does not exist.")
         else:
-            return AFMError.folderDoesNotExist
+            return AFMError("Folder does not exist.")
 
 
-class AFMError(Exception):
-    def __init__(self, message):
-        self.message = message
-
-    folderAlreadyRegistered = "AFMError: The Access Folder is already registered for the username."
-    unknownError = "AFMError: There was an unknown error in performing the AFM action. Check console for more information."
-    folderDoesNotExist = "AFMError: No such Access Folder exists."
-    deleteFileError = "AFMError: An unknown error occured in deleting the file. Check console for more information."
-    fileDoesNotExist = "AFMError: No such file exists in the Access Folder registered under that username."
-
-    @staticmethod
-    def checkIfErrorMessage(msg):
-        msgsArray = [
-            AFMError.folderAlreadyRegistered,
-            AFMError.unknownError,
-            AFMError.folderDoesNotExist,
-            AFMError.deleteFileError,
-            AFMError.fileDoesNotExist
-        ]
+class AFMError:
+    def __init__(self, message: str) -> None:
+        self.message = "AFMError: " + message
         
-        if msg in msgsArray:
-            return True
-        else:
-            return False
+    def __str__(self) -> str:
+        return self.message
 
+    def __repr__(self) -> str:
+        return self.message

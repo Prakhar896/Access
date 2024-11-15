@@ -10,5 +10,4 @@ a = Identity("john", "a@a.com", "1234", "today", None, {}, EmailVerification("ab
 @checkSession(strict=True, provideIdentity=True)
 @emailVerified
 def uploadFile(user, filename):
-    print(filename, repr(user))
-    return "2"
+    return "WIP"

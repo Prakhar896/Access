@@ -2,6 +2,7 @@ import os, re
 from flask import Flask, request, render_template, Blueprint, url_for, redirect, session
 from models import Identity, Logger, Universal, AuditLog, EmailVerification
 from services import Encryption, Universal
+from AFManager import AFManager, AFMError
 from emailer import Emailer
 from decorators import *
 
@@ -292,5 +293,8 @@ def resendEmailVerification(user: Identity | None=None):
     user.emailVerification.save()
     
     dispatchEmailVerification(user.email, otpCode)
+    
+    # Register directory
+    
     
     return "SUCCESS: Email verification OTP code dispatched.", 200
