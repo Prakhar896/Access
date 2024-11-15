@@ -101,9 +101,13 @@ def boot():
     
     # Blueprint regirstrations
     
-    ## API
+    ## Identity API
     from identity import identityBP
     app.register_blueprint(identityBP)
+    
+    ## Directory API
+    from directory import directoryBP
+    app.register_blueprint(directoryBP, url_prefix='/directory')
     
     if len(sys.argv) > 1 and sys.argv[1] == "r":
         print(DI.save(None))

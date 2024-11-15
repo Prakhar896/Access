@@ -199,3 +199,29 @@ def checkSession(_func=None, *, strict=False, provideIdentity=False):
         return decorator_checkSession
     else:
         return decorator_checkSession(_func)
+    
+def emailVerified(_func=None, *, identity: Identity=None, provideIdentity=True):
+    def decorator_emailVerified(func):
+        @functools.wraps(func)
+        @debug
+        def wrapper_emailVerified(user: Identity=None, *args, **kwargs):
+            if not isinstance(user, Identity) and identity == None:
+                raise Exception("EMAILVERIFIED ERROR: Account not provided.")
+            
+            if identity != None:
+                user = identity
+            
+            if not user.emailVerification.verified:
+                return "UERROR: Verify your email first.", 401
+            
+            if provideIdentity:
+                return func(user, *args, **kwargs)
+            else:
+                return func(*args, **kwargs)
+        
+        return wrapper_emailVerified
+        
+    if _func is None:
+        return decorator_emailVerified
+    else:
+        return decorator_emailVerified(_func)
