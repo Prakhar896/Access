@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import colouredLogo from '/logo/svg/logo-color.svg';
-import { AbsoluteCenter, Box, Button, Center, FormControl, FormLabel, Heading, Image, Input, Spacer, Spinner, Text, useMediaQuery, useToast, VStack } from '@chakra-ui/react';
+import { AbsoluteCenter, Box, Button, Center, FormControl, FormLabel, Heading, Image, Input, ScaleFade, Spacer, Spinner, Text, useMediaQuery, useToast, VStack } from '@chakra-ui/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import configureShowToast from '../components/showToast';
@@ -126,29 +126,33 @@ function SignUp() {
                 </Link>
                 <Spacer />
                 <Box display={'flex'} flexDir={'column'} justifyContent={'left'} alignItems={'center'} maxW={limitedScreen ? '70%' : '50%'} p={!limitedScreen ? '10px' : '0px'} mt={limitedScreen ? '20px' : '0px'}>
-                    <Heading as={'h1'} size={'xl'}>Create an account</Heading>
-                    <VStack spacing={4} mt={10}>
-                        <FormControl id='username' required>
-                            <FormLabel>Username</FormLabel>
-                            <Input placeholder='e.g johndoe' type='text' w={{ base: 'xs', md: 'md', lg: 'lg' }} value={usernameInput} onChange={handleUsernameChange} required />
-                        </FormControl>
-                        <FormControl id='email' required>
-                            <FormLabel>Email</FormLabel>
-                            <Input placeholder='e.g john@example.com' type='email' w={{ base: 'xs', md: 'md', lg: 'lg' }} value={email} onChange={handleEmailChange} required />
-                        </FormControl>
-                        <FormControl id='password' required>
-                            <FormLabel>Password</FormLabel>
-                            <Input placeholder='Uppercase and numeric letters required' type='password' value={password} onChange={handlePasswordChange} required />
-                        </FormControl>
-                        <FormControl id='confirmPassword' required>
-                            <FormLabel>Confirm Password</FormLabel>
-                            <Input placeholder='Re-enter your password' type='password' value={confirmPassword} onChange={handleConfirmPasswordChange} required />
-                        </FormControl>
-                    </VStack>
-                    <VStack mt={'10%'}>
-                        <Text>Already have an account? <Button variant={'link'} color={'black'} onClick={() => navigate('/login')}>Login here.</Button></Text>
-                        <Button variant={!buttonDisabled ? 'Default' : 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} onClick={requestOTP} isDisabled={buttonDisabled} isLoading={requestOTPLoading}>Get Started</Button>
-                    </VStack>
+                    <ScaleFade in={true} initialScale={0.9}>
+                        <Box display={'flex'} flexDir={'column'} alignItems={'center'}>
+                            <Heading as={'h1'} size={'xl'}>Create an account</Heading>
+                            <VStack spacing={4} mt={10}>
+                                <FormControl id='username' required>
+                                    <FormLabel>Username</FormLabel>
+                                    <Input placeholder='e.g johndoe' type='text' w={{ base: 'xs', md: 'md', lg: 'lg' }} value={usernameInput} onChange={handleUsernameChange} required />
+                                </FormControl>
+                                <FormControl id='email' required>
+                                    <FormLabel>Email</FormLabel>
+                                    <Input placeholder='e.g john@example.com' type='email' w={{ base: 'xs', md: 'md', lg: 'lg' }} value={email} onChange={handleEmailChange} required />
+                                </FormControl>
+                                <FormControl id='password' required>
+                                    <FormLabel>Password</FormLabel>
+                                    <Input placeholder='Uppercase and numeric letters required' type='password' value={password} onChange={handlePasswordChange} required />
+                                </FormControl>
+                                <FormControl id='confirmPassword' required>
+                                    <FormLabel>Confirm Password</FormLabel>
+                                    <Input placeholder='Re-enter your password' type='password' value={confirmPassword} onChange={handleConfirmPasswordChange} required />
+                                </FormControl>
+                            </VStack>
+                            <VStack mt={'10%'}>
+                                <Text>Already have an account? <Button variant={'link'} color={'black'} onClick={() => navigate('/login')}>Login here.</Button></Text>
+                                <Button variant={!buttonDisabled ? 'Default' : 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} onClick={requestOTP} isDisabled={buttonDisabled} isLoading={requestOTPLoading}>Get Started</Button>
+                            </VStack>
+                        </Box>
+                    </ScaleFade>
                 </Box>
                 <Spacer />
             </Box>
