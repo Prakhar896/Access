@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import configureShowToast from '../components/showToast';
 import server from '../networking';
 import { fetchSession } from '../slices/AuthState';
+import CentredSpinner from '../components/CentredSpinner';
 
 function Login() {
     const navigate = useNavigate();
@@ -108,7 +109,7 @@ function Login() {
     }, [username, loaded])
 
     if (!loaded) {
-        return <Center h={'100vh'}><Spinner /></Center>
+        return <CentredSpinner />
     }
 
     return (

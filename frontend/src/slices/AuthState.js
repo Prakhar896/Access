@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import server from '../networking';
 
 const initialState = {
+    accountID: null,
     username: null,
     loaded: false,
     error: null
@@ -11,6 +12,9 @@ const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
+        setAccountID: (state, action) => {
+            state.accountID = action.payload;
+        },
         setUsername: (state, action) => {
             state.username = action.payload;
         },
@@ -48,18 +52,21 @@ export const retrieveSession = async () => {
     }
 }
 
-export const { setUsername, setLoaded, setError } = authSlice.actions;
+export const { setAccountID, setUsername, setLoaded, setError } = authSlice.actions;
 
-export const fetchSession = () => async (dispatch) => {
+export const fetchSession = (handler=null) => async (dispatch) => {
     // console.log('Fetching session...');
     dispatch(setLoaded(false));
     const response = await retrieveSession();
-    if (response.username) {
+    if (response.aID && response.username) {
+        dispatch(setAccountID(response.aID));
         dispatch(setUsername(response.username));
     } else {
         dispatch(setError(response.error));
     }
     dispatch(setLoaded(true));
+    
+    handler(response);
 };
 
 export default authSlice.reducer;

@@ -14,6 +14,7 @@ import Home from './pages/Home.jsx'
 import SignUp from './pages/SignUp.jsx'
 import Login from './pages/Login.jsx'
 import Directory from './pages/portal/Directory.jsx'
+import VerifyEmail from './pages/VerifyEmail.jsx'
 
 const store = configureStore({
     reducer: {
@@ -32,6 +33,7 @@ createRoot(document.getElementById('root')).render(
                         <Route index element={<Home />} />
                         <Route path='signup' element={<SignUp />} />
                         <Route path='login' element={<Login />} />
+                        <Route path='verifyEmail' element={<VerifyEmail />} />
                         <Route path='portal'>
                             <Route path='files' element={<Directory />} />
                         </Route>

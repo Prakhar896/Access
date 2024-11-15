@@ -5,6 +5,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import configureShowToast from '../components/showToast';
 import server from '../networking';
+import CentredSpinner from '../components/CentredSpinner';
+import { fetchSession, retrieveSession } from '../slices/AuthState';
 
 function SignUp() {
     const navigate = useNavigate();
@@ -61,21 +63,35 @@ function SignUp() {
         })
             .then(response => {
                 if (response.status == 200) {
-                    if (response.data && typeof response.data == "string") {
-                        if (response.data.startsWith("SUCCESS")) {
-                            showToast('Success', 'Please check your email for the verification link.', 'success');
-                        } else if (response.data.startsWith("UERROR")) {
+                    if (response.data && typeof response.data == 'object' && !Array.isArray(response.data)) {
+                        // Response is JSON object
+                        if (response.data.message && response.data.aID && typeof response.data.message == "string" && response.data.message.startsWith("SUCCESS")) {
+                            // If valid success attributes are present, proceed
+                            showToast('Success', 'Please enter the verification code in your inbox.', 'success');
+                            navigate('/verifyEmail', { state: { userID: response.data.aID, email: emailAddress } });
+                        } else {
+                            // Data object returned with unexpected attributes
+                            console.log("Unknown response from server in new identity creation; response:", response.data);
+                            showToast("Something went wrong", "An error occurred. Please try again.", 'error');
+                        }
+                    } else if (response.data && typeof response.data == "string") {
+                        // String response returned
+                        if (response.data.startsWith("UERROR")) {
+                            // Process UERROR
                             console.log("User error occurred in new identity creation; response:", response.data);
                             showToast("Something went wrong", response.data.substring("UERROR: ".length), 'error');
                         } else {
+                            // Process other errors
                             console.log("Unknown response from server in new identity creation; response:", response.data);
                             showToast("Something went wrong", "An error occurred. Please try again.", 'error');
                         }
                     } else {
+                        // Unexpected response format
                         console.log("Unexpected response in new identity creation; response:", response.data);
                         showToast("Something went wrong", "An error occurred. Please try again.", 'error');
                     }
                 } else {
+                    // Non-200 status code
                     console.log("Non-200 status code in new identity creation; response:", response.data);
                     showToast("Something went wrong", "An error occurred. Please try again.", 'error');
                 }
@@ -84,20 +100,26 @@ function SignUp() {
             })
             .catch(err => {
                 if (err.response && err.response.data && typeof err.response.data == "string") {
+                    // Response is string
                     if (err.response.data.startsWith("UERROR")) {
+                        // Process UERROR
                         console.log("User error occurred in new identity creation; response:", err.response.data);
                         showToast("Something went wrong", err.response.data.substring("UERROR: ".length), 'error');
                     } else if (err.response.data.startsWith("ERROR")) {
+                        // Process other errors
                         console.log("Error occurred in new identity creation; response:", err.response.data);
                         showToast("Something went wrong", "Failed to create account. Please try again.", 'error');
                     } else {
+                        // Process unknown errors
                         console.log("Unknown response from server in new identity creation; response:", err.response.data);
                         showToast("Something went wrong", "An error occurred. Please try again.", 'error');
                     }
                 } else if (err.message) {
+                    // Error message present
                     console.log("Error occurred in new identity creation; message:", err.message);
                     showToast("Something went wrong", "An error occurred. Please try again.", 'error');
                 } else {
+                    // Unknown error
                     console.log("Unknown error occurred in new identity creation; error:", err);
                     showToast("Something went wrong", "An error occurred. Please try again.", 'error');
                 }
@@ -114,7 +136,7 @@ function SignUp() {
     }, [username, loaded])
 
     if (!loaded) {
-        return <Center h={'100vh'}><Spinner /></Center>
+        return <CentredSpinner />
     }
 
     return (
