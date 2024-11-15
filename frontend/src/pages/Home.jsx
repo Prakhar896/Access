@@ -1,12 +1,14 @@
 import { Box, Button, ButtonGroup, Heading, Image, Spacer, Spinner, Text, useColorMode, useMediaQuery } from '@chakra-ui/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import colouredLogo from '/logo/svg/logo-color.svg';
 import { Link, useNavigate } from 'react-router-dom';
+import CentredSpinner from '../components/CentredSpinner';
 
 function Home() {
     const [limitedScreen] = useMediaQuery("(max-width: 800px)");
     const navigate = useNavigate();
+    const { username, loaded, error } = useSelector(state => state.auth);
 
     const toSignup = () => {
         navigate('/signup');
@@ -14,6 +16,16 @@ function Home() {
 
     const toLogin = () => {
         navigate('/login');
+    }
+
+    useEffect(() => {
+        if (username && loaded) {
+            navigate('/portal/files');
+        }
+    }, [username, loaded]);
+
+    if (!loaded) {
+        return <CentredSpinner />
     }
 
     return (
