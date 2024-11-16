@@ -315,12 +315,16 @@ class AuditLog(DIRepresentable):
         
         return DI.save(convertedData, self.originRef)
     
+    def linkTo(self, user: Identity):
+        user.auditLogs[self.id] = self
+        return True
+    
     @staticmethod
     def ref(accountID, logID) -> Ref:
         return Ref("accounts", accountID, "auditLogs", logID)
     
 class File(DIRepresentable):
-    def __init__(self, accountID: str, name: str, blocked: bool=False, id: str=None, uploadedTimestamp: str=None) -> None:
+    def __init__(self, accountID: str, name: str, blocked: bool=False, id: str=None, uploadedTimestamp: str=None, lastUpdate: str=None) -> None:
         if id == None:
             id = uuid4().hex
         if uploadedTimestamp == None:
@@ -329,8 +333,9 @@ class File(DIRepresentable):
         self.id = id
         self.accountID = accountID
         self.name = name
-        self.uploadedTimestamp = uploadedTimestamp
         self.blocked = blocked
+        self.uploadedTimestamp = uploadedTimestamp
+        self.lastUpdate = lastUpdate
         self.originRef = File.ref(accountID, id)
         
     @staticmethod
@@ -339,7 +344,7 @@ class File(DIRepresentable):
         
     @staticmethod
     def rawLoad(data: Dict[str, Any]) -> 'File':
-        requiredParams = ['accountID', 'name', 'blocked', 'id', 'uploadedTimestamp']
+        requiredParams = ['accountID', 'name', 'blocked', 'id', 'uploadedTimestamp', 'lastUpdate']
         for reqParam in requiredParams:
             if reqParam not in data:
                 data[reqParam] = None
@@ -349,7 +354,8 @@ class File(DIRepresentable):
             name=data['name'],
             blocked=data['blocked'] == "True",
             id=data['id'],
-            uploadedTimestamp=data['uploadedTimestamp']
+            uploadedTimestamp=data['uploadedTimestamp'],
+            lastUpdate=data['lastUpdate']
         )
     
     @staticmethod
@@ -429,13 +435,18 @@ class File(DIRepresentable):
         
         return DI.save(convertedData, self.originRef)
     
+    def linkTo(self, user: Identity):
+        user.files[self.id] = self
+        return True
+    
     def represent(self) -> Dict[str, Any]:
         return {
             "accountID": self.accountID,
             "name": self.name,
             "blocked": str(self.blocked),
             "id": self.id,
-            "uploadedTimestamp": self.uploadedTimestamp
+            "uploadedTimestamp": self.uploadedTimestamp,
+            "lastUpdate": self.lastUpdate
         }
     
     def extension(self):

@@ -4,7 +4,8 @@ class Config:
     file = "config.json"
     defaultConfig = {
         "fileExtensions": ['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'xlsx', 'heic', 'mov', 'mp4', 'docx', 'pptx', 'py', 'swift', 'js', 'zip'],
-        "allowedFileSize": 16
+        "allowedFileSize": 16,
+        "maxFileCount": 20
     }
 
     def __init__(self):
@@ -13,7 +14,16 @@ class Config:
         if not reloadSuccessful:
             print("CONFIG INIT: Failed to initialise config instance; falling back on default config.")
             self.config = Config.defaultConfig
-        return
+            self.dump()
+        
+    def getFileExtensions(self):
+        return self.config['fileExtensions'] if 'fileExtensions' in self.config else []
+    
+    def getAllowedFileSize(self):
+        return self.config['allowedFileSize'] if 'allowedFileSize' in self.config else 0
+    
+    def getMaxFileCount(self):
+        return self.config['maxFileCount'] if 'maxFileCount' in self.config else 0
 
     def dump(self):
         with open(Config.file, "w") as f:
@@ -114,3 +124,20 @@ def manageFileSize(configManager: Config):
         configManager.dump()
         print()
         print("Successfully updated file size to {} MB.".format(newFileSize))
+        
+def manageFileCount(configManager: Config):
+    print("Current maximum file count: {}".format(configManager.config["maxFileCount"]))
+    newFileCount = input("Enter new file count or '0' to return: ")
+
+    while not newFileCount.isdigit():
+        print("Invalid file count provided. Please try again.")
+        newFileCount = input("Enter new file count or '0' to return: ")
+
+    newFileCount = int(newFileCount)
+    if newFileCount == 0:
+        return
+    else:
+        configManager.config["maxFileCount"] = newFileCount
+        configManager.dump()
+        print()
+        print("Successfully updated file count to {}.".format(newFileCount))
