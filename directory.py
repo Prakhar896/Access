@@ -1,4 +1,4 @@
-import os
+import os, copy
 from flask import Blueprint, request, send_file, send_from_directory, redirect, url_for
 from main import allowed_file, secure_filename, configManager
 from AFManager import AFManager, AFMError
@@ -81,3 +81,68 @@ def uploadFile(user: Identity):
         user.save()
     
     return fileSaveUpdates, 200
+
+@directoryBP.route('/file/<filename>', methods=['GET'])
+@checkSession(strict=True, provideIdentity=True)
+@emailVerified
+def downloadFile(user: Identity, filename: str):
+    if not AFManager.checkIfFolderIsRegistered(user.id):
+        return "UERROR: Please register your directory first.", 400
+    
+    if filename not in AFManager.getFilenames(user.id):
+        return "ERROR: File not found.", 404
+    
+    userFile = [user.files[fileID] for fileID in user.files if user.files[fileID].name == filename]
+    if len(userFile) == 0:
+        Logger.log("DIRECTORY DOWNLOAD: Updating user '{}' with unmatched existing file '{}'.".format(user.id, filename))
+        userFile = File(user.id, filename)
+        userFile.save()
+    else:
+        userFile = userFile[0]
+    
+    return send_file(AFManager.userFilePath(user.id, filename), as_attachment=True, last_modified=Universal.fromUTC(userFile.lastUpdate) if isinstance(userFile.lastUpdate, str) else None)
+
+@directoryBP.route('/file', methods=['POST'])
+@checkAPIKey
+@jsonOnly
+@enforceSchema(
+    ("filename", str)
+)
+def getFile():
+    if len(request.json['filename'].strip()) == 0:
+        return "ERROR: No filename provided.", 400
+    
+    return redirect(url_for('directory.downloadFile', filename=request.json['filename'].strip()))
+
+@directoryBP.route('/', methods=['GET'])
+@checkSession(strict=True, provideIdentity=True)
+@emailVerified
+def listFiles(user: Identity):
+    if not AFManager.checkIfFolderIsRegistered(user.id):
+        return "UERROR: Please register your directory first.", 400
+    
+    directoryFiles = AFManager.getFilenames(user.id)
+    userFilenames = [userFile.name for userFile in user.files.values()]
+    filesData = {id: file for id, file in user.files.items()}
+    
+    # Check for new files in directory
+    for directoryFile in directoryFiles:
+        if directoryFile not in userFilenames:
+            Logger.log("DIRECTORY LIST: Updating user '{}' with unmatched existing file '{}'.".format(user.id, directoryFile))
+            newFile = File(user.id, directoryFile)
+            newFile.linkTo(user)
+            newFile.save()
+            
+            filesData[newFile.id] = newFile
+    
+    # Check for removed files in directory
+    for userFilename in userFilenames:
+        if userFilename not in directoryFiles:
+            Logger.log("DIRECTORY LIST: Removing unmatched user file '{}' from user '{}'.".format(userFilename, user.id))
+            userFile = user.files[[fileID for fileID in user.files if user.files[fileID].name == userFilename][0]]
+            userFile.destroy()
+            
+            del filesData[userFile.id]
+    
+    filesData = {id: file.represent() for id, file in filesData.items()}
+    return filesData, 200

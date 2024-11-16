@@ -15,8 +15,6 @@ from accessAnalytics import AccessAnalytics
 from dotenv import load_dotenv
 load_dotenv()
 
-Universal.initAsync()
-
 ### APP CONFIG
 configManager = Config()
 
@@ -39,7 +37,7 @@ if os.path.isdir(os.path.join(os.getcwd(), "assets")):
         if os.path.isfile(os.path.join(os.getcwd(), "assets", file)):
             availableAssets.append(file)
 
-print("MAIN BOOT: Assets available: " + ", ".join(availableAssets))
+# print("MAIN BOOT: Assets available: " + ", ".join(availableAssets))
 
 ## Other pre-requisites
 @app.before_request
@@ -70,6 +68,8 @@ def page_not_found(e):
     return redirect(url_for('version'))
 
 def boot():
+    Universal.initAsync()
+    
     ver = Universal.getVersion()
     if ver == "Version File Not Found":
         print("MAIN LOAD ERROR: No system version file detected. Boot aborted.")
