@@ -225,7 +225,7 @@ def deleteFilesAPI():
     else:
         return "ERROR: Invalid request.", 400
 
-@directoryBP.route('/', methods=['GET'])
+@directoryBP.route('', methods=['GET'])
 @checkSession(strict=True, provideIdentity=True)
 @emailVerified
 def listFiles(user: Identity):
