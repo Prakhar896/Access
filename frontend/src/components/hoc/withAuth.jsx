@@ -1,9 +1,9 @@
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom"
-import CentredSpinner from "./CentredSpinner";
+import CentredSpinner from "../CentredSpinner";
 import { useEffect } from "react";
 import { useToast } from "@chakra-ui/react";
-import configureShowToast from "./showToast";
+import configureShowToast from "../showToast";
 
 const withAuth = (WrappedComponent) => {
     return (props) => {

@@ -1,7 +1,8 @@
 import React from 'react'
-import withAuth from '../../components/withAuth'
+import withAuth from '../../components/hoc/withAuth'
 import { Text } from '@chakra-ui/react';
 import { useSelector } from 'react-redux';
+import withNavbar from '../../components/hoc/withNavbar';
 
 function Directory() {
     const { username } = useSelector(state => state.auth);
@@ -11,4 +12,4 @@ function Directory() {
     )
 }
 
-export default withAuth(Directory);
+export default withAuth(withNavbar(Directory));
