@@ -5,7 +5,8 @@ const initialState = {
     accountID: null,
     username: null,
     loaded: false,
-    error: null
+    error: null,
+    disableSessionCheck: false,
 }
 
 const authSlice = createSlice({
@@ -23,6 +24,14 @@ const authSlice = createSlice({
         },
         setError: (state, action) => {
             state.error = action.payload;
+        },
+        setDisableSessionCheck: (state, action) => {
+            state.disableSessionCheck = action.payload;
+        },
+        stateLogout: (state) => {
+            state.accountID = null;
+            state.username = null;
+            state.error = null;
         }
     },
 });
@@ -52,7 +61,7 @@ export const retrieveSession = async () => {
     }
 }
 
-export const { setAccountID, setUsername, setLoaded, setError } = authSlice.actions;
+export const { setAccountID, setUsername, setLoaded, setError, setDisableSessionCheck, stateLogout } = authSlice.actions;
 
 export const fetchSession = (handler=null) => async (dispatch) => {
     // console.log('Fetching session...');
@@ -70,5 +79,40 @@ export const fetchSession = (handler=null) => async (dispatch) => {
         handler(response);
     }
 };
+
+export const logout = (disableSessionCheck=false, handler=null) => async (dispatch) => {
+    try {
+        const response = await server.get('/identity/logout')
+        if (response.status === 200 && typeof response.data == "string" && response.data.startsWith("SUCCESS")) {
+            if (disableSessionCheck) {
+                dispatch(setDisableSessionCheck(true));
+            }
+            dispatch(stateLogout());
+        } else {
+            console.log("Unexpected response in logout; response:", response.data);
+        }
+
+        if (handler) {
+            handler(response.data);
+        }
+    } catch (err) {
+        var e = null;
+        if (err.response && err.response.data && typeof err.response.data === 'string') {
+            e = err.response.data;
+        } else if (err.message && typeof err.message === 'string') {
+            e = "ERROR: " + err.message;
+        } else if (typeof err === 'string') {
+            e = "ERROR: " + err;
+        } else {
+            e = 'ERROR: An unknown error occurred.';
+        }
+
+        console.log("Error in logout:", e);
+
+        if (handler) {
+            handler(e);
+        }
+    }
+}
 
 export default authSlice.reducer;

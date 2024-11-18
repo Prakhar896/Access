@@ -13,15 +13,15 @@ const withAuth = (WrappedComponent) => {
         const navigate = useNavigate();
         const toast = useToast();
         const showToast = configureShowToast(toast);
-        const { username, loaded, error } = useSelector(state => state.auth);
+        const { username, loaded, disableSessionCheck, error } = useSelector(state => state.auth);
 
         useEffect(() => {
-            if (!username && loaded) {
+            if (!username && loaded && !disableSessionCheck) {
                 navigate('/login');
                 showToast("Please sign in first", '', 'error');
                 console.log('Unauthorised access detected; redirecting.');
             }
-        }, [username, loaded])
+        }, [username, loaded]);
 
         return (
             <AnimatePresence mode="wait">
