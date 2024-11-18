@@ -25,24 +25,18 @@ class Identity(DIRepresentable):
         self.files = files
         self.originRef = Identity.ref(id)
         
+        self.auditLogsLoaded = False
+        
     @staticmethod
-    def rawLoad(data: dict) -> 'Identity':
-        requiredParams = ['username', 'email', 'password', 'lastLogin', 'authToken', 'auditLogs', 'emailVerification', 'created', 'files', 'id']
+    def rawLoad(data: dict, loadAuditLogs=False) -> 'Identity':
+        requiredParams = ['username', 'email', 'password', 'lastLogin', 'authToken', 'emailVerification', 'created', 'files', 'id']
         for reqParam in requiredParams:
             if reqParam not in data:
-                if reqParam in ['auditLogs', 'files', 'emailVerification']:
+                if reqParam in ['files', 'emailVerification']:
                     data[reqParam] = {}
-                elif reqParam == 'emailVerified':
-                    data[reqParam] = False
                 else:
                     data[reqParam] = None
         
-        logs = {}
-        for logID in data['auditLogs']:
-            if data['auditLogs'][logID] == None:
-                continue
-            logs[logID] = AuditLog.rawLoad(data['auditLogs'][logID])
-            
         files = {}
         for fileID in data['files']:
             if data['files'][fileID] == None:
@@ -51,21 +45,25 @@ class Identity(DIRepresentable):
         
         emailVerification = EmailVerification.rawLoad(data['emailVerification'], data['id'])
         
-        return Identity(
+        account = Identity(
             username=data['username'],
             email=data['email'],
             password=data['password'],
             lastLogin=data['lastLogin'],
             authToken=data['authToken'],
-            auditLogs=logs,
             emailVerification=emailVerification,
             created=data['created'],
             files=files,
             id=data['id']
         )
+        
+        if loadAuditLogs:
+            account.getAuditLogs()
+        
+        return account
     
     @staticmethod
-    def load(id=None, username=None, email=None, authToken=None) -> 'Identity | List[Identity] | None':
+    def load(id=None, username=None, email=None, authToken=None, withAuditLogs=False) -> 'Identity | List[Identity] | None':
         if id == None:
             data = DI.load(Ref("accounts"))
             if data == None:
@@ -77,7 +75,7 @@ class Identity(DIRepresentable):
 
             identities: Dict[str, Identity] = {}
             for id in data:
-                identities[id] = Identity.rawLoad(data[id])
+                identities[id] = Identity.rawLoad(data[id], loadAuditLogs=withAuditLogs)
             
             if username == None and email == None and authToken == None:
                 return list(identities.values())
@@ -101,10 +99,9 @@ class Identity(DIRepresentable):
             if not isinstance(data, dict):
                 raise Exception("IDENTITY LOAD ERROR: Unexpected DI load response format; response: {}".format(data))
             
-            return Identity.rawLoad(data)
+            return Identity.rawLoad(data, loadAuditLogs=withAuditLogs)
         
     def represent(self) -> Dict[str, Any]:
-        auditLogs = {logID: self.auditLogs[logID].represent() for logID in self.auditLogs}
         files = {fileID: self.files[fileID].represent() for fileID in self.files}
         
         return {
@@ -114,7 +111,6 @@ class Identity(DIRepresentable):
             "password": self.password,
             "lastLogin": self.lastLogin,
             "authToken": self.authToken,
-            "auditLogs": auditLogs,
             "emailVerification": self.emailVerification.represent(),
             "created": self.created,
             "files": files
@@ -124,6 +120,18 @@ class Identity(DIRepresentable):
         convertedData = self.represent()
         
         return DI.save(convertedData, self.originRef)
+    
+    def getAuditLogs(self):
+        accountLogs = AuditLog.load(accountID=self.id)
+        if accountLogs == None:
+            self.auditLogs = {}
+            return True
+        if not isinstance(accountLogs, list):
+            raise Exception("IDENTITY GETAUDITLOGS ERROR: Unexpected response format; response: {}".format(accountLogs))
+
+        self.auditLogs = {log.id: log for log in accountLogs}
+        self.auditLogsLoaded = True
+        return True
     
     def deleteAuditLog(self, logID):
         '''Deletes an audit log from the account's audit logs.'''
@@ -215,7 +223,7 @@ class AuditLog(DIRepresentable):
             id = uuid4().hex
         if timestamp == None:
             timestamp = Universal.utcNowString()
-            
+        
         print("AL: {}: {}: {}".format(id, event, text))
             
         self.id = id
@@ -223,7 +231,7 @@ class AuditLog(DIRepresentable):
         self.timestamp = timestamp
         self.event = event
         self.text = text
-        self.originRef = AuditLog.ref(accountID, id)
+        self.originRef = AuditLog.ref(id)
         
     @staticmethod
     def rawLoad(data: dict) -> 'AuditLog':
@@ -242,66 +250,44 @@ class AuditLog(DIRepresentable):
     
     @staticmethod
     def load(id=None, accountID=None) -> 'AuditLog | List[AuditLog] | None':
-        accountsData = DI.load(Ref("accounts"))
-        if accountsData == None:
-            return None
-        if not isinstance(accountsData, dict):
-            raise Exception("AUDITLOG LOAD ERROR: Failed to load dictionary accounts data; response: {}".format(accountsData))
-        
-        if id == None and accountID == None:
-            # Load all logs
-            auditLogs: List[AuditLog] = []
-            for accountID in accountsData:
-                accountData = accountsData[accountID]
-                if "auditLogs" in accountData:
-                    for logID in accountData["auditLogs"]:
-                        auditLogs.append(AuditLog.rawLoad(accountData["auditLogs"][logID]))
-            
-            return auditLogs
-        elif id == None and accountID != None:
-            # Load all logs for the targeted account
-            if accountID not in accountsData:
+        if id != None:
+            # Load a specific audit log
+            log = DI.load(AuditLog.ref(id))
+            if isinstance(log, DIError):
+                raise Exception("AUDITLOG LOAD ERROR: DIError: {}".format(log))
+            if log == None:
                 return None
+            if not isinstance(log, dict):
+                raise Exception("AUDITLOG LOAD ERROR: Unexpected DI log load response format; response: {}".format(log))
             
-            accountData = accountsData[accountID]
-            if "auditLogs" not in accountData:
+            return AuditLog.rawLoad(log)
+        elif accountID != None:
+            # Load all audit logs for the targeted account
+            logs = DI.load(Ref("auditLogs"))
+            if isinstance(logs, DIError):
+                raise Exception("AUDITLOG LOAD ERROR: DIError: {}".format(logs))
+            if logs == None:
                 return None
-            if not isinstance(accountData["auditLogs"], dict):
-                raise Exception("AUDITLOG LOAD ERROR: Corrupted auditLogs data for account '{}'; data: {}".format(accountID, accountData["auditLogs"]))
+            if not isinstance(logs, dict):
+                return Exception("AUDITLOG LOAD ERROR: Unexpected DI logs load response format; response: {}".format(logs))
             
-            auditLogs: List[AuditLog] = []
-            for logID in accountData["auditLogs"]:
-                auditLogs.append(AuditLog.rawLoad(accountData["auditLogs"][logID]))
+            accountLogs = []
+            for logData in logs.values():
+                if logData['accountID'] == accountID:
+                    accountLogs.append(AuditLog.rawLoad(logData))
             
-            return auditLogs
-        elif id != None and accountID == None:
-            # Search all accounts for the targeted log
-            for accountID in accountsData:
-                accountData = accountsData[accountID]
-                if "auditLogs" in accountData:
-                    if not isinstance(accountData["auditLogs"], dict):
-                        continue
-                    for logID in accountData["auditLogs"]:
-                        if logID == id:
-                            return AuditLog.rawLoad(accountData["auditLogs"][logID])
-            
-            return None
+            return accountLogs
         else:
-            # Search the targeted account for the targeted log
-            if accountID not in accountsData:
+            # Load all audit logs
+            logs = DI.load(Ref("auditLogs"))
+            if isinstance(logs, DIError):
+                raise Exception("AUDITLOG LOAD ERROR: DIError: {}".format(logs))
+            if logs == None:
                 return None
+            if not isinstance(logs, dict):
+                return Exception("AUDITLOG LOAD ERROR: Unexpected DI logs load response format; response: {}".format(logs))
             
-            accountData = accountsData[accountID]
-            if "auditLogs" not in accountData:
-                return None
-            if not isinstance(accountData["auditLogs"], dict):
-                raise Exception("AUDITLOG LOAD ERROR: Corrupted auditLogs data for account '{}'; data: {}".format(accountID, accountData["auditLogs"]))
-            
-            for logID in accountData["auditLogs"]:
-                if logID == id:
-                    return AuditLog.rawLoad(accountData["auditLogs"][logID])
-            
-            return None
+            return [AuditLog.rawLoad(logData) for logData in logs.values()]
 
     def save(self, checkIntegrity=True) -> bool:
         convertedData = self.represent()
@@ -322,8 +308,8 @@ class AuditLog(DIRepresentable):
         return True
     
     @staticmethod
-    def ref(accountID, logID) -> Ref:
-        return Ref("accounts", accountID, "auditLogs", logID)
+    def ref(logID) -> Ref:
+        return Ref("auditLogs", logID)
     
 class File(DIRepresentable):
     def __init__(self, accountID: str, name: str, blocked: bool=False, id: str=None, uploadedTimestamp: str=None, lastUpdate: str=None) -> None:
