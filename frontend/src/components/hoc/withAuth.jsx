@@ -6,7 +6,7 @@ import { Box, Fade, Spinner, useToast } from "@chakra-ui/react";
 import configureShowToast from "../showToast";
 import { AnimatePresence, motion } from "framer-motion";
 
-const MotionBox = motion(Box);
+const MotionBox = motion.create(Box);
 
 const withAuth = (WrappedComponent) => {
     return (props) => {
