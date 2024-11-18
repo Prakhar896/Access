@@ -26,22 +26,17 @@ class Identity(DIRepresentable):
         self.originRef = Identity.ref(id)
         
         self.auditLogsLoaded = False
+        self.filesLoaded = False
         
     @staticmethod
-    def rawLoad(data: dict, loadAuditLogs=False) -> 'Identity':
-        requiredParams = ['username', 'email', 'password', 'lastLogin', 'authToken', 'emailVerification', 'created', 'files', 'id']
+    def rawLoad(data: dict, loadAuditLogs=False, loadFiles=False) -> 'Identity':
+        requiredParams = ['username', 'email', 'password', 'lastLogin', 'authToken', 'emailVerification', 'created', 'id']
         for reqParam in requiredParams:
             if reqParam not in data:
-                if reqParam in ['files', 'emailVerification']:
+                if reqParam in ['emailVerification']:
                     data[reqParam] = {}
                 else:
                     data[reqParam] = None
-        
-        files = {}
-        for fileID in data['files']:
-            if data['files'][fileID] == None:
-                continue
-            files[fileID] = File.rawLoad(data['files'][fileID])
         
         emailVerification = EmailVerification.rawLoad(data['emailVerification'], data['id'])
         
@@ -53,17 +48,18 @@ class Identity(DIRepresentable):
             authToken=data['authToken'],
             emailVerification=emailVerification,
             created=data['created'],
-            files=files,
             id=data['id']
         )
         
         if loadAuditLogs:
             account.getAuditLogs()
+        if loadFiles:
+            account.getFiles()
         
         return account
     
     @staticmethod
-    def load(id=None, username=None, email=None, authToken=None, withAuditLogs=False) -> 'Identity | List[Identity] | None':
+    def load(id=None, username=None, email=None, authToken=None, withAuditLogs=False, withFiles=False) -> 'Identity | List[Identity] | None':
         if id == None:
             data = DI.load(Ref("accounts"))
             if data == None:
@@ -75,7 +71,7 @@ class Identity(DIRepresentable):
 
             identities: Dict[str, Identity] = {}
             for id in data:
-                identities[id] = Identity.rawLoad(data[id], loadAuditLogs=withAuditLogs)
+                identities[id] = Identity.rawLoad(data[id], loadAuditLogs=withAuditLogs, loadFiles=withFiles)
             
             if username == None and email == None and authToken == None:
                 return list(identities.values())
@@ -99,11 +95,9 @@ class Identity(DIRepresentable):
             if not isinstance(data, dict):
                 raise Exception("IDENTITY LOAD ERROR: Unexpected DI load response format; response: {}".format(data))
             
-            return Identity.rawLoad(data, loadAuditLogs=withAuditLogs)
+            return Identity.rawLoad(data, loadAuditLogs=withAuditLogs, loadFiles=withFiles)
         
     def represent(self) -> Dict[str, Any]:
-        files = {fileID: self.files[fileID].represent() for fileID in self.files}
-        
         return {
             "id": self.id,
             "username": self.username,
@@ -112,8 +106,7 @@ class Identity(DIRepresentable):
             "lastLogin": self.lastLogin,
             "authToken": self.authToken,
             "emailVerification": self.emailVerification.represent(),
-            "created": self.created,
-            "files": files
+            "created": self.created
         }
         
     def save(self):
@@ -125,12 +118,26 @@ class Identity(DIRepresentable):
         accountLogs = AuditLog.load(accountID=self.id)
         if accountLogs == None:
             self.auditLogs = {}
+            self.auditLogsLoaded = True
             return True
         if not isinstance(accountLogs, list):
             raise Exception("IDENTITY GETAUDITLOGS ERROR: Unexpected response format; response: {}".format(accountLogs))
 
         self.auditLogs = {log.id: log for log in accountLogs}
         self.auditLogsLoaded = True
+        return True
+    
+    def getFiles(self):
+        accountFiles = File.load(accountID=self.id)
+        if accountFiles == None:
+            self.files = {}
+            self.filesLoaded = True
+            return True
+        if not isinstance(accountFiles, list):
+            raise Exception("IDENTITY GETFILES ERROR: Unexpected response format; response: {}".format(accountFiles))
+        
+        self.files = {file.id: file for file in accountFiles}
+        self.filesLoaded = True
         return True
     
     def deleteAuditLog(self, logID):
@@ -317,14 +324,14 @@ class File(DIRepresentable):
             id = uuid4().hex
         if uploadedTimestamp == None:
             uploadedTimestamp = Universal.utcNowString()
-            
+        
         self.id = id
         self.accountID = accountID
         self.name = name
         self.blocked = blocked
         self.uploadedTimestamp = uploadedTimestamp
         self.lastUpdate = lastUpdate
-        self.originRef = File.ref(accountID, id)
+        self.originRef = File.ref(id)
         
     @staticmethod
     def getExtFrom(fileName: str):
@@ -348,66 +355,41 @@ class File(DIRepresentable):
     
     @staticmethod
     def load(id=None, accountID=None) -> 'File | List[File] | None':
-        accountsData = DI.load(Ref("accounts"))
-        if accountsData == None:
-            return None
-        if not isinstance(accountsData, dict):
-            raise Exception("FILE LOAD ERROR: Failed to load dictionary accounts data; response: {}".format(accountsData))
-        
-        if id == None and accountID == None:
-            # Load all files
-            files: List[File] = []
-            for accountID in accountsData:
-                accountData = accountsData[accountID]
-                if "files" in accountData:
-                    for fileID in accountData["files"]:
-                        files.append(File.rawLoad(accountData["files"][fileID]))
-            
-            return files
-        elif id == None and accountID != None:
-            # Load all files for the targeted account
-            if accountID not in accountsData:
+        if id != None:
+            fileData = DI.load(File.ref(id))
+            if isinstance(fileData, DIError):
+                raise Exception("FILE LOAD ERROR: DIError: {}".format(fileData))
+            if fileData == None:
                 return None
+            if not isinstance(fileData, dict):
+                raise Exception("FILE LOAD ERROR: Unexpected DI file load response format; response: {}".format(fileData))
             
-            accountData = accountsData[accountID]
-            if "files" not in accountData:
+            return File.rawLoad(fileData)
+        elif accountID != None:
+            files = DI.load(Ref("files"))
+            if isinstance(files, DIError):
+                raise Exception("FILE LOAD ERROR: DIError: {}".format(files))
+            if files == None:
                 return None
-            if not isinstance(accountData["files"], dict):
-                raise Exception("FILE LOAD ERROR: Corrupted files data for account '{}'; data: {}".format(accountID, accountData["files"]))
+            if not isinstance(files, dict):
+                raise Exception("FILE LOAD ERROR: Unexpected DI files load response format; response: {}".format(files))
             
-            files: List[File] = []
-            for fileID in accountData["files"]:
-                files.append(File.rawLoad(accountData["files"][fileID]))
+            accountFiles = []
+            for fileData in files.values():
+                if fileData['accountID'] == accountID:
+                    accountFiles.append(File.rawLoad(fileData))
             
-            return files
-        elif id != None and accountID == None:
-            # Search all accounts for the targeted file
-            for accountID in accountsData:
-                accountData = accountsData[accountID]
-                if "files" in accountData:
-                    if not isinstance(accountData["files"], dict):
-                        continue
-                    for fileID in accountData["files"]:
-                        if fileID == id:
-                            return File.rawLoad(accountData["files"][fileID])
-            
-            return None
+            return accountFiles
         else:
-            # Search the targeted account for the targeted file
-            if accountID not in accountsData:
+            files = DI.load(Ref("files"))
+            if isinstance(files, DIError):
+                raise Exception("FILE LOAD ERROR: DIError: {}".format(files))
+            if files == None:
                 return None
+            if not isinstance(files, dict):
+                raise Exception("FILE LOAD ERROR: Unexpected DI files load response format; response: {}".format(files))
             
-            accountData = accountsData[accountID]
-            if "files" not in accountData:
-                return None
-            if not isinstance(accountData["files"], dict):
-                raise Exception("FILE LOAD ERROR: Corrupted files data for account '{}'; data: {}".format(accountID, accountData["files"]))
-            
-            for fileID in accountData["files"]:
-                if fileID == id:
-                    return File.rawLoad(accountData["files"][fileID])
-            
-            return None
+            return [File.rawLoad(fileData) for fileData in files.values()]
     
     def save(self, checkIntegrity=True) -> bool:
         convertedData = self.represent()
@@ -441,5 +423,5 @@ class File(DIRepresentable):
         return File.getExtFrom(self.name)
     
     @staticmethod
-    def ref(accountID, fileID) -> Ref:
-        return Ref("accounts", accountID, "files", fileID)
+    def ref(fileID) -> Ref:
+        return Ref("files", fileID)
