@@ -102,6 +102,43 @@ def downloadFile(user: Identity, filename: str):
     
     return send_file(AFManager.userFilePath(user.id, filename), as_attachment=True, last_modified=Universal.fromUTC(userFile.lastUpdate) if isinstance(userFile.lastUpdate, str) else None)
 
+@directoryBP.route('/file/<filename>', methods=['DELETE'])
+@checkAPIKey
+@checkSession(strict=True, provideIdentity=True)
+@emailVerified
+def deleteFile(user: Identity, filename: str):
+    if not AFManager.checkIfFolderIsRegistered(user.id):
+        return "UERROR: Please register your directory first.", 400
+    
+    if filename not in AFManager.getFilenames(user.id):
+        return "ERROR: File not found.", 404
+    
+    try:
+        res = AFManager.deleteFile(user.id, filename)
+        if res != True:
+            raise Exception(res)
+    except Exception as e:
+        Logger.log("DIRECTORY DELETE ERROR: Operation failed for user '{}'; error: {}".format(user.id, e))
+        return "ERROR: Failed to process request.", 500
+    
+    userFile = [user.files[fileID] for fileID in user.files if user.files[fileID].name == filename]
+    if len(userFile) == 1:
+        userFile = userFile[0]
+        userFile.destroy()
+    
+    log = AuditLog(user.id, "FileDelete", "File '{}' deleted.".format(filename))
+    log.save()
+    
+    return "SUCCESS: File deleted.", 200
+
+@directoryBP.route('/bulkDelete', methods=['DELETE'])
+@checkAPIKey
+@checkSession(strict=True, provideIdentity=True)
+@emailVerified
+def bulkDelete(user: Identity):
+    print(request.args.getlist('filenames'), request.is_json)
+    return "hello"
+
 @directoryBP.route('/file', methods=['POST'])
 @checkAPIKey
 @jsonOnly
@@ -113,6 +150,27 @@ def getFile():
         return "ERROR: No filename provided.", 400
     
     return redirect(url_for('directory.downloadFile', filename=request.json['filename'].strip()))
+
+@directoryBP.route('/file', methods=['DELETE'])
+@checkAPIKey
+@jsonOnly
+@enforceSchema(
+    ("filenames")
+)
+def deleteFilesAPI():
+    if isinstance(request.json["filenames"], str):
+        if len(request.json["filenames"].strip()) == 0:
+            return "ERROR: No filename provided.", 400
+        
+        return redirect(url_for('directory.deleteFile', filename=request.json['filenames'].strip()))
+    elif isinstance(request.json["filenames"], list):
+        for filename in request.json["filenames"]:
+            if not isinstance(filename, str) or len(filename.strip()) == 0:
+                return "ERROR: Invalid filename provided.", 400
+        
+        return redirect(url_for('directory.bulkDelete', filenames=[filename.strip() for filename in request.json["filenames"]]))
+    else:
+        return "ERROR: Invalid request.", 400
 
 @directoryBP.route('/', methods=['GET'])
 @checkSession(strict=True, provideIdentity=True)
