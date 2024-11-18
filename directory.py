@@ -45,7 +45,12 @@ def uploadFile(user: Identity):
     if len(currentFiles) >= configManager.getMaxFileCount():
         return "UERROR: Maximum file upload limit reached.", 400
     
-    changes = False
+    try:
+        user.getFiles()
+    except Exception as e:
+        Logger.log("DIRECTORY UPLOAD ERROR: Failed to retrieve files for user '{}'; error: {}".format(user.id, e))
+        return "ERROR: Failed to process request.", 500
+    
     fileSaveUpdates = {}
     for file in files:
         secureName = secure_filename(file.filename)
@@ -56,29 +61,31 @@ def uploadFile(user: Identity):
             fileSaveUpdates[secureName] = "UERROR: Maximum file upload limit reached."
             continue
         
+        # Append the file to current directory files list
         currentFiles.append(secureName)
         
+        # Save the file
         fileExists = os.path.isfile(AFManager.userFilePath(user.id, secureName))
         file.save(AFManager.userFilePath(user.id, secureName))
-        fileSaveUpdates[secureName] = "SUCCESS: File saved."
         
+        # Log the file save
         fileSaveLog = AuditLog(user.id, "FileUpload" if not fileExists else "FileOverwrite", "File '{}' uploaded.".format(secureName))
         fileSaveLog.save()
         
+        # Update the database with the file's list. If file exists, update last modified, else create and save new file object
         fileFound = False
         for userFile in user.files.values():
             if userFile.name == secureName:
                 userFile.lastUpdate = Universal.utcNowString()
                 fileFound = True
+                userFile.save()
                 break
+        
         if not fileFound:
             fileObject = File(user.id, secureName)
-            fileObject.linkTo(user)
+            fileObject.save()
         
-        changes = True
-    
-    if changes:
-        user.save()
+        fileSaveUpdates[secureName] = "SUCCESS: File saved."
     
     return fileSaveUpdates, 200
 
@@ -92,15 +99,25 @@ def downloadFile(user: Identity, filename: str):
     if filename not in AFManager.getFilenames(user.id):
         return "ERROR: File not found.", 404
     
-    userFile = [user.files[fileID] for fileID in user.files if user.files[fileID].name == filename]
-    if len(userFile) == 0:
+    userFile = None
+    try:
+        userFile = File.load(accountID=user.id, filename=filename)
+        if not isinstance(userFile, File):
+            raise Exception("Unexpected load response type.")
+    except Exception as e:
+        Logger.log("DIRECTORY DOWNLOAD ERROR: Failed to retrieve file object '{}' for user '{}'; error: {}".format(filename, user.id, e))
+        return "ERROR: Failed to process request.", 500
+    
+    if userFile == None:
         Logger.log("DIRECTORY DOWNLOAD: Updating user '{}' with unmatched existing file '{}'.".format(user.id, filename))
         userFile = File(user.id, filename)
         userFile.save()
-    else:
-        userFile = userFile[0]
     
-    return send_file(AFManager.userFilePath(user.id, filename), as_attachment=True, last_modified=Universal.fromUTC(userFile.lastUpdate) if isinstance(userFile.lastUpdate, str) else None)
+    lastModified = None
+    if isinstance(userFile.lastUpdate, str):
+        lastModified = Universal.fromUTC(userFile.lastUpdate)
+    
+    return send_file(AFManager.userFilePath(user.id, filename), as_attachment=True, last_modified=lastModified)
 
 @directoryBP.route('/file/<filename>', methods=['DELETE'])
 @checkAPIKey
@@ -121,9 +138,8 @@ def deleteFile(user: Identity, filename: str):
         Logger.log("DIRECTORY DELETE ERROR: Operation failed for user '{}'; error: {}".format(user.id, e))
         return "ERROR: Failed to process request.", 500
     
-    userFile = [user.files[fileID] for fileID in user.files if user.files[fileID].name == filename]
-    if len(userFile) == 1:
-        userFile = userFile[0]
+    userFile = File.load(accountID=user.id, filename=filename)
+    if userFile != None and isinstance(userFile, File):
         userFile.destroy()
     
     log = AuditLog(user.id, "FileDelete", "File '{}' deleted.".format(filename))
@@ -145,7 +161,6 @@ def bulkDelete(user: Identity):
     
     directoryFiles = AFManager.getFilenames(user.id)
     fileDeletionUpdates = {}
-    changes = False
     for filename in filenames:
         if filename not in directoryFiles:
             fileDeletionUpdates[filename] = "UERROR: File not found."
@@ -160,25 +175,20 @@ def bulkDelete(user: Identity):
             fileDeletionUpdates[filename] = "ERROR: Failed to process request."
             continue
         
-        userFile = [user.files[fileID] for fileID in user.files if user.files[fileID].name == filename]
-        if len(userFile) == 1:
-            userFile = userFile[0]
-            
-            try:
-                user.deleteFile(userFile.id)
-                changes = True
-            except Exception as e:
-                Logger.log("DIRECTORY BULKDELETE ERROR: Failed to delete '{}' file object for user '{}'; error: {}".format(filename, user.id, e))
+        try:
+            userFile = File.load(accountID=user.id, filename=filename)
+            if userFile != None and isinstance(userFile, File):
+                userFile.destroy()
+        except Exception as e:
+            Logger.log("DIRECTORY BULKDELETE ERROR: Failed to delete file object '{}' for user '{}'; error: {}".format(filename, user.id, e))
+            fileDeletionUpdates[filename] = "ERROR: Failed to process request."
+            continue
         
         log = AuditLog(user.id, "FileDelete", "File '{}' deleted.".format(filename))
         log.save()
-        changes = True
         
         fileDeletionUpdates[filename] = "SUCCESS: File deleted."
-        
-    if changes:
-        user.save()
-        
+    
     return fileDeletionUpdates, 200
 
 @directoryBP.route('/file', methods=['POST'])
@@ -223,27 +233,37 @@ def listFiles(user: Identity):
         return "UERROR: Please register your directory first.", 400
     
     directoryFiles = AFManager.getFilenames(user.id)
-    userFilenames = [userFile.name for userFile in user.files.values()]
-    filesData = {id: file for id, file in user.files.items()}
+    
+    userFiles = []
+    userFilenames = []
+    try:
+        userFiles = File.load(accountID=user.id)
+        if not isinstance(userFiles, list):
+            raise Exception("Unexpected load response type.")
+        
+        userFilenames = [file.name for file in userFiles]
+        userFiles = {file.id: file for file in userFiles}
+    except Exception as e:
+        Logger.log("DIRECTORY LIST ERROR: Failed to retrieve files for user '{}'; error: {}".format(user.id, e))
+        return "ERROR: Failed to process request.", 500
     
     # Check for new files in directory
     for directoryFile in directoryFiles:
         if directoryFile not in userFilenames:
             Logger.log("DIRECTORY LIST: Updating user '{}' with unmatched existing file '{}'.".format(user.id, directoryFile))
             newFile = File(user.id, directoryFile)
-            newFile.linkTo(user)
             newFile.save()
             
-            filesData[newFile.id] = newFile
+            userFiles[newFile.id] = newFile
     
     # Check for removed files in directory
     for userFilename in userFilenames:
         if userFilename not in directoryFiles:
             Logger.log("DIRECTORY LIST: Removing unmatched user file '{}' from user '{}'.".format(userFilename, user.id))
-            userFile = user.files[[fileID for fileID in user.files if user.files[fileID].name == userFilename][0]]
-            userFile.destroy()
+            targetFile = [file for file in userFiles.values() if file.name == userFilename][0]
+            targetFile.destroy()
             
-            del filesData[userFile.id]
+            del userFiles[targetFile.id]
     
-    filesData = {id: file.represent() for id, file in filesData.items()}
+    filesData = {id: file.represent() for id, file in userFiles.items()}
     return filesData, 200

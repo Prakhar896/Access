@@ -354,7 +354,7 @@ class File(DIRepresentable):
         )
     
     @staticmethod
-    def load(id=None, accountID=None) -> 'File | List[File] | None':
+    def load(id=None, accountID=None, filename=None) -> 'File | List[File] | None':
         if id != None:
             fileData = DI.load(File.ref(id))
             if isinstance(fileData, DIError):
@@ -365,31 +365,42 @@ class File(DIRepresentable):
                 raise Exception("FILE LOAD ERROR: Unexpected DI file load response format; response: {}".format(fileData))
             
             return File.rawLoad(fileData)
-        elif accountID != None:
-            files = DI.load(Ref("files"))
-            if isinstance(files, DIError):
-                raise Exception("FILE LOAD ERROR: DIError: {}".format(files))
-            if files == None:
-                return None
-            if not isinstance(files, dict):
-                raise Exception("FILE LOAD ERROR: Unexpected DI files load response format; response: {}".format(files))
-            
-            accountFiles = []
-            for fileData in files.values():
-                if fileData['accountID'] == accountID:
-                    accountFiles.append(File.rawLoad(fileData))
-            
-            return accountFiles
         else:
-            files = DI.load(Ref("files"))
-            if isinstance(files, DIError):
-                raise Exception("FILE LOAD ERROR: DIError: {}".format(files))
-            if files == None:
-                return None
-            if not isinstance(files, dict):
-                raise Exception("FILE LOAD ERROR: Unexpected DI files load response format; response: {}".format(files))
+            if accountID == None and filename != None:
+                raise Exception("FILE LOAD ERROR: Unexpected load condition.") ## This is because multiple users can have the same file name. Thus, providing just the filename is not enough.
             
-            return [File.rawLoad(fileData) for fileData in files.values()]
+            data = DI.load(Ref("files"))
+            if isinstance(data, DIError):
+                raise Exception("FILE LOAD ERROR: DIError: {}".format(data))
+            if data == None:
+                return None
+            if not isinstance(data, dict):
+                raise Exception("FILE LOAD ERROR: Unexpected DI files load response format; response: {}".format(data))
+
+            files: Dict[str, File] = {}
+            for fileID in data:
+                files[fileID] = File.rawLoad(data[fileID])
+            
+            # If no accountID, filename is provided, return all files
+            if accountID == None and filename == None:
+                return list(files.values())
+            
+            # Look for files that belong to the specified account
+            # Loop through all files and return the files that belong to the specified account
+            accountFiles = []
+            for fileID in files:
+                if files[fileID].accountID == accountID:
+                    if filename != None and files[fileID].name == filename:
+                        return files[fileID]
+                    elif filename == None:
+                        accountFiles.append(files[fileID])
+            
+            # If the filename is provided, but no file is found, return None
+            if filename != None:
+                return None
+            
+            # If no filename is provided, return the list of account files
+            return accountFiles
     
     def save(self, checkIntegrity=True) -> bool:
         convertedData = self.represent()
