@@ -136,8 +136,50 @@ def deleteFile(user: Identity, filename: str):
 @checkSession(strict=True, provideIdentity=True)
 @emailVerified
 def bulkDelete(user: Identity):
-    print(request.args.getlist('filenames'), request.is_json)
-    return "hello"
+    filenames = [x.strip() for x in request.args.getlist('filenames')]
+    if len(filenames) == 0:
+        return "ERROR: No filenames provided.", 400
+    
+    if not AFManager.checkIfFolderIsRegistered(user.id):
+        return "UERROR: Please register your directory first.", 400
+    
+    directoryFiles = AFManager.getFilenames(user.id)
+    fileDeletionUpdates = {}
+    changes = False
+    for filename in filenames:
+        if filename not in directoryFiles:
+            fileDeletionUpdates[filename] = "UERROR: File not found."
+            continue
+        
+        try:
+            res = AFManager.deleteFile(user.id, filename)
+            if res != True:
+                raise Exception(res)
+        except Exception as e:
+            Logger.log("DIRECTORY BULKDELETE ERROR: Failed to delete file '{}' for user '{}'; error: {}".format(filename, user.id, e))
+            fileDeletionUpdates[filename] = "ERROR: Failed to process request."
+            continue
+        
+        userFile = [user.files[fileID] for fileID in user.files if user.files[fileID].name == filename]
+        if len(userFile) == 1:
+            userFile = userFile[0]
+            
+            try:
+                user.deleteFile(userFile.id)
+                changes = True
+            except Exception as e:
+                Logger.log("DIRECTORY BULKDELETE ERROR: Failed to delete '{}' file object for user '{}'; error: {}".format(filename, user.id, e))
+        
+        log = AuditLog(user.id, "FileDelete", "File '{}' deleted.".format(filename))
+        log.linkTo(user)
+        changes = True
+        
+        fileDeletionUpdates[filename] = "SUCCESS: File deleted."
+        
+    if changes:
+        user.save()
+        
+    return fileDeletionUpdates, 200
 
 @directoryBP.route('/file', methods=['POST'])
 @checkAPIKey
@@ -158,11 +200,12 @@ def getFile():
     ("filenames")
 )
 def deleteFilesAPI():
-    if isinstance(request.json["filenames"], str):
-        if len(request.json["filenames"].strip()) == 0:
+    if isinstance(request.json["filenames"], str) or (isinstance(request.json["filenames"], list) and len(request.json["filenames"]) == 1):
+        filename = (request.json["filenames"] if isinstance(request.json["filenames"], str) else request.json["filenames"][0]).strip()
+        if len(filename) == 0:
             return "ERROR: No filename provided.", 400
         
-        return redirect(url_for('directory.deleteFile', filename=request.json['filenames'].strip()))
+        return redirect(url_for('directory.deleteFile', filename=filename))
     elif isinstance(request.json["filenames"], list):
         for filename in request.json["filenames"]:
             if not isinstance(filename, str) or len(filename.strip()) == 0:

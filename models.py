@@ -216,6 +216,8 @@ class AuditLog(DIRepresentable):
         if timestamp == None:
             timestamp = Universal.utcNowString()
             
+        print("AL: {}: {}: {}".format(id, event, text))
+            
         self.id = id
         self.accountID = accountID
         self.timestamp = timestamp
