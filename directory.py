@@ -63,7 +63,7 @@ def uploadFile(user: Identity):
         fileSaveUpdates[secureName] = "SUCCESS: File saved."
         
         fileSaveLog = AuditLog(user.id, "FileUpload" if not fileExists else "FileOverwrite", "File '{}' uploaded.".format(secureName))
-        fileSaveLog.linkTo(user)
+        fileSaveLog.save()
         
         fileFound = False
         for userFile in user.files.values():
@@ -171,7 +171,7 @@ def bulkDelete(user: Identity):
                 Logger.log("DIRECTORY BULKDELETE ERROR: Failed to delete '{}' file object for user '{}'; error: {}".format(filename, user.id, e))
         
         log = AuditLog(user.id, "FileDelete", "File '{}' deleted.".format(filename))
-        log.linkTo(user)
+        log.save()
         changes = True
         
         fileDeletionUpdates[filename] = "SUCCESS: File deleted."

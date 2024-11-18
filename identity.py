@@ -93,15 +93,14 @@ def newIdentity():
         )
         account.emailVerification.otpCode = otpCode
         account.emailVerification.dispatchTimestamp = Universal.utcNowString()
+        account.save()
         
         accountCreatedLog = AuditLog(
             accountID=account.id,
             event="IdentityCreate",
             text="Created identity with username '{}' and email '{}'.".format(account.username, account.email)
         )
-        
-        account.auditLogs[account.id] = accountCreatedLog
-        account.save()
+        accountCreatedLog.save()
     except Exception as e:
         Logger.log("IDENTITY NEW ERROR: Failed to create and save new identity. Error: {}".format(e))
         return "ERROR: Failed to process request. Please try again.", 500
@@ -157,15 +156,14 @@ def loginIdentity(user: Identity | None=None):
     authToken = Universal.generateUniqueID(customLength=12)
     account.authToken = authToken
     account.lastLogin = Universal.utcNowString()
+    account.save()
     
     loginEvent = AuditLog(
         accountID=account.id,
         event="Login",
         text="Logged in from IP address '{}'.".format(request.remote_addr)
     )
-    account.auditLogs[loginEvent.id] = loginEvent
-    
-    account.save()
+    loginEvent.save()
     
     # Update user session
     session["aID"] = account.id
@@ -246,12 +244,14 @@ def verifyOTP():
     account.emailVerification.otpCode = None
     account.emailVerification.dispatchTimestamp = None
     account.emailVerification.verified = True
+    account.save()
     
     emailVerifiedLog = AuditLog(
         accountID=account.id,
         event="EmailVerified",
         text="Email verified successfully."
     )
+    emailVerifiedLog.save()
     
     if not AFManager.checkIfFolderIsRegistered(account.id):
         res = AFManager.registerFolder(account.id)
@@ -259,10 +259,7 @@ def verifyOTP():
             Logger.log("IDENTITY VERIFYOTP ERROR: Failed to register folder for account '{}'. Error: {}".format(account.id, res))
         else:
             folderRegisteredLog = AuditLog(account.id, "DirectoryRegistered", "Registered storage directory for account.")
-            account.auditLogs[folderRegisteredLog.id] = folderRegisteredLog
-    
-    account.auditLogs[emailVerifiedLog.id] = emailVerifiedLog
-    account.save()
+            folderRegisteredLog.save()
     
     return "SUCCESS: Email verified successfully.", 200
 
