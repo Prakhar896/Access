@@ -22,7 +22,7 @@ UPLOAD_FOLDER = os.path.join(os.getcwd(), 'Chute')
 readableFileExtensions = ', '.join(["."+x for x in configManager.config["fileExtensions"]])
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}}, allow_private_network=True)
+CORS(app, resources={r"/*": {"origins": "*"}}, origins="*", supports_credentials=True, allow_private_network=True)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = configManager.config["allowedFileSize"] * 1000 * 1000
