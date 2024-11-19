@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import colouredLogo from '/logo/svg/logo-color.svg';
-import { Button, Flex, Image, MenuIcon, Spacer, useToast } from '@chakra-ui/react';
+import { Button, Flex, Image, MenuIcon, Spacer, useMediaQuery, useToast } from '@chakra-ui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowRightFromBracket, faBars } from '@fortawesome/free-solid-svg-icons';
 import configureShowToast from './showToast';
@@ -13,6 +13,7 @@ function Navbar() {
     const navigate = useNavigate();
     const showToast = configureShowToast(toast);
     const dispatch = useDispatch();
+    const [limitedScreen] = useMediaQuery("(max-width: 800px)");
 
     const handleLogout = () => {
         dispatch(logout(true, (msg) => {
@@ -26,7 +27,7 @@ function Navbar() {
     }
 
     return (
-        <Flex as={"nav"} alignItems={"center"} rounded={"10px"} mb={"20px"} p={"10px"} m={"1rem"} overflow="hidden">
+        <Flex as={"nav"} alignItems={"center"} rounded={"10px"} mb={"20px"} p={"10px"} m={!limitedScreen ? "1rem": "10px"} overflow="hidden">
             <Button variant={"outline"} mr={"20px"}>
                 <FontAwesomeIcon icon={faBars} />
             </Button>

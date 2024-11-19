@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Box, Button, Heading, Spinner, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, useToast } from '@chakra-ui/react';
+import { Box, Button, Heading, Spinner, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, useMediaQuery, useToast } from '@chakra-ui/react';
 import { Link as ChakraLink } from '@chakra-ui/react';
 import { useSelector } from 'react-redux';
 import withAuth from '../../components/hoc/withAuth';
@@ -9,18 +9,15 @@ import configureShowToast from '../../components/showToast';
 import CentredSpinner from '../../components/CentredSpinner';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowDown, faCircleDown } from '@fortawesome/free-solid-svg-icons';
+import FilesList from '../../components/FilesList';
 
 function Directory() {
-    const backendURL = import.meta.env.VITE_BACKEND_URL;
     const { username, loaded } = useSelector(state => state.auth);
     const [filesData, setFilesData] = useState([]);
     const [retrievingFiles, setRetrievingFiles] = useState(true);
+    const [limitedScreen] = useMediaQuery("(max-width: 800px)");
     const toast = useToast();
     const showToast = configureShowToast(toast);
-
-    const downloadLinkFor = (file) => {
-        return `${backendURL}/directory/file/${file}`;
-    }
 
     const processFileData = (data) => {
         var newData = [];
@@ -35,7 +32,6 @@ function Directory() {
     }
 
     const fetchFiles = () => {
-        setRetrievingFiles(true);
         server.get("/directory")
             .then(res => {
                 if (res.status == 200) {
@@ -80,44 +76,9 @@ function Directory() {
     }, [filesData]);
 
     return (
-        <Box display={'flex'} flexDir={'column'} justifyContent={'left'} m={'1rem'} p={'10px'}>
+        <Box display={'flex'} flexDir={'column'} justifyContent={'left'} m={!limitedScreen ? '1rem': '10px'} p={'10px'}>
             <Heading as={'h1'} fontSize={'3xl'} fontFamily={'Ubuntu'}>My Files</Heading>
-            {retrievingFiles && (
-                <Box display={'flex'} justifyContent={'left'} alignItems={'center'} mt={'5%'}>
-                    <Spinner />
-                </Box>
-            )}
-            {!retrievingFiles && filesData.length == 0 && <Text>No files found.</Text>}
-            {!retrievingFiles && filesData.length > 0 && (
-                <TableContainer mt={{ base: '15px', md: '20px', lg: '25px' }}>
-                    <Table variant='simple'>
-                        <Thead>
-                            <Tr>
-                                <Th>Name</Th>
-                                <Th>Modified</Th>
-                                <Th>Uploaded</Th>
-                                <Th>Actions</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
-                            {filesData.map((file, index) => (
-                                <Tr key={index}>
-                                    <Td>
-                                        <ChakraLink href={downloadLinkFor(file.name)} color={'blue.500'}>{file.name}</ChakraLink>
-                                    </Td>
-                                    <Td>{file.lastUpdate ?? "Unavailable"}</Td>
-                                    <Td>{file.uploadedTimestamp}</Td>
-                                    <Td>
-                                        <Button onClick={() => { location.href = downloadLinkFor(file.name); }} variant={'ghost'} size={'md'}>
-                                            <FontAwesomeIcon icon={faCircleDown} />
-                                        </Button>
-                                    </Td>
-                                </Tr>
-                            ))}
-                        </Tbody>
-                    </Table>
-                </TableContainer>
-            )}
+            <FilesList filesData={filesData} retrieving={retrievingFiles} />
         </Box>
     )
 }
