@@ -7,6 +7,7 @@ import configureShowToast from "../components/showToast"
 import { FaFile, FaRegClipboard, FaUser } from 'react-icons/fa';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowUpFromBracket, faFile } from '@fortawesome/free-solid-svg-icons';
+import UploadFilesModal from './UploadFilesModal';
 
 function Sidebar({ isOpen, onClose }) {
     const navigate = useNavigate();
@@ -21,6 +22,11 @@ function Sidebar({ isOpen, onClose }) {
         },
         borderRadius: "20px",
     };
+
+    const handleModalOpen = () => {
+        onClose();
+        onUploadFilesModalOpen();
+    }
 
     return (
         <>
@@ -63,7 +69,7 @@ function Sidebar({ isOpen, onClose }) {
                     </DrawerBody>
                     <DrawerFooter display="flex" justifyContent="center">
                         <Box mb={4}>
-                            <Button variant="Default" mb={4}>
+                            <Button variant="Default" mb={4} onClick={handleModalOpen}>
                                 <HStack spacing={'10px'}>
                                     <FontAwesomeIcon icon={faArrowUpFromBracket} />
                                     <Text>Upload Files</Text>
@@ -73,12 +79,7 @@ function Sidebar({ isOpen, onClose }) {
                     </DrawerFooter>
                 </DrawerContent>
             </Drawer>
-            {/* <AddListingModal
-                isOpen={isUploadFilesModalOpen}
-                onClose={onUploadFilesModalClose}
-                onOpen={onUploadFilesModalOpen}
-                closeSidebar={onClose}
-            /> */}
+            <UploadFilesModal isOpen={isUploadFilesModalOpen} onOpen={onUploadFilesModalOpen} onClose={onUploadFilesModalClose} />
         </>
     )
 }

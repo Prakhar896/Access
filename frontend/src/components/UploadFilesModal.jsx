@@ -46,7 +46,9 @@ function UploadFilesModal({ isOpen, onClose, onOpen, triggerReload }) {
             }
 
             setUploading(false);
-            triggerReload();
+            if (triggerReload) {
+                triggerReload();
+            }
         } catch (err) {
             if (err.response && err.response.status && err.response.status == 413) {
                 console.log("File too large error occurred when uploading files; response: ", err.response.data);
