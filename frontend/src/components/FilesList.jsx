@@ -44,7 +44,11 @@ function FilesList({ filesData, retrieving }) {
                     {filesData.map((file, index) => (
                         <Tr key={index}>
                             <Td>
-                                <ChakraLink href={downloadLinkFor(file.name)} color={'blue.500'} fontSize={{ base: 'sm', md: 'md', lg: 'lg' }}><Text maxW={{ base: '200px', md: '300px', lg: 'fit-content' }} isTruncated>{file.name}</Text></ChakraLink>
+                                {file.name ? (
+                                    <ChakraLink href={downloadLinkFor(file.name)} color={'blue.500'} fontSize={{ base: 'sm', md: 'md', lg: 'lg' }}><Text maxW={{ base: '200px', md: '300px', lg: 'fit-content' }} isTruncated>{file.name}</Text></ChakraLink>
+                                ) : (
+                                    <Text color={'red'}>Unavailable</Text>
+                                )}
                             </Td>
                             {!limitedScreen && (
                                 <>

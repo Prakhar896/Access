@@ -87,7 +87,7 @@ function Directory() {
                 </Box>
                 <FilesList filesData={filesData} retrieving={retrievingFiles} />
             </Box>
-            <UploadFilesModal isOpen={isUploadModalOpen} onOpen={onUploadModalOpen} onClose={onUploadModalClose} />
+            <UploadFilesModal isOpen={isUploadModalOpen} onOpen={onUploadModalOpen} onClose={onUploadModalClose} triggerReload={fetchFiles} />
         </>
     )
 }
