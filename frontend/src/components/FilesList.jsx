@@ -25,8 +25,6 @@ function FilesList({ filesData, retrieving }) {
         </Box>
     }
 
-    console.log(filesData)
-
     return (
         <TableContainer mt={{ base: '15px', md: '20px', lg: '25px' }} w={limitedScreen && '100%'}>
             <Table variant='simple'>

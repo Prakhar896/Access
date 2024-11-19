@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Box, Button, Heading, Spacer, Spinner, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, useMediaQuery, useToast } from '@chakra-ui/react';
+import { Box, Button, Heading, Spacer, Spinner, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, useDisclosure, useMediaQuery, useToast } from '@chakra-ui/react';
 import { Link as ChakraLink } from '@chakra-ui/react';
 import { useSelector } from 'react-redux';
 import withAuth from '../../components/hoc/withAuth';
@@ -10,12 +10,14 @@ import CentredSpinner from '../../components/CentredSpinner';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowDown, faArrowUpFromBracket, faCircleDown } from '@fortawesome/free-solid-svg-icons';
 import FilesList from '../../components/FilesList';
+import UploadFilesModal from '../../components/UploadFilesModal';
 
 function Directory() {
     const { username, loaded } = useSelector(state => state.auth);
     const [filesData, setFilesData] = useState([]);
     const [retrievingFiles, setRetrievingFiles] = useState(true);
     const [limitedScreen] = useMediaQuery("(max-width: 800px)");
+    const { isOpen: isUploadModalOpen, onOpen: onUploadModalOpen, onClose: onUploadModalClose } = useDisclosure();
     const toast = useToast();
     const showToast = configureShowToast(toast);
 
@@ -76,14 +78,17 @@ function Directory() {
     }, [filesData]);
 
     return (
-        <Box display={'flex'} flexDir={'column'} justifyContent={'left'} m={!limitedScreen ? '1rem': '10px'} p={'10px'}>
-            <Box display={'flex'} justifyContent={'left'} flexDirection={'row'} alignItems={'center'}>
-                <Heading as={'h1'} fontSize={'3xl'} fontFamily={'Ubuntu'}>My Files</Heading>
-                <Spacer />
-                <Button variant={'Default'}><FontAwesomeIcon icon={faArrowUpFromBracket} /></Button>
+        <>
+            <Box display={'flex'} flexDir={'column'} justifyContent={'left'} m={!limitedScreen ? '1rem' : '10px'} p={'10px'}>
+                <Box display={'flex'} justifyContent={'left'} flexDirection={'row'} alignItems={'center'}>
+                    <Heading as={'h1'} fontSize={'3xl'} fontFamily={'Ubuntu'}>My Files</Heading>
+                    <Spacer />
+                    <Button variant={'Default'} onClick={onUploadModalOpen}><FontAwesomeIcon icon={faArrowUpFromBracket} /></Button>
+                </Box>
+                <FilesList filesData={filesData} retrieving={retrievingFiles} />
             </Box>
-            <FilesList filesData={filesData} retrieving={retrievingFiles} />
-        </Box>
+            <UploadFilesModal isOpen={isUploadModalOpen} onOpen={onUploadModalOpen} onClose={onUploadModalClose} />
+        </>
     )
 }
 
