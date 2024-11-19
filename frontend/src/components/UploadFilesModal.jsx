@@ -48,10 +48,16 @@ function UploadFilesModal({ isOpen, onClose, onOpen, triggerReload }) {
             setUploading(false);
             triggerReload();
         } catch (err) {
-            if (err.response && err.response.data && typeof err.response.data == "string") {
+            if (err.response && err.response.status && err.response.status == 413) {
+                console.log("File too large error occurred when uploading files; response: ", err.response.data);
+                showToast("Something went wrong", "One or more files are too large. Please try again with less/smaller files.", "error");
+                setUploading(false);
+                return
+            } else if (err.response && err.response.data && typeof err.response.data == "string") {
                 if (err.response.data.startsWith("UERROR")) {
                     console.log("User error occurred when uploading files; response: ", err.response.data);
                     showToast("Something went wrong", err.response.data.substring("UERROR: ".length), "error");
+                    setUploading(false);
                     return
                 } else {
                     console.log("Unknown response from server when uploading files; response: ", err.response.data);
@@ -66,17 +72,24 @@ function UploadFilesModal({ isOpen, onClose, onOpen, triggerReload }) {
         }
     }
 
+    const handleClose = () => {
+        setFiles([]);
+        setFileUploadResults({});
+        setUploading(false);
+        onClose();
+    }
+
     const uploadButtonDisabled = files.length === 0 || uploading;
 
     return (
-        <Modal onClose={onClose} isOpen={isOpen} isCentered>
+        <Modal onClose={handleClose} isOpen={isOpen} isCentered blockScrollOnMount closeOnOverlayClick={false} size={'md'}>
             <ModalOverlay />
             <ModalContent>
                 <ModalHeader>Upload Files</ModalHeader>
                 <ModalCloseButton />
                 <ModalBody>
-                    <FormControl mb={5} isRequired>
-                        
+                    <Text>Files where the name is the same as an existing file in your directory will overwrite the existing file. New files are uploaded as normal. Filenames may be slightly modified for security purposes.</Text>
+                    <FormControl mt={5} mb={5} isRequired>
                         <FormLabel><Text>Select one or more files.</Text></FormLabel>
                         <Input
                             key={"filesInput"}
@@ -99,6 +112,7 @@ function UploadFilesModal({ isOpen, onClose, onOpen, triggerReload }) {
                 </ModalBody>
                 <ModalFooter>
                     <HStack spacing={"10px"}>
+                        <Button variant="outline" onClick={handleClose}>Close</Button>
                         <Button variant={!uploading && !uploadButtonDisabled ? 'Default' : 'solid'} onClick={handleUpload} isLoading={uploading} loadingText="Uploading..." isDisabled={uploadButtonDisabled}>Upload</Button>
                     </HStack>
                 </ModalFooter>
