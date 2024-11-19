@@ -42,8 +42,6 @@ def uploadFile(user: Identity):
         return "UERROR: Please register your directory first.", 400
     
     currentFiles = AFManager.getFilenames(user.id)
-    if len(currentFiles) >= configManager.getMaxFileCount():
-        return "UERROR: Maximum file upload limit reached.", 400
     
     try:
         user.getFiles()
@@ -55,14 +53,15 @@ def uploadFile(user: Identity):
     for file in files:
         secureName = secure_filename(file.filename)
         if not allowed_file(secureName):
-            fileSaveUpdates[secureName] = "UERROR: File type not allowed."
+            fileSaveUpdates[file.filename] = "UERROR: File type not allowed."
             continue
-        if (len(currentFiles) + 1) >= configManager.getMaxFileCount():
-            fileSaveUpdates[secureName] = "UERROR: Maximum file upload limit reached."
+        if secureName not in currentFiles and (len(currentFiles) + 1) > configManager.getMaxFileCount():
+            fileSaveUpdates[file.filename] = "UERROR: Maximum file upload limit reached."
             continue
         
-        # Append the file to current directory files list
-        currentFiles.append(secureName)
+        # Append the file to current directory files list, if it doesn't exist
+        if secureName not in currentFiles:
+            currentFiles.append(secureName)
         
         # Save the file
         fileExists = os.path.isfile(AFManager.userFilePath(user.id, secureName))
@@ -85,7 +84,10 @@ def uploadFile(user: Identity):
             fileObject = File(user.id, secureName)
             fileObject.save()
         
-        fileSaveUpdates[secureName] = "SUCCESS: File saved."
+        if not fileExists:
+            fileSaveUpdates[file.filename] = "SUCCESS: File saved."
+        else:
+            fileSaveUpdates[file.filename] = "SUCCESS: File updated."
     
     return fileSaveUpdates, 200
 
