@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Box, Button, Heading, Spinner, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, useMediaQuery, useToast } from '@chakra-ui/react';
+import { Box, Button, Heading, Spacer, Spinner, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, useMediaQuery, useToast } from '@chakra-ui/react';
 import { Link as ChakraLink } from '@chakra-ui/react';
 import { useSelector } from 'react-redux';
 import withAuth from '../../components/hoc/withAuth';
@@ -8,7 +8,7 @@ import server from '../../networking';
 import configureShowToast from '../../components/showToast';
 import CentredSpinner from '../../components/CentredSpinner';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowDown, faCircleDown } from '@fortawesome/free-solid-svg-icons';
+import { faArrowDown, faArrowUpFromBracket, faCircleDown } from '@fortawesome/free-solid-svg-icons';
 import FilesList from '../../components/FilesList';
 
 function Directory() {
@@ -77,7 +77,11 @@ function Directory() {
 
     return (
         <Box display={'flex'} flexDir={'column'} justifyContent={'left'} m={!limitedScreen ? '1rem': '10px'} p={'10px'}>
-            <Heading as={'h1'} fontSize={'3xl'} fontFamily={'Ubuntu'}>My Files</Heading>
+            <Box display={'flex'} justifyContent={'left'} flexDirection={'row'} alignItems={'center'}>
+                <Heading as={'h1'} fontSize={'3xl'} fontFamily={'Ubuntu'}>My Files</Heading>
+                <Spacer />
+                <Button variant={'Default'}><FontAwesomeIcon icon={faArrowUpFromBracket} /></Button>
+            </Box>
             <FilesList filesData={filesData} retrieving={retrievingFiles} />
         </Box>
     )
