@@ -240,6 +240,8 @@ def listFiles(user: Identity):
     userFilenames = []
     try:
         userFiles = File.load(accountID=user.id)
+        if userFiles == None:
+            userFiles = []
         if not isinstance(userFiles, list):
             raise Exception("Unexpected load response type.")
         
