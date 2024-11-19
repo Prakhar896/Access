@@ -20,7 +20,7 @@ function FilesList({ filesData, retrieving }) {
     }
 
     if (!retrieving && filesData.length <= 0) {
-        <Box display={'flex'} justifyContent={'left'} alignItems={'center'} mt={'5%'}>
+        return <Box display={'flex'} justifyContent={'left'} alignItems={'center'} mt={'5%'}>
             <Text>No files found.</Text>
         </Box>
     }
