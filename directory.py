@@ -302,7 +302,7 @@ def renameFile(user: Identity):
         return "UERROR: New filename already exists.", 400
     
     # Check filename validity with re
-    if not re.match(r"^[\w,\s-]+\.[A-Za-z]{3}$", newFilename):
+    if not re.match(r"^[a-zA-Z0-9_\- ]+\.[a-zA-Z]+$", newFilename):
         return "UERROR: Invalid filename format.", 400
     
     newFilename = secure_filename(newFilename)
