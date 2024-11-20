@@ -111,7 +111,7 @@ function MyAccount() {
                             setSaving(false);
                             setShowingSaveSuccess(false);
                         }, 2000);
-                        if (handler) {
+                        if (handler && typeof handler == "function") {
                             handler();
                         }
                         return
@@ -201,7 +201,7 @@ function MyAccount() {
                                     <AlertIcon />
                                     <Text fontSize={{ base: 'sm', md: 'md' }}>Verify your email to use many of Access' features.</Text>
                                     <Spacer />
-                                    <Button colorScheme='yellow' variant={'outline'} fontSize={{ base: 'sm', md: 'md' }} p={'14px'}>Resend Code</Button>
+                                    <Button colorScheme='yellow' variant={'outline'} fontSize={{ base: 'xs', sm: 'sm', md: 'md' }} p={'14px'}>Resend Code</Button>
                                 </Alert>
                             )}
                             <FormControl>
