@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { BsFillInfoCircleFill, BsTrash3Fill } from 'react-icons/bs'
 import { FaDownload, FaEllipsisV, FaFileDownload, FaHamburger } from 'react-icons/fa'
 import RenameFile from './fileManagement/RenameFile';
+import DeleteFile from './fileManagement/DeleteFile';
 
 function FileActions({ fileData, downloadLinkFor, triggerReload }) {
     const { isOpen: infoModalOpen, onOpen: onInfoModalOpen, onClose: onInfoModalClose } = useDisclosure();
@@ -31,9 +32,7 @@ function FileActions({ fileData, downloadLinkFor, triggerReload }) {
                     </MenuItem>
                     <RenameFile fileData={fileData} triggerReload={triggerReload} />
                     <MenuDivider />
-                    <MenuItem color={'red'} icon={<BsTrash3Fill />}>
-                        Delete
-                    </MenuItem>
+                    <DeleteFile fileData={fileData} triggerReload={triggerReload} />
                 </MenuList>
             </Menu>
 
