@@ -1,15 +1,24 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Alert, AlertIcon, Box, Button, FormControl, FormLabel, Heading, Input, Spacer, Spinner, Text, useMediaQuery, useToast, VStack } from '@chakra-ui/react';
 import configureShowToast from '../../components/showToast';
 import { useSelector } from 'react-redux';
 import server from '../../networking';
+import { FaEllipsisH, FaSave } from 'react-icons/fa';
+import { BsFillSaveFill, BsSave2Fill } from 'react-icons/bs';
 
 function MyAccount() {
-    const { username, loaded } = useSelector(state => state.auth);
+    const { loaded } = useSelector(state => state.auth);
     const [limitedScreen] = useMediaQuery("(max-width: 800px)");
 
     const [profileData, setProfileData] = useState({});
     const [retrievingProfile, setRetrievingProfile] = useState(true);
+    const [saveDisabled, setSaveDisabled] = useState(true);
+    
+    const [profileUsername, setProfileUsername] = useState("");
+    const [profileEmail, setProfileEmail] = useState("");
+
+    const handleUsernameInputChange = (e) => { setProfileUsername(e.target.value); }
+    const handleEmailInputChange = (e) => { setProfileEmail(e.target.value); }
 
     const toast = useToast();
     const showToast = configureShowToast(toast);
@@ -23,6 +32,13 @@ function MyAccount() {
                 if (res.status == 200 && typeof res.data == "object" && !Array.isArray(res.data)) {
                     setProfileData(res.data);
                     setRetrievingProfile(false);
+
+                    if (res.data.username) {
+                        setProfileUsername(res.data.username);
+                    }
+                    if (res.data.email) {
+                        setProfileEmail(res.data.email);
+                    }
                     return
                 } else {
                     console.log("Non-200/unexpectedd response when retrieving profile; response: ", res.data);
@@ -54,12 +70,26 @@ function MyAccount() {
         }
     }, [])
 
-    console.log(profileData)
+    useEffect(() => {
+        if (profileData && !retrievingProfile) {
+            if (profileUsername == profileData.username && profileEmail == profileData.email) {
+                setSaveDisabled(true);
+            } else {
+                setSaveDisabled(false);
+            }
+        }
+    }, [profileUsername, profileEmail])
 
     return (
         <Box display={'flex'} flexDir={'column'} justifyContent={'left'} m={!limitedScreen ? '1rem' : '10px'} p={'10px'}>
             <Box display={'flex'} justifyContent={'left'} flexDirection={'row'} alignItems={'center'}>
                 <Heading as={'h1'} fontSize={'3xl'} fontFamily={'Ubuntu'}>My Account</Heading>
+                <Spacer />
+                <Button variant={'Default'}>
+                    <FaEllipsisH />
+                    {!limitedScreen && <Text ml={2}>Manage Password</Text>}
+                </Button>
+                <Button colorScheme='green' variant={'solid'} ml={"10px"} isDisabled={saveDisabled}><FaSave /></Button>
             </Box>
 
             <Box display={'flex'} justifyContent={'left'} flexDirection={'column'} alignItems={'left'} w={!limitedScreen ? '50%' : '100%'} mt={"5%"}>
@@ -69,11 +99,11 @@ function MyAccount() {
                     <VStack spacing={"20px"}>
                         <FormControl>
                             <FormLabel><Text fontSize={'lg'}>Username</Text></FormLabel>
-                            <Input value={profileData.username} isReadOnly />
+                            <Input value={profileUsername} onChange={handleUsernameInputChange} />
                         </FormControl>
                         <FormControl>
                             <FormLabel><Text fontSize={'lg'}>Email</Text></FormLabel>
-                            <Input type='email' value={profileData.email} isReadOnly />
+                            <Input type='email' value={profileEmail} onChange={handleEmailInputChange} />
                         </FormControl>
                         {profileData.emailVerified == false && (
                             <Alert status='warning' rounded={'xl'}>
