@@ -24,7 +24,7 @@ def getProfile(user: Identity):
         "emailVerified": user.emailVerification.verified,
         "lastLogin": user.lastLogin,
         "createdAt": user.created,
-        "fileCount": len(user.files)   
+        "fileCount": len(user.files)
     }
     
     return profileData, 200
