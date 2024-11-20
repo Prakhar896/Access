@@ -3,8 +3,7 @@ import { Alert, AlertIcon, Box, Button, FormControl, FormLabel, Heading, Input, 
 import configureShowToast from '../../components/showToast';
 import { useSelector } from 'react-redux';
 import server from '../../networking';
-import { FaEllipsisH, FaSave } from 'react-icons/fa';
-import { BsFillSaveFill, BsSave2Fill } from 'react-icons/bs';
+import { FaCheck, FaEllipsisH, FaSave } from 'react-icons/fa';
 
 function MyAccount() {
     const { loaded } = useSelector(state => state.auth);
@@ -13,6 +12,8 @@ function MyAccount() {
     const [profileData, setProfileData] = useState({});
     const [retrievingProfile, setRetrievingProfile] = useState(true);
     const [saveDisabled, setSaveDisabled] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [showingSaveSuccess, setShowingSaveSuccess] = useState(false);
     
     const [profileUsername, setProfileUsername] = useState("");
     const [profileEmail, setProfileEmail] = useState("");
@@ -49,7 +50,7 @@ function MyAccount() {
                 if (err.response && err.response.data && typeof err.response.data == "string") {
                     if (err.response.data.startsWith("UERROR")) {
                         console.log("User error occurred in retrieving profile; response: ", err.response.data);
-                        showToast("Something went wrong", res.data.substring("UERROR: ".length), "error");
+                        showToast("Something went wrong", err.response.data.substring("UERROR: ".length), "error");
                         return
                     } else {
                         console.log("Error occurred in retrieving profile; response: ", err.response.data);
@@ -62,6 +63,66 @@ function MyAccount() {
 
                 showToast("Something went wrong", "Couldn't retrieve profile. Please try again.", "error");
             })
+    }
+
+
+    const updateProfile = () => {
+        if (profileData.username == profileUsername && profileData.email == profileEmail) {
+            showToast("No changes detected", "You haven't made any changes to your profile.", "warning");
+            return
+        }
+
+        var data = {};
+        if (profileData.username != profileUsername) {
+            data.username = profileUsername;
+        }
+        if (profileData.email != profileEmail) {
+            data.email = profileEmail;
+        }
+
+        setSaving(true);
+        server.post('/profile/update', data)
+        .then(res => {
+            if (res.status == 200) {
+                if (typeof res.data == "string" && res.data.startsWith("SUCCESS")) {
+                    showToast("Profile updated.", "", "success");
+                    getProfile();
+                    setSaveDisabled(true);
+                    setShowingSaveSuccess(true);
+                    setTimeout(() => {
+                        setSaving(false);
+                        setShowingSaveSuccess(false);
+                    }, 2000);
+                    return
+                } else {
+                    console.log("Unexpected response when updating profile; response:", res.data);
+                }
+            } else {
+                console.log("Non-200 response when updating profile; response:", res.data);
+            }
+
+            showToast("Something went wrong", "Couldn't update profile. Please try again.", "error");
+            setSaving(false);
+        })
+        .catch(err => {
+            if (err.response && err.response.data && typeof err.response.data == "string") {
+                if (err.response.data.startsWith("UERROR")) {
+                    console.log("User error occurred in updating profile; response: ", err.response.data);
+                    showToast("Something went wrong", err.response.data.substring("UERROR: ".length), "error");
+                    setSaving(false);
+                    return
+                } else {
+                    console.log("Error occurred in updating profile; response: ", err.response.data);
+                }
+            } else if (err.message && typeof err.message == "string") {
+                console.log("Error occurred in updating profile; message: ", err.message);
+            } else {
+                console.log("Unknown error occurred in updating profile; error: ", err);
+            }
+
+            showToast("Something went wrong", "Couldn't update profile. Please try again.", "error");
+            setSaving(false);
+        })
     }
 
     useEffect(() => {
@@ -89,7 +150,7 @@ function MyAccount() {
                     <FaEllipsisH />
                     {!limitedScreen && <Text ml={2}>Manage Password</Text>}
                 </Button>
-                <Button colorScheme='green' variant={'solid'} ml={"10px"} isDisabled={saveDisabled}><FaSave /></Button>
+                <Button colorScheme='green' variant={'solid'} ml={"10px"} onClick={updateProfile} isDisabled={saveDisabled} isLoading={saving && !showingSaveSuccess}>{showingSaveSuccess ? <FaCheck />: <FaSave />}</Button>
             </Box>
 
             <Box display={'flex'} justifyContent={'left'} flexDirection={'column'} alignItems={'left'} w={!limitedScreen ? '50%' : '100%'} mt={"5%"}>
