@@ -1,9 +1,10 @@
 import os, re
-from flask import Blueprint, request, redirect, url_for
+from flask import Blueprint, request, redirect, url_for, session
 from models import Identity, File, AuditLog
 from decorators import jsonOnly, checkAPIKey, emailVerified, checkSession
 from identity import dispatchEmailVerification
 from services import Universal, Logger, Encryption
+from AFManager import AFManager, AFMError
 
 userProfileBP = Blueprint('profile', __name__)
 
@@ -121,3 +122,50 @@ def updateProfile(user: Identity):
     user.save()
     
     return "SUCCESS: Profile updated.", 200
+
+@userProfileBP.route('/delete', methods=["POST"])
+@checkAPIKey
+@checkSession(strict=True, provideIdentity=True)
+def deleteIdentity(user: Identity):
+    # Systematically delete all user-related resources
+    try:
+        user.getFiles()
+    except Exception as e:
+        Logger.log("USERPROFILE DELETE ERROR: Failed to retrieve user's files; error: {}".format(e))
+        return "ERROR: Failed to process request.", 500
+    
+    for fileID in list(user.files.keys()):
+        try:
+            user.deleteFile(fileID)
+        except Exception as e:
+            Logger.log("USERPROFILE DELETE ERROR: Failed to delete file object '{}' for '{}' identity deletion; error: {}".format(fileID, user.id, e))
+    
+    try:
+        user.getAuditLogs()
+    except Exception as e:
+        Logger.log("USERPROFILE DELETE ERROR: Failed to retrieve user's audit logs; error: {}".format(e))
+        return "ERROR: Failed to process request.", 500
+    
+    for logID in list(user.auditLogs.keys()):
+        try:
+            user.deleteAuditLog(logID)
+        except Exception as e:
+            Logger.log("USERPROFILE DELETE ERROR: Failed to delete audit log '{}' for '{}' identity deletion; error: {}".format(logID, user.id, e))
+    
+    try:
+        if AFManager.checkIfFolderIsRegistered(user.id):
+            res = AFManager.deleteFolder(user.id)
+            if res != True:
+                raise Exception(res)
+    except AFMError as e:
+        Logger.log("USERPROFILE DELETE ERROR: Failed to delete directory for user '{}' in AFM; error: {}".format(user.id, e))
+        return "ERROR: Failed to process request.", 500
+    
+    try:
+        user.destroy()
+    except Exception as e:
+        Logger.log("USERPROFILE DELETE ERROR: Failed to delete identity '{}'; error: {}".format(user.id, e))
+        return "ERROR: Failed to process request.", 500
+    
+    session.clear()
+    return "SUCCESS: Identity deleted. Thank you for using Access.", 200

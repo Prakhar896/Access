@@ -71,7 +71,8 @@ class Identity(DIRepresentable):
 
             identities: Dict[str, Identity] = {}
             for id in data:
-                identities[id] = Identity.rawLoad(data[id], loadAuditLogs=withAuditLogs, loadFiles=withFiles)
+                if isinstance(data[id], dict):
+                    identities[id] = Identity.rawLoad(data[id], loadAuditLogs=withAuditLogs, loadFiles=withFiles)
             
             if username == None and email == None and authToken == None:
                 return list(identities.values())
@@ -280,8 +281,9 @@ class AuditLog(DIRepresentable):
             
             accountLogs = []
             for logData in logs.values():
-                if logData['accountID'] == accountID:
-                    accountLogs.append(AuditLog.rawLoad(logData))
+                if isinstance(logData, dict):
+                    if logData['accountID'] == accountID:
+                        accountLogs.append(AuditLog.rawLoad(logData))
             
             return accountLogs
         else:
@@ -294,7 +296,7 @@ class AuditLog(DIRepresentable):
             if not isinstance(logs, dict):
                 return Exception("AUDITLOG LOAD ERROR: Unexpected DI logs load response format; response: {}".format(logs))
             
-            return [AuditLog.rawLoad(logData) for logData in logs.values()]
+            return [AuditLog.rawLoad(logData) for logData in logs.values() if isinstance(logData, dict)]
 
     def save(self, checkIntegrity=True) -> bool:
         convertedData = self.represent()
@@ -379,7 +381,8 @@ class File(DIRepresentable):
 
             files: Dict[str, File] = {}
             for fileID in data:
-                files[fileID] = File.rawLoad(data[fileID])
+                if isinstance(data[fileID], dict):
+                    files[fileID] = File.rawLoad(data[fileID])
             
             # If no accountID, filename is provided, return all files
             if accountID == None and filename == None:
