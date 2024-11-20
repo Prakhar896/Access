@@ -36,7 +36,8 @@ def getProfile(user: Identity):
 def updateProfile(user: Identity):
     username: str = None
     email: str = None
-    password: str = None
+    currentPassword: str = None
+    newPassword: str = None
     
     if "username" in request.json:
         if not isinstance(request.json["username"], str):
@@ -62,18 +63,26 @@ def updateProfile(user: Identity):
         if email == user.email:
             email = None
     
-    if "password" in request.json:
-        if not isinstance(request.json["password"], str):
+    if "newPassword" in request.json:
+        if not isinstance(request.json["newPassword"], str):
             return "ERROR: Invalid request format.", 400
         
-        password = request.json["password"].strip()
-        if len(password) < 6:
+        if "currentPassword" not in request.json:
+            return "ERROR: Invalid request format.", 400
+        if not isinstance(request.json["currentPassword"], str):
+            return "ERROR: Invalid request format.", 400
+        
+        newPassword = request.json["newPassword"].strip()
+        currentPassword = request.json["currentPassword"].strip()
+        if len(newPassword) < 6:
             return "UERROR: Password must be at least 6 characters long.", 400
+        if newPassword == currentPassword:
+            return "UERROR: New password cannot be the same as the old password.", 400
         
         numbers = False
         uppercaseChars = False
         specialChars = False
-        for char in password:
+        for char in newPassword:
             if numbers and uppercaseChars and specialChars:
                 break
             if char.isnumeric():
@@ -85,10 +94,12 @@ def updateProfile(user: Identity):
         if not (numbers and uppercaseChars and specialChars):
             return "UERROR: Password must have at least 1 number, 1 uppercase letter, and 1 special character.", 400
         
-        if Encryption.verifySHA256(password, user.password):
+        if not Encryption.verifySHA256(currentPassword, user.password):
+            return "UERROR: Incorrect password.", 400
+        if Encryption.verifySHA256(newPassword, user.password):
             return "UERROR: New password cannot be the same as the old password.", 400
     
-    if username is None and email is None and password is None:
+    if username is None and email is None and newPassword is None:
         return "SUCCESS: Nothing to update.", 200
     
     # Try to see if there's another account with the same username/email
@@ -115,8 +126,8 @@ def updateProfile(user: Identity):
         
         Logger.log("USERPROFILE UPDATE: Identity '{}' changed their email to '{}'. Email verification dispatched.".format(user.id, user.email))
     
-    if password != None:
-        user.password = Encryption.encodeToSHA256(password)
+    if newPassword != None:
+        user.password = Encryption.encodeToSHA256(newPassword)
         Logger.log("USERPROFILE UPDATE: Identity '{}' changed their password.".format(user.id))
     
     user.save()
