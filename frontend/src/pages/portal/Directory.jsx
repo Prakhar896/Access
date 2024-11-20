@@ -88,7 +88,7 @@ function Directory() {
                     <Spacer />
                     <Button variant={'Default'} onClick={onUploadModalOpen}><FontAwesomeIcon icon={faArrowUpFromBracket} /></Button>
                 </Box>
-                <FilesList filesData={filesData} retrieving={retrievingFiles} />
+                <FilesList filesData={filesData} retrieving={retrievingFiles} triggerReload={fetchFiles} />
             </Box>
             <UploadFilesModal isOpen={isUploadModalOpen} onOpen={onUploadModalOpen} onClose={onUploadModalClose} triggerReload={fetchFiles} />
         </>

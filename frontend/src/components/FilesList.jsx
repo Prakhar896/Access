@@ -5,7 +5,7 @@ import React from 'react'
 import FileActions from './FileActions';
 import server from '../networking';
 
-function FilesList({ filesData, retrieving }) {
+function FilesList({ filesData, retrieving, triggerReload }) {
     const backendURL = server.defaults.baseURL;
     const [limitedScreen] = useMediaQuery("(max-width: 800px)");
 
@@ -60,7 +60,7 @@ function FilesList({ filesData, retrieving }) {
                             )}
                             <Td>
                                 <HStack w={'100%'} ml={"10px"}>
-                                    <FileActions fileData={file} downloadLinkFor={downloadLinkFor} />
+                                    <FileActions fileData={file} downloadLinkFor={downloadLinkFor} triggerReload={triggerReload} />
                                 </HStack>
                             </Td>
                         </Tr>
