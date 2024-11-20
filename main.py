@@ -109,6 +109,10 @@ def boot():
     from directory import directoryBP
     app.register_blueprint(directoryBP, url_prefix='/directory')
     
+    ## UserProfile API
+    from userProfile import userProfileBP
+    app.register_blueprint(userProfileBP, url_prefix="/profile")
+    
     if len(sys.argv) > 1 and sys.argv[1] == "r":
         print(DI.save(None))
     
