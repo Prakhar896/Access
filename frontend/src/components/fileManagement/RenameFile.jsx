@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button, FormControl, FormHelperText, FormLabel, HStack, Input, MenuItem, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Text, useDisclosure, useToast } from '@chakra-ui/react'
 import { BsPencilFill } from 'react-icons/bs'
 import configureShowToast from '../showToast';
@@ -10,7 +10,7 @@ function RenameFile({ fileData, triggerReload }) {
     const toast = useToast();
     const showToast = configureShowToast(toast);
     
-    const [newFilename, setNewFilename] = useState(fileData.name || '');
+    const [newFilename, setNewFilename] = useState('');
     const [renaming, setRenaming] = useState(false);
 
     const handleRenameInputEnter = (e) => { if (e.key === 'Enter') renameFile() };
@@ -92,6 +92,14 @@ function RenameFile({ fileData, triggerReload }) {
             setRenaming(false);
         })
     }
+
+    useEffect(() => {
+        if (fileData && fileData.name) {
+            setNewFilename(fileData.name)
+        } else {
+            handleRenameClose();
+        }
+    }, [fileData])
 
     return (
         <>

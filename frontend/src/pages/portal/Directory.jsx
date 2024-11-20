@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Box, Button, Heading, Spacer, Spinner, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, useDisclosure, useMediaQuery, useToast } from '@chakra-ui/react';
+import { Box, Button, Heading, Menu, MenuButton, MenuDivider, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Spacer, Spinner, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, useDisclosure, useMediaQuery, useToast } from '@chakra-ui/react';
 import { Link as ChakraLink } from '@chakra-ui/react';
 import { useSelector } from 'react-redux';
 import withAuth from '../../components/hoc/withAuth';
@@ -11,11 +11,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowDown, faArrowUpFromBracket, faCircleDown } from '@fortawesome/free-solid-svg-icons';
 import FilesList from '../../components/FilesList';
 import UploadFilesModal from '../../components/UploadFilesModal';
+import { BsChevronDown } from 'react-icons/bs';
 
 function Directory() {
     const { username, loaded } = useSelector(state => state.auth);
     const [filesData, setFilesData] = useState([]);
     const [retrievingFiles, setRetrievingFiles] = useState(true);
+    const [sortBy, setSortBy] = useState(localStorage.getItem("UserPrefSortAttribute") || "name");
+    const [sortOrder, setSortOrder] = useState(localStorage.getItem("UserPrefSortOrder") || "asc");
     const [limitedScreen] = useMediaQuery("(max-width: 800px)");
     const { isOpen: isUploadModalOpen, onOpen: onUploadModalOpen, onClose: onUploadModalClose } = useDisclosure();
     const toast = useToast();
@@ -33,7 +36,31 @@ function Directory() {
             newData.push(file);
         }
 
+        newData.sort((a, b) => {
+            return new Date(b.originalUploadedTimestamp) - new Date(a.originalUploadedTimestamp);
+        })
+
         return newData;
+    }
+
+    const sortAndSetFiles = (data) => {
+        localStorage.setItem("UserPrefSortAttribute", sortBy);
+        localStorage.setItem("UserPrefSortOrder", sortOrder);
+
+        if (data.length > 0) {
+            var newData = [...data];
+            newData.sort((a, b) => {
+                if (!a[sortBy] || !b[sortBy]) {
+                    return 0;
+                } else if (sortOrder == "asc") {
+                    return a[sortBy] > b[sortBy] ? 1 : -1;
+                } else {
+                    return a[sortBy] < b[sortBy] ? 1 : -1;
+                }
+            });
+        }
+
+        setFilesData(newData);
     }
 
     const fetchFiles = () => {
@@ -41,7 +68,7 @@ function Directory() {
             .then(res => {
                 if (res.status == 200) {
                     if (typeof res.data == "object" && !Array.isArray(res.data)) {
-                        setFilesData(processFileData(Object.values(res.data)));
+                        sortAndSetFiles(processFileData(Object.values(res.data)));
                         setRetrievingFiles(false);
                         return
                     } else {
@@ -77,14 +104,38 @@ function Directory() {
     }, [loaded]);
 
     useEffect(() => {
-        console.log(filesData);
-    }, [filesData]);
+        sortAndSetFiles(filesData);
+
+        if (!retrievingFiles) {
+            // If not retrieving files, force a prop transfer update to FilesList by triggering a re-render with a timeout
+            setRetrievingFiles(true);
+            setTimeout(() => {
+                setRetrievingFiles(false);
+            }, 0)
+        }
+    }, [sortBy, sortOrder]);
 
     return (
         <>
             <Box display={'flex'} flexDir={'column'} justifyContent={'left'} m={!limitedScreen ? '1rem' : '10px'} p={'10px'}>
                 <Box display={'flex'} justifyContent={'left'} flexDirection={'row'} alignItems={'center'}>
                     <Heading as={'h1'} fontSize={'3xl'} fontFamily={'Ubuntu'}>My Files</Heading>
+                    <Menu closeOnSelect={false}>
+                        <MenuButton as={Button} variant={'Default'} rightIcon={<BsChevronDown />} ml={"10px"} size={'xs'}>
+                            Sort by
+                        </MenuButton>
+                        <MenuList>
+                            <MenuOptionGroup defaultValue={localStorage.getItem("UserPrefSortAttribute") || "name"} title='Attribute' type='radio'>
+                                <MenuItemOption value='name' onClick={() => setSortBy('name')}>Name</MenuItemOption>
+                                <MenuItemOption value='lastUpdate' onClick={() => setSortBy('lastUpdate')}>Last Modified</MenuItemOption>
+                                <MenuItemOption value='uploadedTimestamp' onClick={() => setSortBy('uploadedTimestamp')}>Uploaded</MenuItemOption>
+                            </MenuOptionGroup>
+                            <MenuOptionGroup defaultValue={localStorage.getItem("UserPrefSortOrder") || "asc"} title='Order' type='radio'>
+                                <MenuItemOption value='asc' onClick={() => setSortOrder('asc')}>Ascending</MenuItemOption>
+                                <MenuItemOption value='desc' onClick={() => setSortOrder('desc')}>Descending</MenuItemOption>
+                            </MenuOptionGroup>
+                        </MenuList>
+                    </Menu>
                     <Spacer />
                     <Button variant={'Default'} onClick={onUploadModalOpen}><FontAwesomeIcon icon={faArrowUpFromBracket} /></Button>
                 </Box>
