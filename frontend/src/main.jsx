@@ -4,6 +4,7 @@ import './index.css'
 import { ChakraProvider, ColorModeScript } from '@chakra-ui/react'
 import { configureStore } from '@reduxjs/toolkit'
 import Layout from './Layout.jsx'
+import AuthLayout from './AuthLayout.jsx'
 import universalReducer from './slices/UniversalState.js'
 import authReducer from './slices/AuthState.js'
 import { Provider } from 'react-redux'
@@ -16,6 +17,7 @@ import Login from './pages/Login.jsx'
 import Directory from './pages/portal/Directory.jsx'
 import VerifyEmail from './pages/VerifyEmail.jsx'
 import MyAccount from './pages/portal/MyAccount.jsx'
+import NavLayout from './NavLayout.jsx'
 
 const store = configureStore({
     reducer: {
@@ -35,9 +37,11 @@ createRoot(document.getElementById('root')).render(
                         <Route path='signup' element={<SignUp />} />
                         <Route path='login' element={<Login />} />
                         <Route path='verifyEmail' element={<VerifyEmail />} />
-                        <Route path='portal'>
-                            <Route path='files' element={<Directory />} />
-                            <Route path='account' element={<MyAccount />} />
+                        <Route path='portal' element={<AuthLayout />}>
+                            <Route element={<NavLayout />}>
+                                <Route path='files' element={<Directory />} />
+                                <Route path='account' element={<MyAccount />} />
+                            </Route>
                         </Route>
                     </Route>
                 </Routes>

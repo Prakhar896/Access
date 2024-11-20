@@ -1,6 +1,4 @@
 import React from 'react'
-import withAuth from '../../components/hoc/withAuth';
-import withNavbar from '../../components/hoc/withNavbar';
 import { Box, Heading, useMediaQuery, useToast } from '@chakra-ui/react';
 import configureShowToast from '../../components/showToast';
 import { useSelector } from 'react-redux';
@@ -21,4 +19,4 @@ function MyAccount() {
     )
 }
 
-export default withAuth(withNavbar(MyAccount));
+export default MyAccount;

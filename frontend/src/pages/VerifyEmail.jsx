@@ -167,7 +167,7 @@ function VerifyEmail() {
                             </VStack>
                             <VStack mt={'10%'} spacing={'20px'}>
                                 <Text color={messageColour} hidden={messageHidden} >{message}</Text>
-                                <Button variant={!buttonDisabled ? 'Default' : 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} onClick={() => verifyOTP()} isDisabled={buttonDisabled} isLoading={verificationLoading} loadingText={'Verifying...'}>Verify</Button>
+                                <Button variant={!buttonDisabled && !verificationLoading ? 'Default' : 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} onClick={() => verifyOTP()} isDisabled={buttonDisabled} isLoading={verificationLoading} loadingText={'Verifying...'}>Verify</Button>
                             </VStack>
                         </Box>
                     </ScaleFade>

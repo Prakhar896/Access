@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { Box, Button, Heading, Menu, MenuButton, MenuDivider, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Spacer, Spinner, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, useDisclosure, useMediaQuery, useToast } from '@chakra-ui/react';
 import { Link as ChakraLink } from '@chakra-ui/react';
 import { useSelector } from 'react-redux';
-import withAuth from '../../components/hoc/withAuth';
-import withNavbar from '../../components/hoc/withNavbar';
 import server from '../../networking';
 import configureShowToast from '../../components/showToast';
 import CentredSpinner from '../../components/CentredSpinner';
@@ -36,10 +34,6 @@ function Directory() {
             newData.push(file);
         }
 
-        newData.sort((a, b) => {
-            return new Date(b.originalUploadedTimestamp) - new Date(a.originalUploadedTimestamp);
-        })
-
         return newData;
     }
 
@@ -47,8 +41,8 @@ function Directory() {
         localStorage.setItem("UserPrefSortAttribute", sortBy);
         localStorage.setItem("UserPrefSortOrder", sortOrder);
 
+        var newData = [...data];
         if (data.length > 0) {
-            var newData = [...data];
             newData.sort((a, b) => {
                 if (!a[sortBy] || !b[sortBy]) {
                     return 0;
@@ -106,13 +100,13 @@ function Directory() {
     useEffect(() => {
         sortAndSetFiles(filesData);
 
-        if (!retrievingFiles) {
-            // If not retrieving files, force a prop transfer update to FilesList by triggering a re-render with a timeout
-            setRetrievingFiles(true);
-            setTimeout(() => {
-                setRetrievingFiles(false);
-            }, 0)
-        }
+        // if (!retrievingFiles) {
+        //     // If not retrieving files, force a prop transfer update to FilesList by triggering a re-render with a timeout
+        //     setRetrievingFiles(true);
+        //     setTimeout(() => {
+        //         setRetrievingFiles(false);
+        //     }, 0)
+        // }
     }, [sortBy, sortOrder]);
 
     return (
@@ -146,4 +140,4 @@ function Directory() {
     )
 }
 
-export default withAuth(withNavbar(Directory));
+export default Directory;

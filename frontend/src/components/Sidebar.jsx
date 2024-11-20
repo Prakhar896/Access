@@ -29,8 +29,8 @@ function Sidebar({ isOpen, onClose }) {
     }
 
     const handleNavigate = (path) => {
-        navigate(path);
         onClose();
+        navigate(path);
     }
 
     return (
@@ -50,7 +50,7 @@ function Sidebar({ isOpen, onClose }) {
                     </DrawerHeader>
 
                     <DrawerBody display={"flex"} flexDirection={"column"}>
-                        <Button color={"#515F7C"} mb={2} justifyContent={"left"} colorScheme='white' sx={DrawerHover}>
+                        <Button color={"#515F7C"} mb={2} justifyContent={"left"} colorScheme='white' sx={DrawerHover} onClick={() => handleNavigate('/portal/files')}>
                             <HStack>
                                 <Box ml={'5px'}>
                                     <FaFile />
