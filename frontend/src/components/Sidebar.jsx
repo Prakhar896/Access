@@ -28,6 +28,11 @@ function Sidebar({ isOpen, onClose }) {
         onUploadFilesModalOpen();
     }
 
+    const handleNavigate = (path) => {
+        navigate(path);
+        onClose();
+    }
+
     return (
         <>
             <Drawer
@@ -54,7 +59,7 @@ function Sidebar({ isOpen, onClose }) {
                             </HStack>
                         </Button>
 
-                        <Button color="#515F7C" mb={2} justifyContent={"left"} colorScheme='white' sx={DrawerHover}>
+                        <Button color="#515F7C" mb={2} justifyContent={"left"} colorScheme='white' sx={DrawerHover} onClick={() => handleNavigate('/portal/account')}>
                             <HStack>
                                 <Box ml={'5px'}>
                                     <FaUser />
