@@ -24,6 +24,9 @@ function Directory() {
     const processFileData = (data) => {
         var newData = [];
         for (var file of data) {
+            file["originalLastUpdate"] = structuredClone(file["lastUpdate"]);
+            file["originalUploadedTimestamp"] = structuredClone(file["uploadedTimestamp"]);
+
             file["lastUpdate"] = file["lastUpdate"] ? new Date(file["lastUpdate"]).toLocaleString() : null;
             file["uploadedTimestamp"] = new Date(file["uploadedTimestamp"]).toLocaleString();
 

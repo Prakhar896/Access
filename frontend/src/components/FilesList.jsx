@@ -1,10 +1,12 @@
-import { Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, Link as ChakraLink, Button, Box, Spinner, useMediaQuery } from '@chakra-ui/react';
+import { Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, Link as ChakraLink, Button, Box, Spinner, useMediaQuery, HStack } from '@chakra-ui/react';
 import { faCircleDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react'
+import FileActions from './FileActions';
+import server from '../networking';
 
 function FilesList({ filesData, retrieving }) {
-    const backendURL = import.meta.env.VITE_BACKEND_URL;
+    const backendURL = server.defaults.baseURL;
     const [limitedScreen] = useMediaQuery("(max-width: 800px)");
 
     const downloadLinkFor = (file) => {
@@ -26,7 +28,7 @@ function FilesList({ filesData, retrieving }) {
     }
 
     return (
-        <TableContainer mt={{ base: '15px', md: '20px', lg: '25px' }} w={limitedScreen && '100%'}>
+        <TableContainer mt={{ base: '15px', md: '20px', lg: '25px' }} w={limitedScreen && '100%'} boxShadow={'xl'} border={'1px solid #4d5566'} borderRadius={'10px'} >
             <Table variant='simple'>
                 <Thead>
                     <Tr>
@@ -56,10 +58,10 @@ function FilesList({ filesData, retrieving }) {
                                     <Td>{file.uploadedTimestamp}</Td>
                                 </>
                             )}
-                            <Td justifyContent={'center'}>
-                                <Button onClick={() => { location.href = downloadLinkFor(file.name); }} variant={'ghost'} size={'md'}>
-                                    <FontAwesomeIcon icon={faCircleDown} />
-                                </Button>
+                            <Td>
+                                <HStack w={'100%'} ml={"10px"}>
+                                    <FileActions fileData={file} downloadLinkFor={downloadLinkFor} />
+                                </HStack>
                             </Td>
                         </Tr>
                     ))}
