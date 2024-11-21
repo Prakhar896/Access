@@ -4,6 +4,7 @@ import { BsFillInfoCircleFill, BsTrash3Fill } from 'react-icons/bs'
 import { FaDownload, FaEllipsisV, FaFileDownload, FaHamburger } from 'react-icons/fa'
 import RenameFile from './fileManagement/RenameFile';
 import DeleteFile from './fileManagement/DeleteFile';
+import ShareFile from './fileManagement/ShareFile';
 
 function FileActions({ fileData, downloadLinkFor, triggerReload }) {
     const { isOpen: infoModalOpen, onOpen: onInfoModalOpen, onClose: onInfoModalClose } = useDisclosure();
@@ -30,6 +31,7 @@ function FileActions({ fileData, downloadLinkFor, triggerReload }) {
                     <MenuItem icon={<FaFileDownload />} onClick={() => location.href = downloadLinkFor(fileData.name)}>
                         Download
                     </MenuItem>
+                    <ShareFile fileData={fileData} />
                     <RenameFile fileData={fileData} triggerReload={triggerReload} />
                     <MenuDivider />
                     <DeleteFile fileData={fileData} triggerReload={triggerReload} />
