@@ -18,6 +18,7 @@ import Directory from './pages/portal/Directory.jsx'
 import VerifyEmail from './pages/VerifyEmail.jsx'
 import MyAccount from './pages/portal/MyAccount.jsx'
 import NavLayout from './NavLayout.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
 
 const store = configureStore({
     reducer: {
@@ -37,6 +38,7 @@ createRoot(document.getElementById('root')).render(
                         <Route path='signup' element={<SignUp />} />
                         <Route path='login' element={<Login />} />
                         <Route path='verifyEmail' element={<VerifyEmail />} />
+                        <Route path='forgotPassword' element={<ForgotPassword />} />
                         <Route path='portal' element={<AuthLayout />}>
                             <Route element={<NavLayout />}>
                                 <Route path='files' element={<Directory />} />

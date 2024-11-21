@@ -146,7 +146,7 @@ function SignUp() {
 
     return (
         <Box display={'flex'} flexDirection={'column'} justifyContent={'center'} maxW={'100%'} p={!limitedScreen ? '10px' : '0px'}>
-            <Box display={'flex'} flexDirection={'column'} justifyContent={'space-between'} alignItems={'center'} mt={!limitedScreen ? '10%' : '20%'}>
+            <Box display={'flex'} flexDirection={'column'} justifyContent={'space-between'} alignItems={'center'} mt={'10%'} mb={"20px"}>
                 <Spacer />
                 <Link to={'/'}>
                     <Image src={colouredLogo} alt={'Logo'} maxH={'100px'} rounded={'xl'} />
@@ -176,7 +176,7 @@ function SignUp() {
                             </VStack>
                             <VStack mt={'10%'}>
                                 <Text>Already have an account? <Button variant={'link'} color={'black'} onClick={() => navigate('/login')}>Login here.</Button></Text>
-                                <Button variant={!buttonDisabled ? 'Default' : 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} onClick={requestOTP} isDisabled={buttonDisabled} isLoading={requestOTPLoading}>Get Started</Button>
+                                <Button variant={!requestOTPLoading && !buttonDisabled ? 'Default' : 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} onClick={requestOTP} isDisabled={buttonDisabled} isLoading={requestOTPLoading}>Get Started</Button>
                             </VStack>
                         </Box>
                     </ScaleFade>

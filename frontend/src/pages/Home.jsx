@@ -40,7 +40,7 @@ function Home() {
                     <Spacer />
                     <Image src={colouredLogo} alt={'Logo'} maxH={{ base: '100px', md: '150px', lg: '200px' }} rounded={'xl'} />
                     <Spacer />
-                    <Box display={'flex'} flexDir={'column'} justifyContent={'left'} alignItems={'left'} maxW={limitedScreen ? '70%' : '50%'} p={!limitedScreen ? '10px' : '0px'} mt={limitedScreen ? '20px' : '0px'}>
+                    <Box display={'flex'} flexDir={'column'} justifyContent={'left'} alignItems={'flex-start'} maxW={limitedScreen ? '70%' : '50%'} p={!limitedScreen ? '10px' : '0px'} mt={limitedScreen ? '20px' : '0px'}>
                         <Heading as={'h1'} size={{ base: 'xl', md: '2xl' }}>Welcome to Access</Heading>
                         <Text mt={'10px'}>Access is a cloud storage service for all your quick, secure and efficient storage needs.</Text>
                         <br />
@@ -52,6 +52,7 @@ function Home() {
                             <Button onClick={toSignup} w={{ base: 'fit-content', lg: '120px' }}>Sign up</Button>
                             <Button onClick={toLogin} w={{ base: 'fit-content', lg: '120px' }}>Login</Button>
                         </ButtonGroup>
+                        <Button variant={'link'} color={'black'} onClick={() => navigate('/forgotPassword')} mt={"20px"} fontSize={"sm"} >Forgot Password</Button>
                     </Box>
                     <Spacer />
                 </Box>

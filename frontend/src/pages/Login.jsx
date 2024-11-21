@@ -115,7 +115,7 @@ function Login() {
 
     return (
         <Box display={'flex'} flexDirection={'column'} justifyContent={'center'} maxW={'100%'} p={!limitedScreen ? '10px' : '0px'}>
-            <Box display={'flex'} flexDirection={'column'} justifyContent={'space-between'} alignItems={'center'} mt={!limitedScreen ? '10%' : '20%'}>
+            <Box display={'flex'} flexDirection={'column'} justifyContent={'space-between'} alignItems={'center'} mt={'10%'} mb={"20px"}>
                 <Spacer />
                 <Link to={'/'}>
                     <Image src={colouredLogo} alt={'Logo'} maxH={'100px'} rounded={'xl'} />
@@ -133,11 +133,12 @@ function Login() {
                                 <FormControl id='password' required>
                                     <FormLabel>Password</FormLabel>
                                     <Input onKeyUp={handleFieldEnter} placeholder='Uppercase and numeric letters required' type='password' value={password} onChange={handlePasswordChange} required />
+                                    <Button variant={'link'} color={'black'} onClick={() => navigate('/forgotPassword')} mt={"10px"} fontSize={"sm"} >Forgot Password</Button>
                                 </FormControl>
                             </VStack>
                             <VStack mt={'10%'}>
                                 <Text>Not a user yet? <Button variant={'link'} color={'black'} onClick={() => navigate('/signup')} >Sign up here.</Button></Text>
-                                <Button variant={!buttonDisabled ? 'Default' : 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} onClick={login} isDisabled={buttonDisabled} isLoading={loginLoading}>Sign in</Button>
+                                <Button variant={!loginLoading && !buttonDisabled ? 'Default' : 'solid'} w={{ base: 'xs', md: 'md', lg: 'lg' }} onClick={login} isDisabled={buttonDisabled} isLoading={loginLoading}>Sign in</Button>
                             </VStack>
                         </Box>
                     </ScaleFade>
