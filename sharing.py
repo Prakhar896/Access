@@ -140,19 +140,29 @@ def toggleActive(user: Identity):
 @sharingBP.route("/info", methods=["POST"])
 @checkAPIKey
 @jsonOnly
-@enforceSchema(
-    ("linkCode", str)
-)
 @checkSession(provideIdentity=True)
 def getSharingInfo(user: Identity | None=None):
-    linkCode = request.json["linkCode"].strip()
-    if len(linkCode) == 0:
+    linkCode = None
+    if "linkCode" in request.json:
+        linkCode = request.json["linkCode"].strip()
+        
+        if len(linkCode) == 0:
+            return "ERROR: Invalid request.", 400
+    
+    fileID = None
+    if "fileID" in request.json:
+        fileID = request.json["fileID"].strip()
+        
+        if len(fileID) == 0:
+            return "ERROR: Invalid request.", 400
+    
+    if linkCode == None and fileID == None:
         return "ERROR: Invalid request.", 400
     
     targetFile = None
     isOwner = False
     try:
-        targetFile = File.load(shareCode=linkCode)
+        targetFile = File.load(id=fileID, shareCode=linkCode)
         if not isinstance(targetFile, File):
             return "UERROR: File not found.", 404
         
