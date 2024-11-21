@@ -40,7 +40,11 @@ class Identity(DIRepresentable):
                 else:
                     data[reqParam] = None
         
-        emailVerification = EmailVerification.rawLoad(data['emailVerification'], data['id'])
+        emailVerification = data['emailVerification']
+        if isinstance(emailVerification, dict):
+            emailVerification = EmailVerification.rawLoad(data['emailVerification'], data['id'])
+        else:
+            emailVerification = EmailVerification(data['id'])
         
         account = Identity(
             username=data['username'],
@@ -325,16 +329,19 @@ class AuditLog(DIRepresentable):
         return Ref("auditLogs", logID)
     
 class File(DIRepresentable):
-    def __init__(self, accountID: str, name: str, blocked: bool=False, id: str=None, uploadedTimestamp: str=None, lastUpdate: str=None) -> None:
+    def __init__(self, accountID: str, name: str, blocked: bool=False, sharing: 'FileSharing'=None, id: str=None, uploadedTimestamp: str=None, lastUpdate: str=None) -> None:
         if id == None:
             id = uuid4().hex
         if uploadedTimestamp == None:
             uploadedTimestamp = Universal.utcNowString()
+        if sharing == None:
+            sharing = FileSharing(id)
         
         self.id = id
         self.accountID = accountID
         self.name = name
         self.blocked = blocked
+        self.sharing = sharing
         self.uploadedTimestamp = uploadedTimestamp
         self.lastUpdate = lastUpdate
         self.originRef = File.ref(id)
@@ -345,15 +352,25 @@ class File(DIRepresentable):
         
     @staticmethod
     def rawLoad(data: Dict[str, Any]) -> 'File':
-        requiredParams = ['accountID', 'name', 'blocked', 'id', 'uploadedTimestamp', 'lastUpdate']
+        requiredParams = ['accountID', 'name', 'blocked', 'sharing', 'id', 'uploadedTimestamp', 'lastUpdate']
         for reqParam in requiredParams:
             if reqParam not in data:
-                data[reqParam] = None
+                if reqParam in ['sharing']:
+                    data[reqParam] = {}
+                else:
+                    data[reqParam] = None
+        
+        sharing = data['sharing']
+        if isinstance(sharing, dict):
+            sharing = FileSharing.rawLoad(data['sharing'], data['id'])
+        else:
+            sharing = FileSharing(data['id'])
         
         return File(
             accountID=data['accountID'],
             name=data['name'],
             blocked=data['blocked'] == "True",
+            sharing=sharing,
             id=data['id'],
             uploadedTimestamp=data['uploadedTimestamp'],
             lastUpdate=data['lastUpdate']
@@ -432,6 +449,7 @@ class File(DIRepresentable):
             "accountID": self.accountID,
             "name": self.name,
             "blocked": str(self.blocked),
+            "sharing": self.sharing.represent(),
             "id": self.id,
             "uploadedTimestamp": self.uploadedTimestamp,
             "lastUpdate": self.lastUpdate
@@ -443,3 +461,71 @@ class File(DIRepresentable):
     @staticmethod
     def ref(fileID) -> Ref:
         return Ref("files", fileID)
+
+class FileSharing(DIRepresentable):
+    def __init__(self, fileID: str, linkCode: str=None, password: str=None, accessors: int=None, startTimestamp: str=None, active: bool=False) -> None:
+        self.linkCode = linkCode
+        self.password = password
+        self.accessors = accessors
+        self.startTimestamp =  startTimestamp
+        self.active = active
+        self.originRef = FileSharing.ref(fileID)
+        
+    @staticmethod
+    def rawLoad(data: Dict[str, Any], fileID: str) -> 'FileSharing':
+        requiredParams = ['linkCode', 'password', 'accessors', 'startTimestamp', 'active']
+        for reqParam in requiredParams:
+            if reqParam not in data:
+                if reqParam in ['active']:
+                    data[reqParam] = False
+                else:
+                    data[reqParam] = None
+        
+        if isinstance(data['accessors'], str):
+            try:
+                intValue = int(data['accessors'])
+                data['accessors'] = intValue
+            except:
+                data['accessors'] = None
+        
+        return FileSharing(
+            fileID=fileID,
+            linkCode=data['linkCode'],
+            password=data['password'],
+            accessors=data['accessors'],
+            startTimestamp=data['startTimestamp'],
+            active=data['active'] == "True"
+        )
+    
+    @staticmethod
+    def load(fileID: str) -> 'FileSharing | None':
+        data = DI.load(FileSharing.ref(fileID))
+        if data == None:
+            return None
+        if isinstance(data, DIError):
+            raise Exception("FILESHARING LOAD ERROR: DIError occurred: {}".format(data))
+        if not isinstance(data, dict):
+            raise Exception("FILESHARING LOAD ERROR: Unexpected DI load response format; response: {}".format(data))
+        
+        return FileSharing.rawLoad(data, fileID)
+    
+    def represent(self) -> Dict[str, Any]:
+        return {
+            "linkCode": self.linkCode,
+            "password": self.password,
+            "accessors": self.accessors,
+            "startTimestamp": self.startTimestamp,
+            "active": str(self.active)
+        }
+    
+    def save(self) -> bool:
+        convertedData = self.represent()
+        
+        return DI.save(convertedData, self.originRef)
+    
+    def destroy(self):
+        return DI.save({}, self.originRef)
+    
+    @staticmethod
+    def ref(fileID: str) -> Ref:
+        return Ref("files", fileID, "sharing")
