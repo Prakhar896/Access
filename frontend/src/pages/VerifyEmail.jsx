@@ -24,6 +24,7 @@ function VerifyEmail() {
     const [code, setCode] = useState(searchParams.get('code') || '');
     const [userID, setUserID] = useState(searchParams.get('id') || '');
     const [email, setEmail] = useState('');
+    const [fromCreateAccount, setFromCreateAccount] = useState(state && state.fromCreateAccount ? true : false);
 
     const buttonDisabled = !code || !userID;
 
@@ -69,14 +70,16 @@ function VerifyEmail() {
                     if (response.data && typeof response.data === 'string') {
                         if (response.data.startsWith('SUCCESS')) {
                             showToast('Email verified!', '', 'success');
-                            if (username && window.history.length > 1) {
-                                navigate(-1);
-                            } else {
+                            if (fromCreateAccount) {
                                 navigate('/login', {
                                     state: {
                                         email: email
                                     }
                                 });
+                            } else if (window.history.length > 1) {
+                                navigate(-1);
+                            } else {
+                                navigate('/');
                             }
                         } else {
                             console.log("Unknown response from server in login; response:", response.data);

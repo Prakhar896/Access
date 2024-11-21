@@ -10,9 +10,11 @@ import { faArrowDown, faArrowUpFromBracket, faCircleDown } from '@fortawesome/fr
 import FilesList from '../../components/FilesList';
 import UploadFilesModal from '../../components/UploadFilesModal';
 import { BsChevronDown } from 'react-icons/bs';
+import { useNavigate } from 'react-router-dom';
 
 function Directory() {
     const { username, loaded } = useSelector(state => state.auth);
+    const [showingVerifyEmailLink, setShowingVerifyEmailLink] = useState(false);
     const [filesData, setFilesData] = useState([]);
     const [retrievingFiles, setRetrievingFiles] = useState(true);
     const [sortBy, setSortBy] = useState(localStorage.getItem("UserPrefSortAttribute") || "name");
@@ -21,6 +23,7 @@ function Directory() {
     const { isOpen: isUploadModalOpen, onOpen: onUploadModalOpen, onClose: onUploadModalClose } = useDisclosure();
     const toast = useToast();
     const showToast = configureShowToast(toast);
+    const navigate = useNavigate();
 
     const processFileData = (data) => {
         var newData = [];
@@ -78,6 +81,10 @@ function Directory() {
                     if (err.response.data.startsWith("UERROR")) {
                         console.log("User error occurred in retrieving files; response: ", err.response.data);
                         showToast("Something went wrong", err.response.data.substring("UERROR: ".length), "error");
+
+                        if (err.response.data == "UERROR: Verify your email first.") {
+                            setShowingVerifyEmailLink(true);
+                        }
                         return
                     } else {
                         console.log("Unknown response from server in retrieving files; response: ", err.response.data);
@@ -133,7 +140,11 @@ function Directory() {
                     <Spacer />
                     <Button variant={'Default'} onClick={onUploadModalOpen}><FontAwesomeIcon icon={faArrowUpFromBracket} /></Button>
                 </Box>
-                <FilesList filesData={filesData} retrieving={retrievingFiles} triggerReload={fetchFiles} />
+                {showingVerifyEmailLink ? (
+                    <Button variant={'Default'} onClick={() => navigate("/portal/account")} mt={'20px'} maxW={'fit-content'}>Verify Email in My Account</Button>
+                ) : (
+                    <FilesList filesData={filesData} retrieving={retrievingFiles} triggerReload={fetchFiles} />
+                )}
             </Box>
             <UploadFilesModal isOpen={isUploadModalOpen} onOpen={onUploadModalOpen} onClose={onUploadModalClose} triggerReload={fetchFiles} />
         </>

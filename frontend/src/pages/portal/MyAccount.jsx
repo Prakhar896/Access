@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Alert, AlertIcon, Box, Button, FormControl, FormLabel, Heading, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Spacer, Spinner, Text, useDisclosure, useMediaQuery, useToast, VStack } from '@chakra-ui/react';
+import { Alert, AlertIcon, Box, Button, FormControl, FormLabel, Heading, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Spacer, Spinner, Text, useDisclosure, useMediaQuery, useToast, VStack, Link as ChakraLink } from '@chakra-ui/react';
 import configureShowToast from '../../components/showToast';
 import { useSelector } from 'react-redux';
 import server from '../../networking';
 import { FaCheck, FaEllipsisH, FaSave } from 'react-icons/fa';
 import AuditLogsList from '../../components/AuditLogsList';
 import DeleteAccountButton from '../../components/DeleteAccountButton';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function MyAccount() {
     const { accountID, loaded } = useSelector(state => state.auth);
@@ -320,7 +320,9 @@ function MyAccount() {
                                     {profileData.emailVerified == false && (
                                         <Alert status='warning' rounded={'xl'}>
                                             <AlertIcon />
-                                            <Text fontSize={{ base: 'sm', md: 'md' }}>Verify your email to use many of Access' features.</Text>
+                                            <Text fontSize={{ base: 'sm', md: 'md' }}>
+                                                <ChakraLink as={Link} to={"/verifyEmail?id=" + accountID}>Verify your email</ChakraLink> to use many of Access' features.
+                                            </Text>
                                             <Spacer />
                                             <Button colorScheme='yellow' variant={'outline'} fontSize={{ base: 'xs', sm: 'sm', md: 'md' }} p={'14px'} onClick={handleResendClick} isLoading={resendingVerificationEmail} loadingText="Resending..." isDisabled={resendingVerificationEmail}>{resendSuccess ? "Input Code": "Resend Code"}</Button>
                                         </Alert>

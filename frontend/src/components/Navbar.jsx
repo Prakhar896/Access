@@ -34,7 +34,7 @@ function Navbar() {
                 <Button variant={"outline"} mr={"20px"} onClick={() => onOpen()}>
                     <FontAwesomeIcon icon={faBars} />
                 </Button>
-                <Image src={colouredLogo} alt='Logo' maxH={'50px'} rounded={'xl'} />
+                <Image src={colouredLogo} alt='Logo' maxH={'50px'} rounded={'xl'} onClick={() => navigate('/portal/files')} />
                 <Spacer />
                 <Button variant={"ghost"} onClick={handleLogout}><FontAwesomeIcon icon={faArrowRightFromBracket} color='red' /></Button>
             </Flex>

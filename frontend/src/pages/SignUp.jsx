@@ -73,7 +73,7 @@ function SignUp() {
                         if (response.data.message && response.data.aID && typeof response.data.message == "string" && response.data.message.startsWith("SUCCESS")) {
                             // If valid success attributes are present, proceed
                             showToast('Success', 'Please enter the verification code in your inbox.', 'success');
-                            navigate('/verifyEmail', { state: { userID: response.data.aID, email: emailAddress } });
+                            navigate('/verifyEmail', { state: { userID: response.data.aID, email: emailAddress, fromCreateAccount: true } });
                         } else {
                             // Data object returned with unexpected attributes
                             console.log("Unknown response from server in new identity creation; response:", response.data);
