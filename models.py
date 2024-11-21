@@ -5,7 +5,7 @@ from services import Universal
 from utils import Ref
 
 class Identity(DIRepresentable):
-    def __init__(self, username: str, email: str, password: str, lastLogin: str, authToken: str, auditLogs: 'Dict[str, AuditLog]'={}, emailVerification: 'EmailVerification'=None, created: str=None, files: 'Dict[str, File]'={}, id: str=None) -> None:
+    def __init__(self, username: str, email: str, password: str, lastLogin: str, authToken: str, emailVerification: 'EmailVerification'=None, created: str=None, resetKey: str=None, resetDispatch: str=None, auditLogs: 'Dict[str, AuditLog]'={}, files: 'Dict[str, File]'={}, id: str=None) -> None:
         if id == None:
             id = uuid4().hex
         if emailVerification == None:
@@ -19,9 +19,11 @@ class Identity(DIRepresentable):
         self.password = password
         self.lastLogin = lastLogin
         self.authToken = authToken
-        self.auditLogs = auditLogs
         self.emailVerification = emailVerification
         self.created = created
+        self.resetKey = resetKey
+        self.resetDispatch = resetDispatch
+        self.auditLogs = auditLogs
         self.files = files
         self.originRef = Identity.ref(id)
         
@@ -30,7 +32,7 @@ class Identity(DIRepresentable):
         
     @staticmethod
     def rawLoad(data: dict, loadAuditLogs=False, loadFiles=False) -> 'Identity':
-        requiredParams = ['username', 'email', 'password', 'lastLogin', 'authToken', 'emailVerification', 'created', 'id']
+        requiredParams = ['username', 'email', 'password', 'lastLogin', 'authToken', 'emailVerification', 'created', 'resetKey', 'resetDispatch', 'id']
         for reqParam in requiredParams:
             if reqParam not in data:
                 if reqParam in ['emailVerification']:
@@ -48,6 +50,8 @@ class Identity(DIRepresentable):
             authToken=data['authToken'],
             emailVerification=emailVerification,
             created=data['created'],
+            resetKey=data['resetKey'],
+            resetDispatch=data['resetDispatch'],
             id=data['id']
         )
         
@@ -107,7 +111,9 @@ class Identity(DIRepresentable):
             "lastLogin": self.lastLogin,
             "authToken": self.authToken,
             "emailVerification": self.emailVerification.represent(),
-            "created": self.created
+            "created": self.created,
+            "resetKey": self.resetKey,
+            "resetDispatch": self.resetDispatch
         }
         
     def save(self):

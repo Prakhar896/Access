@@ -3,70 +3,10 @@ from flask import Flask, request, render_template, Blueprint, url_for, redirect,
 from models import Identity, Logger, Universal, AuditLog, EmailVerification
 from services import Encryption, Universal
 from AFManager import AFManager, AFMError
-from emailer import Emailer
+from emailDispatch import dispatchAccountWelcome, dispatchEmailVerification, dispatchPasswordResetKey, dispatchPasswordUpdatedEmail
 from decorators import *
 
 identityBP = Blueprint('api', __name__)
-
-def dispatchAccountWelcome(username: str, destEmail: str):
-    text = """
-    Dear {},
-    
-    Thank you for signing up with Access, a secure, efficient and intuitive cloud storage service for all of your storage needs.
-    With high reliability and a large set of useful features, you can be rest assured as Access takes on the bulk of the tedious file management tasks.
-    
-    After you verify your email, you will get access to a variety of tools and features to get started.
-    Login to the Access Portal to intuitively see, manage and update your files and account information.
-    We are so excited to have you on board!
-    
-    Thank you for being a valued user of Access.
-    
-    {}
-    """.format(username, Universal.copyright)
-    
-    Universal.asyncProcessor.addJob(
-        Emailer.sendEmail,
-        destEmail=destEmail,
-        subject="Welcome to Access!",
-        altText=text,
-        html=render_template(
-            "emails/welcome.html",
-            username=username,
-            copyright=Universal.copyright
-        )
-    )
-
-def dispatchEmailVerification(username: str, destEmail: str, otpCode: str, accountID: str):
-    verificationLink = "{}verifyEmail?id={}&code={}".format(os.environ.get("SYSTEM_URL", "http://localhost:8000/"), accountID, otpCode)
-    
-    text = """
-    Dear {},
-    
-    To benefit from Access' myriad of wonderful features, email verification is needed.
-    
-    If already on the verification page, enter this verification code: {}
-    
-    For easy verification, click on this link: {}
-    
-    Thank you for being a valued user of Access.
-    
-    
-    {}
-    """.format(username, otpCode, verificationLink, Universal.copyright)
-    
-    Universal.asyncProcessor.addJob(
-        Emailer.sendEmail,
-        destEmail=destEmail,
-        subject="Verify Email | Access",
-        altText=text,
-        html=render_template(
-            "emails/otpEmail.html",
-            username=username,
-            otpCode=otpCode,
-            verificationLink=verificationLink,
-            copyright=Universal.copyright
-        )
-    )
 
 @identityBP.route("/identity/new", methods=["POST"])
 @jsonOnly
@@ -344,3 +284,105 @@ def resendEmailVerification(user: Identity | None=None):
     dispatchEmailVerification(user.username, user.email, otpCode, user.id)
     
     return "SUCCESS: Email verification OTP code dispatched.", 200
+
+@identityBP.route("/identity/forgotPassword", methods=["POST"])
+@checkAPIKey
+@jsonOnly
+@enforceSchema(
+    ("usernameOrEmail", str)
+)
+def forgotPassword():
+    usernameOrEmail = request.json["usernameOrEmail"].strip()
+    
+    ambiguousSuccessMessage = "SUCCESS: If an account exists with the provided username/email, a password reset key has been dispatched."
+    
+    if "@" in usernameOrEmail:
+        if not re.match("^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", usernameOrEmail):
+            return "UERROR: Email is not in the correct format.", 400
+    
+    account = None
+    try:
+        account = Identity.load(username=usernameOrEmail, email=usernameOrEmail)
+        if not isinstance(account, Identity):
+            return ambiguousSuccessMessage, 200
+    except Exception as e:
+        Logger.log("IDENTITY FORGOT PASSWORD ERROR: Failed to find identity. Error: {}".format(e))
+        return "ERROR: Failed to process request. Please try again.", 500
+    
+    if "reset" not in request.json:
+        if account.resetDispatch != None and isinstance(account.resetDispatch, str):
+            if (Universal.utcNow() - Universal.fromUTC(account.resetDispatch)).total_seconds() < 60:
+                return ambiguousSuccessMessage, 200
+            
+            if account.resetKey == None:
+                account.resetDispatch = None
+        
+        resetKey = Universal.generateUniqueID(customLength=8)
+        
+        account.resetKey = resetKey
+        account.resetDispatch = Universal.utcNowString()
+        account.save()
+        
+        Logger.log("IDENTITY FORGOTPASSWORD: Password reset key dispatched for account '{}'.".format(account.id))
+        
+        dispatchPasswordResetKey(account.username, account.email, resetKey)
+        
+        return "SUCCESS: If an account exists with the provided username/email, a password reset email has been dispatched.", 200
+    else:
+        if not isinstance(request.json["reset"], dict):
+            return "ERROR: Invalid request.", 400
+        
+        reqParams = ["key", "newPassword"]
+        for param in reqParams:
+            if param not in request.json["reset"]:
+                return "ERROR: Invalid request.", 400
+            elif not isinstance(request.json["reset"][param], str):
+                return "ERROR: Invalid request.", 400
+            elif len(request.json["reset"][param].strip()) == 0:
+                return "UERROR: Invalid request.", 400
+        
+        resetKey: str = request.json["reset"]["key"].strip()
+        newPassword: str = request.json["reset"]["newPassword"].strip()
+        
+        if len(newPassword) < 6:
+            return "UERROR: Password must have at least 6 characters.", 400
+        
+        numbers = False
+        uppercaseChars = False
+        specialChars = False
+        for char in newPassword:
+            if numbers and uppercaseChars and specialChars:
+                break
+            if char.isnumeric():
+                numbers = True
+            elif char.isupper():
+                uppercaseChars = True
+            elif not char.isalnum():
+                specialChars = True
+        if not (numbers and uppercaseChars and specialChars):
+            return "UERROR: Password must have at least 1 number, 1 uppercase letter, and 1 special character.", 400
+        
+        if account.resetKey == None or account.resetDispatch == None:
+            return "UERROR: No reset key dispatched for account.", 400
+        if (Universal.utcNow() - Universal.fromUTC(account.resetDispatch)).total_seconds() > 900:
+            account.resetKey = None
+            account.resetDispatch = None
+            account.save()
+            
+            Logger.log("IDENTITY FORGOTPASSWORD: Password reset key expired for account '{}'.".format(account.id))
+            
+            return "UERROR: Reset key expired. Please request a new one.", 400
+        
+        if account.resetKey != resetKey:
+            return "UERROR: Invalid reset key.", 401
+        
+        # Reset password
+        account.authToken = None
+        account.password = Encryption.encodeToSHA256(newPassword)
+        account.resetKey = None
+        account.resetDispatch = None
+        account.save()
+        
+        dispatchPasswordUpdatedEmail(account.username, account.email)
+        
+        return "SUCCESS: Password updated successfully.", 200

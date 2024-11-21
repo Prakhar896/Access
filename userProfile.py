@@ -2,36 +2,11 @@ import os, re
 from flask import Blueprint, request, redirect, url_for, session, render_template
 from models import Identity, File, AuditLog
 from decorators import jsonOnly, checkAPIKey, emailVerified, checkSession
-from identity import dispatchEmailVerification
 from services import Universal, Logger, Encryption
-from emailer import Emailer
+from emailDispatch import dispatchEmailVerification, dispatchPasswordUpdatedEmail
 from AFManager import AFManager, AFMError
 
 userProfileBP = Blueprint('profile', __name__)
-
-def dispatchPasswordUpdatedEmail(username: str, destEmail: str):
-    text = """
-    Dear {},
-    
-    This is an alert to notify that you recently updated your Access Identity's password on the portal.
-    If this was not you, please reset your password immediately.
-    
-    Thank you for being a valued user of Access.
-    
-    {}
-    """.format(username, Universal.copyright)
-    
-    Universal.asyncProcessor.addJob(
-        Emailer.sendEmail,
-        destEmail=destEmail,
-        subject="Password Updated | Access",
-        altText=text,
-        html=render_template(
-            "emails/passwordUpdated.html",
-            username=username,
-            copyright=Universal.copyright
-        )
-    )
 
 @userProfileBP.route('', methods=['POST'])
 @checkAPIKey
