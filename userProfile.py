@@ -29,6 +29,26 @@ def getProfile(user: Identity):
     
     return profileData, 200
 
+@userProfileBP.route('/auditLogs', methods=['POST'])
+@checkAPIKey
+@checkSession(strict=True, provideIdentity=True)
+def getAuditLogs(user: Identity):
+    try:
+        user.getAuditLogs()
+    except Exception as e:
+        Logger.log("USERPROFILE GET ERROR: Failed to get user's audit logs; error: {}".format(e))
+        return "ERROR: Failed to process request.", 500
+    
+    auditLogs = {}
+    for logID, log in user.auditLogs.items():
+        auditLogs[logID] = {
+            "timestamp": log.timestamp,
+            "event": log.event,
+            "text": log.text
+        }
+    
+    return auditLogs, 200
+
 @userProfileBP.route('/update', methods=["POST"])
 @checkAPIKey
 @jsonOnly

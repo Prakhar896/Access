@@ -83,6 +83,8 @@ def uploadFile(user: Identity):
     files = request.files.getlist('file')
     if len(files) == 0:
         return "ERROR: No file selected.", 400
+    if len(files) > 10 and os.environ.get("DEBUG_MODE", "False") != "True":
+        return "UERROR: Please upload a maximum of 10 files at a time.", 400
     
     if not AFManager.checkIfFolderIsRegistered(user.id):
         return "UERROR: Please register your directory first.", 400
