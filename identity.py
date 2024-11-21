@@ -142,7 +142,7 @@ def loginIdentity(user: Identity | None=None):
     try:
         account = Identity.load(username=usernameOrEmail, email=usernameOrEmail)
         if not isinstance(account, Identity):
-            return "UERROR: Username or email does not exist.", 404
+            return "UERROR: Invalid credentials.", 400
     except Exception as e:
         Logger.log("IDENTITY LOGIN ERROR: Failed to find identity. Error: {}".format(e))
         return "ERROR: Failed to process request. Please try again.", 500
