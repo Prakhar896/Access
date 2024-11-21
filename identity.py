@@ -8,6 +8,34 @@ from decorators import *
 
 identityBP = Blueprint('api', __name__)
 
+def dispatchAccountWelcome(username: str, destEmail: str):
+    text = """
+    Dear {},
+    
+    Thank you for signing up with Access, a secure, efficient and intuitive cloud storage service for all of your storage needs.
+    With high reliability and a large set of useful features, you can be rest assured as Access takes on the bulk of the tedious file management tasks.
+    
+    After you verify your email, you will get access to a variety of tools and features to get started.
+    Login to the Access Portal to intuitively see, manage and update your files and account information.
+    We are so excited to have you on board!
+    
+    Thank you for being a valued user of Access.
+    
+    {}
+    """.format(username, Universal.copyright)
+    
+    Universal.asyncProcessor.addJob(
+        Emailer.sendEmail,
+        destEmail=destEmail,
+        subject="Welcome to Access!",
+        altText=text,
+        html=render_template(
+            "emails/welcome.html",
+            username=username,
+            copyright=Universal.copyright
+        )
+    )
+
 def dispatchEmailVerification(username: str, destEmail: str, otpCode: str, accountID: str):
     verificationLink = "{}verifyEmail?id={}&code={}".format(os.environ.get("SYSTEM_URL", "http://localhost:8000/"), accountID, otpCode)
     
@@ -111,6 +139,9 @@ def newIdentity():
     except Exception as e:
         Logger.log("IDENTITY NEW ERROR: Failed to create and save new identity. Error: {}".format(e))
         return "ERROR: Failed to process request. Please try again.", 500
+    
+    # Dispatch welcome email
+    dispatchAccountWelcome(account.username, account.email)
     
     # Dispatch OTP verification email
     dispatchEmailVerification(account.username, account.email, otpCode, account.id)
