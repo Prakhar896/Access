@@ -4,6 +4,7 @@ import configureShowToast from '../../components/showToast';
 import { useSelector } from 'react-redux';
 import server from '../../networking';
 import { FaCheck, FaEllipsisH, FaSave } from 'react-icons/fa';
+import AuditLogsList from '../../components/AuditLogsList';
 
 function MyAccount() {
     const { loaded } = useSelector(state => state.auth);
@@ -12,6 +13,8 @@ function MyAccount() {
 
     const [profileData, setProfileData] = useState({});
     const [retrievingProfile, setRetrievingProfile] = useState(true);
+    const [auditLogsData, setAuditLogsData] = useState([]);
+    const [retrievingAuditLogs, setRetrievingAuditLogs] = useState(false);
     const [saveDisabled, setSaveDisabled] = useState(true);
     const [changePasswordDisabled, setChangePasswordDisabled] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -80,7 +83,7 @@ function MyAccount() {
     }
 
 
-    const updateProfile = (handler=null) => {
+    const updateProfile = (handler = null) => {
         if (profileData.username == profileUsername && profileData.email == profileEmail && !currentPassword && !newPassword) {
             showToast("No changes detected", "You haven't made any changes to your profile.", "warning");
             return
@@ -146,9 +149,67 @@ function MyAccount() {
             })
     }
 
+    const processAuditLogs = (data) => {
+        var logs = [];
+
+        for (var log of data) {
+            log["originalTimestamp"] = structuredClone(log["timestamp"]);
+            log["timestamp"] = new Date(log["timestamp"]).toLocaleString('en-GB', { dateStyle: "long", timeStyle: "medium", hour12: true });
+            logs.push(log);
+        }
+
+        logs.sort((a, b) => {
+            // Sort by timestamp in descending order
+            return new Date(b["originalTimestamp"]) - new Date(a["originalTimestamp"]);
+        })
+
+        return logs;
+    }
+
+    const retrieveAuditLogs = async () => {
+        setRetrievingAuditLogs(true);
+        server.post("/profile/auditLogs")
+            .then(res => {
+                if (res.status == 200) {
+                    if (typeof res.data == "object" && !Array.isArray(res.data)) {
+                        setAuditLogsData(processAuditLogs(Object.values(res.data)));
+                        setRetrievingAuditLogs(false);
+                        return;
+                    } else {
+                        console.log("Unexpected response in retrieving audit logs; response:", res.data);
+                    }
+                } else {
+                    console.log("Non-200 status code in retrieving audit logs; response:", res.data);
+                }
+
+                showToast("Something went wrong", "Couldn't retrieve audit logs. Please try again later.", "error");
+                setRetrievingAuditLogs(false);
+            })
+            .catch(err => {
+                if (err.response && err.response.data && typeof err.response.data == "string") {
+                    if (err.response.data.startsWith("UERROR")) {
+                        console.log("User error occurred in retrieving audit logs; response:", err.response.data);
+                        showToast("Something went wrong", err.response.data.substring("UERROR: ".length), "error");
+                        setRetrievingAuditLogs(false);
+                        return;
+                    } else {
+                        console.log("Error occurred in retrieving audit logs; response:", err.response.data);
+                    }
+                } else if (err.message && typeof err.message == "string") {
+                    console.log("Error occurred in retrieving audit logs; message:", err.message);
+                } else {
+                    console.log("Unknown error occurred in retrieving audit logs; error:", err);
+                }
+
+                showToast("Something went wrong", "Couldn't retrieve audit logs. Please try again later.", "error");
+                setRetrievingAuditLogs(false);
+            })
+    }
+
     useEffect(() => {
         if (loaded) {
             getProfile();
+            retrieveAuditLogs();
         }
     }, [])
 
@@ -183,36 +244,47 @@ function MyAccount() {
                     <Button colorScheme='green' variant={'solid'} ml={"10px"} onClick={updateProfile} isDisabled={saveDisabled} isLoading={saving && !showingSaveSuccess}>{showingSaveSuccess ? <FaCheck /> : <FaSave />}</Button>
                 </Box>
 
-                <Box display={'flex'} justifyContent={'left'} flexDirection={'column'} alignItems={'left'} w={!limitedScreen ? '50%' : '100%'} mt={"5%"}>
-                    {retrievingProfile ? (
-                        <Spinner />
-                    ) : (
-                        <VStack spacing={"20px"}>
-                            <FormControl>
-                                <FormLabel><Text fontSize={'lg'}>Username</Text></FormLabel>
-                                <Input value={profileUsername} onChange={handleUsernameInputChange} />
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel><Text fontSize={'lg'}>Email</Text></FormLabel>
-                                <Input type='email' value={profileEmail} onChange={handleEmailInputChange} />
-                            </FormControl>
-                            {profileData.emailVerified == false && (
-                                <Alert status='warning' rounded={'xl'}>
-                                    <AlertIcon />
-                                    <Text fontSize={{ base: 'sm', md: 'md' }}>Verify your email to use many of Access' features.</Text>
-                                    <Spacer />
-                                    <Button colorScheme='yellow' variant={'outline'} fontSize={{ base: 'xs', sm: 'sm', md: 'md' }} p={'14px'}>Resend Code</Button>
-                                </Alert>
-                            )}
-                            <FormControl>
-                                <FormLabel><Text fontSize={'lg'}>Last login</Text></FormLabel>
-                                <Text>{lastLoginDate?.toLocaleString('en-GB', { dateStyle: "long", timeStyle: "short", hour12: true }) || "Unavailable"}</Text>
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel><Text fontSize={'lg'}>Created on</Text></FormLabel>
-                                <Text>{creationDate?.toLocaleString('en-GB', { dateStyle: "long", timeStyle: "short", hour12: true }) || "Unavailable"}</Text>
-                            </FormControl>
-                        </VStack>
+                <Box display={'flex'} justifyContent={'left'} flexDirection={'row'} alignItems={'center'}>
+                    <Box display={'flex'} justifyContent={'left'} flexDirection={'column'} alignItems={'left'} w={!limitedScreen ? '50%' : '100%'} mt={"5%"}>
+                        {retrievingProfile ? (
+                            <Spinner />
+                        ) : (
+                            <>
+                                <VStack spacing={"20px"}>
+                                    <FormControl>
+                                        <FormLabel><Text fontSize={'lg'}>Username</Text></FormLabel>
+                                        <Input value={profileUsername} onChange={handleUsernameInputChange} />
+                                    </FormControl>
+                                    <FormControl>
+                                        <FormLabel><Text fontSize={'lg'}>Email</Text></FormLabel>
+                                        <Input type='email' value={profileEmail} onChange={handleEmailInputChange} />
+                                    </FormControl>
+                                    {profileData.emailVerified == false && (
+                                        <Alert status='warning' rounded={'xl'}>
+                                            <AlertIcon />
+                                            <Text fontSize={{ base: 'sm', md: 'md' }}>Verify your email to use many of Access' features.</Text>
+                                            <Spacer />
+                                            <Button colorScheme='yellow' variant={'outline'} fontSize={{ base: 'xs', sm: 'sm', md: 'md' }} p={'14px'}>Resend Code</Button>
+                                        </Alert>
+                                    )}
+                                    <FormControl>
+                                        <FormLabel><Text fontSize={'lg'}>Last login</Text></FormLabel>
+                                        <Text>{lastLoginDate?.toLocaleString('en-GB', { dateStyle: "long", timeStyle: "short", hour12: true }) || "Unavailable"}</Text>
+                                    </FormControl>
+                                    <FormControl>
+                                        <FormLabel><Text fontSize={'lg'}>Created on</Text></FormLabel>
+                                        <Text>{creationDate?.toLocaleString('en-GB', { dateStyle: "long", timeStyle: "short", hour12: true }) || "Unavailable"}</Text>
+                                    </FormControl>
+                                </VStack>
+                                {limitedScreen && <AuditLogsList auditLogsData={auditLogsData} retrievingAuditLogs={retrievingAuditLogs} />}
+                            </>
+                        )}
+                    </Box>
+
+                    {!limitedScreen && (
+                        <Box display={'flex'} justifyContent={'left'} flexDirection={'column'} alignItems={'left'} w={'50%'} mt={"5%"}>
+                            <AuditLogsList auditLogsData={auditLogsData} retrievingAuditLogs={retrievingAuditLogs} />
+                        </Box>
                     )}
                 </Box>
             </Box>
@@ -237,7 +309,7 @@ function MyAccount() {
 
                     <ModalFooter>
                         <Button variant={'outline'} onClick={handleChangePasswordModalClose}>Cancel</Button>
-                        <Button variant={!saving && !changePasswordDisabled ? 'Default': 'solid'} ml={"10px"} onClick={handlePasswordUpdateProfile} isDisabled={changePasswordDisabled} isLoading={saving} loadingText={"Changing..."}>Change</Button>
+                        <Button variant={!saving && !changePasswordDisabled ? 'Default' : 'solid'} ml={"10px"} onClick={handlePasswordUpdateProfile} isDisabled={changePasswordDisabled} isLoading={saving} loadingText={"Changing..."}>Change</Button>
                     </ModalFooter>
                 </ModalContent>
             </Modal>
