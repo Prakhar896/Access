@@ -230,7 +230,7 @@ function ShareFile({ fileData }) {
 
     useEffect(() => {
         if (sharingInfo.linkCode) {
-            setValue(`${window.location.origin}/s/${sharingInfo.linkCode}`);
+            setValue(`${window.location.origin}/s?code=${sharingInfo.linkCode}`);
         }
     }, [sharingInfo])
 

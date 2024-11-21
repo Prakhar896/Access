@@ -19,6 +19,7 @@ import VerifyEmail from './pages/VerifyEmail.jsx'
 import MyAccount from './pages/portal/MyAccount.jsx'
 import NavLayout from './NavLayout.jsx'
 import ForgotPassword from './pages/ForgotPassword.jsx'
+import FileShare from './pages/FileShare.jsx'
 
 const store = configureStore({
     reducer: {
@@ -39,6 +40,7 @@ createRoot(document.getElementById('root')).render(
                         <Route path='login' element={<Login />} />
                         <Route path='verifyEmail' element={<VerifyEmail />} />
                         <Route path='forgotPassword' element={<ForgotPassword />} />
+                        <Route path='s' element={<FileShare />} />
                         <Route path='portal' element={<AuthLayout />}>
                             <Route element={<NavLayout />}>
                                 <Route path='files' element={<Directory />} />
