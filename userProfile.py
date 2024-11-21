@@ -142,7 +142,7 @@ def updateProfile(user: Identity):
         user.emailVerification.otpCode = Universal.generateUniqueID(customLength=6)
         user.emailVerification.dispatchTimestamp = Universal.utcNowString()
         
-        dispatchEmailVerification(user.email, otpCode=user.emailVerification.otpCode)
+        dispatchEmailVerification(user.email, otpCode=user.emailVerification.otpCode, accountID=user.id, hostname=request.host_url)
         
         Logger.log("USERPROFILE UPDATE: Identity '{}' changed their email to '{}'. Email verification dispatched.".format(user.id, user.email))
     

@@ -9,10 +9,10 @@
 
     <body>
         <h1>OTP Code For Access Portal</h1>
-        <p>Welcome to the Access family! To finish signing up, verify your email by keying in the code below onto the website.</p>
-        <p>If you did not request this, please ignore this email.</p>
+        <p>Welcome to the Access family! To finish signing up, verify your email by clicking on <a href="{{ verificationLink }}">this link.</a></p>
+        <p>Link not working? Copy and paste this to a browser: {{ verificationLink }}</p>
         <br>
-        <h3>OTP Code: {{ otpCode }}</h3>
+        <p>If you did not request this, please ignore this email.</p>
         <br>
         <p>Kind regards, The Access Team</p>
         <br>

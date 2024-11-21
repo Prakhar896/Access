@@ -101,6 +101,10 @@ def boot():
     
     # Blueprint regirstrations
     
+    ## Frontend
+    from frontend import frontendBP
+    app.register_blueprint(frontendBP)
+    
     ## Identity API
     from identity import identityBP
     app.register_blueprint(identityBP)

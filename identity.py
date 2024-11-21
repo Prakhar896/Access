@@ -8,18 +8,20 @@ from decorators import *
 
 identityBP = Blueprint('api', __name__)
 
-def dispatchEmailVerification(destEmail: str, otpCode: str):
-    text = """
-    Welcome to the Access family! To finish signing up, please enter the following OTP code onto the website:
+def dispatchEmailVerification(destEmail: str, otpCode: str, accountID: str, hostname: str):
+    verificationLink = "{}verifyEmail?id={}&code={}".format(hostname, accountID, otpCode)
     
-    OTP Code: {}
+    text = """
+    Welcome to the Access family! To finish signing up, please click on the link below:
+    
+    Verification link: {}
     
     Kind regards,
     The Access Team
     
     THIS IS AN AUTOMATED MESSAGE DELIVERED TO YOU BY THE ACCESS PORTAL. DO NOT REPLY TO THIS EMAIL.
     {}
-    """.format(otpCode, Universal.copyright)
+    """.format(verificationLink, Universal.copyright)
     
     Universal.asyncProcessor.addJob(
         Emailer.sendEmail,
@@ -28,7 +30,7 @@ def dispatchEmailVerification(destEmail: str, otpCode: str):
         altText=text,
         html=render_template(
             "emails/otpEmail.html",
-            otpCode=otpCode,
+            verificationLink=verificationLink,
             copyright=Universal.copyright
         )
     )
@@ -106,7 +108,7 @@ def newIdentity():
         return "ERROR: Failed to process request. Please try again.", 500
     
     # Dispatch OTP verification email
-    dispatchEmailVerification(account.email, otpCode)
+    dispatchEmailVerification(account.email, otpCode, account.id, request.host_url)
     
     return {
         "message": "SUCCESS: Identity created. Verify email via OTP code dispatched.",
@@ -303,6 +305,6 @@ def resendEmailVerification(user: Identity | None=None):
     user.emailVerification.dispatchTimestamp = Universal.utcNowString()
     user.emailVerification.save()
     
-    dispatchEmailVerification(user.email, otpCode)
+    dispatchEmailVerification(user.email, otpCode, user.id, request.host_url)
     
     return "SUCCESS: Email verification OTP code dispatched.", 200
