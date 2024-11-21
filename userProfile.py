@@ -1,12 +1,37 @@
 import os, re
-from flask import Blueprint, request, redirect, url_for, session
+from flask import Blueprint, request, redirect, url_for, session, render_template
 from models import Identity, File, AuditLog
 from decorators import jsonOnly, checkAPIKey, emailVerified, checkSession
 from identity import dispatchEmailVerification
 from services import Universal, Logger, Encryption
+from emailer import Emailer
 from AFManager import AFManager, AFMError
 
 userProfileBP = Blueprint('profile', __name__)
+
+def dispatchPasswordUpdatedEmail(username: str, destEmail: str):
+    text = """
+    Dear {},
+    
+    This is an alert to notify that you recently updated your Access Identity's password on the portal.
+    If this was not you, please reset your password immediately.
+    
+    Thank you for being a valued user of Access.
+    
+    {}
+    """.format(username, Universal.copyright)
+    
+    Universal.asyncProcessor.addJob(
+        Emailer.sendEmail,
+        destEmail=destEmail,
+        subject="Password Updated | Access",
+        altText=text,
+        html=render_template(
+            "emails/passwordUpdated.html",
+            username=username,
+            copyright=Universal.copyright
+        )
+    )
 
 @userProfileBP.route('', methods=['POST'])
 @checkAPIKey
@@ -122,6 +147,9 @@ def updateProfile(user: Identity):
     if username is None and email is None and newPassword is None:
         return "SUCCESS: Nothing to update.", 200
     
+    if (username != None or newPassword != None) and not user.emailVerification.verified:
+        return "UERROR: Email must be verified before updating username or password.", 400
+    
     # Try to see if there's another account with the same username/email
     if username != None or email != None:
         try:
@@ -153,6 +181,8 @@ def updateProfile(user: Identity):
     if newPassword != None:
         user.password = Encryption.encodeToSHA256(newPassword)
         Logger.log("USERPROFILE UPDATE: Identity '{}' changed their password.".format(user.id))
+        
+        dispatchPasswordUpdatedEmail(user.username, user.email)
     
     user.save()
     
