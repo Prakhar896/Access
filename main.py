@@ -117,6 +117,10 @@ def boot():
     from userProfile import userProfileBP
     app.register_blueprint(userProfileBP, url_prefix="/profile")
     
+    ## Sharing API
+    from sharing import sharingBP
+    app.register_blueprint(sharingBP, url_prefix="/sharing")
+    
     if len(sys.argv) > 1 and sys.argv[1] == "r":
         print(DI.save(None))
     

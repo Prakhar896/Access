@@ -377,7 +377,7 @@ class File(DIRepresentable):
         )
     
     @staticmethod
-    def load(id=None, accountID=None, filename=None) -> 'File | List[File] | None':
+    def load(id: str=None, accountID: str=None, filename: str=None, shareCode: str=None) -> 'File | List[File] | None':
         if id != None:
             fileData = DI.load(File.ref(id))
             if isinstance(fileData, DIError):
@@ -405,26 +405,34 @@ class File(DIRepresentable):
                 if isinstance(data[fileID], dict):
                     files[fileID] = File.rawLoad(data[fileID])
             
-            # If no accountID, filename is provided, return all files
-            if accountID == None and filename == None:
+            # If no identifier is provided, return all files
+            if accountID == None and filename == None and shareCode == None:
                 return list(files.values())
             
-            # Look for files that belong to the specified account
-            # Loop through all files and return the files that belong to the specified account
-            accountFiles = []
-            for fileID in files:
-                if files[fileID].accountID == accountID:
-                    if filename != None and files[fileID].name == filename:
+            if accountID != None:
+                # Look for files that belong to the specified account
+                # Loop through all files and return the files that belong to the specified account
+                accountFiles = []
+                for fileID in files:
+                    if files[fileID].accountID == accountID:
+                        if filename != None and files[fileID].name == filename:
+                            return files[fileID]
+                        elif filename == None:
+                            accountFiles.append(files[fileID])
+                
+                # If the filename is provided, but no file is found, return None
+                if filename != None:
+                    return None
+                
+                # If no filename is provided, return the list of account files
+                return accountFiles
+            elif shareCode != None:
+                # Look for files that have the specified share code
+                for fileID in files:
+                    if files[fileID].sharing.linkCode == shareCode:
                         return files[fileID]
-                    elif filename == None:
-                        accountFiles.append(files[fileID])
-            
-            # If the filename is provided, but no file is found, return None
-            if filename != None:
+                
                 return None
-            
-            # If no filename is provided, return the list of account files
-            return accountFiles
     
     def save(self, checkIntegrity=True) -> bool:
         convertedData = self.represent()
@@ -467,7 +475,7 @@ class FileSharing(DIRepresentable):
         self.linkCode = linkCode
         self.password = password
         self.accessors = accessors
-        self.startTimestamp =  startTimestamp
+        self.startTimestamp = startTimestamp
         self.active = active
         self.originRef = FileSharing.ref(fileID)
         
@@ -481,12 +489,11 @@ class FileSharing(DIRepresentable):
                 else:
                     data[reqParam] = None
         
-        if isinstance(data['accessors'], str):
-            try:
-                intValue = int(data['accessors'])
-                data['accessors'] = intValue
-            except:
-                data['accessors'] = None
+        try:
+            intValue = int(data['accessors'])
+            data['accessors'] = intValue
+        except:
+            data['accessors'] = None
         
         return FileSharing(
             fileID=fileID,
@@ -513,7 +520,7 @@ class FileSharing(DIRepresentable):
         return {
             "linkCode": self.linkCode,
             "password": self.password,
-            "accessors": self.accessors,
+            "accessors": str(self.accessors),
             "startTimestamp": self.startTimestamp,
             "active": str(self.active)
         }
