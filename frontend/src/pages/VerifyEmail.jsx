@@ -20,7 +20,7 @@ function VerifyEmail() {
     const [limitedScreen] = useMediaQuery("(max-width: 800px)");
     const toast = useToast()
     const showToast = configureShowToast(toast);
-    const { loaded } = useSelector(state => state.auth);
+    const { username, loaded } = useSelector(state => state.auth);
     const [code, setCode] = useState(searchParams.get('code') || '');
     const [userID, setUserID] = useState(searchParams.get('id') || '');
     const [email, setEmail] = useState('');
@@ -68,12 +68,16 @@ function VerifyEmail() {
                 if (response.status === 200) {
                     if (response.data && typeof response.data === 'string') {
                         if (response.data.startsWith('SUCCESS')) {
-                            showToast('Email verified!', 'You can now sign in.', 'success');
-                            navigate('/login', {
-                                state: {
-                                    email: email
-                                }
-                            });
+                            showToast('Email verified!', '', 'success');
+                            if (username && window.history.length > 1) {
+                                navigate(-1);
+                            } else {
+                                navigate('/login', {
+                                    state: {
+                                        email: email
+                                    }
+                                });
+                            }
                         } else {
                             console.log("Unknown response from server in login; response:", response.data);
                             showToast('Something went wrong', "Couldn't verify email. Please try again.", 'error');

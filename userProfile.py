@@ -137,12 +137,16 @@ def updateProfile(user: Identity):
         user.username = username
     
     if email != None:
+        if user.emailVerification.dispatchTimestamp != None and isinstance(user.emailVerification.dispatchTimestamp, str):
+            if (Universal.utcNow() - Universal.fromUTC(user.emailVerification.dispatchTimestamp)).total_seconds() < 120:
+                return "UERROR: Email address can only be changed every 2 minutes.", 400
+        
         user.email = email
         user.emailVerification.verified = False
         user.emailVerification.otpCode = Universal.generateUniqueID(customLength=6)
         user.emailVerification.dispatchTimestamp = Universal.utcNowString()
         
-        dispatchEmailVerification(user.email, otpCode=user.emailVerification.otpCode, accountID=user.id, hostname=request.host_url)
+        dispatchEmailVerification(user.username, user.email, user.emailVerification.otpCode, user.id)
         
         Logger.log("USERPROFILE UPDATE: Identity '{}' changed their email to '{}'. Email verification dispatched.".format(user.id, user.email))
     

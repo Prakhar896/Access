@@ -6,9 +6,11 @@ import server from '../../networking';
 import { FaCheck, FaEllipsisH, FaSave } from 'react-icons/fa';
 import AuditLogsList from '../../components/AuditLogsList';
 import DeleteAccountButton from '../../components/DeleteAccountButton';
+import { useNavigate } from 'react-router-dom';
 
 function MyAccount() {
-    const { loaded } = useSelector(state => state.auth);
+    const { accountID, loaded } = useSelector(state => state.auth);
+    const navigate = useNavigate();
     const [limitedScreen] = useMediaQuery("(max-width: 800px)");
     const { isOpen: isChangePasswordModalOpen, onOpen: onChangePasswordModalOpen, onClose: onChangePasswordModalClose } = useDisclosure();
 
@@ -16,6 +18,8 @@ function MyAccount() {
     const [retrievingProfile, setRetrievingProfile] = useState(true);
     const [auditLogsData, setAuditLogsData] = useState([]);
     const [retrievingAuditLogs, setRetrievingAuditLogs] = useState(false);
+    const [resendingVerificationEmail, setResendingVerificationEmail] = useState(false);
+    const [resendSuccess, setResendSuccess] = useState(false);
     const [saveDisabled, setSaveDisabled] = useState(true);
     const [changePasswordDisabled, setChangePasswordDisabled] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -207,6 +211,59 @@ function MyAccount() {
             })
     }
 
+    const resendVerificationEmail = async () => {
+        setResendingVerificationEmail(true);
+        server.post("/identity/resendEmailVerification")
+        .then(res => {
+            if (res.status == 200) {
+                if (typeof res.data == "string" && res.data.startsWith("SUCCESS")) {
+                    showToast("Verification email sent.", res.data.substring("SUCCESS: ".length), "success");
+                    setResendingVerificationEmail(false);
+                    setResendSuccess(true);
+                    return
+                } else {
+                    console.log("Unexpected response in resending verification email; response:", res.data);
+                }
+            } else {
+                console.log("Non-200 status code in resending verification email; response:", res.data);
+            }
+
+            showToast("Something went wrong", "Couldn't resend verification email. Please try again.", "error");
+            setResendingVerificationEmail(false);
+        })
+        .catch(err => {
+            if (err.response && err.response.data && typeof err.response.data == "string") {
+                if (err.response.data.startsWith("UERROR")) {
+                    console.log("User error occurred in resending verification email; response:", err.response.data);
+                    showToast("Something went wrong", err.response.data.substring("UERROR: ".length), "error");
+                    setResendingVerificationEmail(false);
+                    return;
+                } else {
+                    console.log("Error occurred in resending verification email; response:", err.response.data);
+                }
+            } else if (err.message && typeof err.message == "string") {
+                console.log("Error occurred in resending verification email; message:", err.message);
+            } else {
+                console.log("Unknown error occurred in resending verification email; error:", err);
+            }
+
+            showToast("Something went wrong", "Couldn't resend verification email. Please try again.", "error");
+            setResendingVerificationEmail(false);
+        })
+    }
+
+    const handleResendClick = () => {
+        if (!resendSuccess) {
+            resendVerificationEmail();
+        } else {
+            if (accountID) {
+                navigate('/verifyEmail?id=' + accountID);
+            } else {
+                showToast("Something went wrong", "Couldn't redirect to verification page. Please try again.", "error");
+            }
+        }
+    }
+
     useEffect(() => {
         if (loaded) {
             getProfile();
@@ -265,7 +322,7 @@ function MyAccount() {
                                             <AlertIcon />
                                             <Text fontSize={{ base: 'sm', md: 'md' }}>Verify your email to use many of Access' features.</Text>
                                             <Spacer />
-                                            <Button colorScheme='yellow' variant={'outline'} fontSize={{ base: 'xs', sm: 'sm', md: 'md' }} p={'14px'}>Resend Code</Button>
+                                            <Button colorScheme='yellow' variant={'outline'} fontSize={{ base: 'xs', sm: 'sm', md: 'md' }} p={'14px'} onClick={handleResendClick} isLoading={resendingVerificationEmail} loadingText="Resending..." isDisabled={resendingVerificationEmail}>{resendSuccess ? "Input Code": "Resend Code"}</Button>
                                         </Alert>
                                     )}
                                     <FormControl>

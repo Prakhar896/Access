@@ -8,20 +8,23 @@ from decorators import *
 
 identityBP = Blueprint('api', __name__)
 
-def dispatchEmailVerification(destEmail: str, otpCode: str, accountID: str, hostname: str):
-    verificationLink = "{}verifyEmail?id={}&code={}".format(hostname, accountID, otpCode)
+def dispatchEmailVerification(username: str, destEmail: str, otpCode: str, accountID: str):
+    verificationLink = "{}verifyEmail?id={}&code={}".format(os.environ.get("SYSTEM_URL", "http://localhost:8000/"), accountID, otpCode)
     
     text = """
-    Welcome to the Access family! To finish signing up, please click on the link below:
+    Dear {},
     
-    Verification link: {}
+    To benefit from Access' myriad of wonderful features, email verification is needed.
     
-    Kind regards,
-    The Access Team
+    If already on the verification page, enter this verification code: {}
     
-    THIS IS AN AUTOMATED MESSAGE DELIVERED TO YOU BY THE ACCESS PORTAL. DO NOT REPLY TO THIS EMAIL.
+    For easy verification, click on this link: {}
+    
+    Thank you for being a valued user of Access.
+    
+    
     {}
-    """.format(verificationLink, Universal.copyright)
+    """.format(username, otpCode, verificationLink, Universal.copyright)
     
     Universal.asyncProcessor.addJob(
         Emailer.sendEmail,
@@ -30,6 +33,8 @@ def dispatchEmailVerification(destEmail: str, otpCode: str, accountID: str, host
         altText=text,
         html=render_template(
             "emails/otpEmail.html",
+            username=username,
+            otpCode=otpCode,
             verificationLink=verificationLink,
             copyright=Universal.copyright
         )
@@ -108,7 +113,7 @@ def newIdentity():
         return "ERROR: Failed to process request. Please try again.", 500
     
     # Dispatch OTP verification email
-    dispatchEmailVerification(account.email, otpCode, account.id, request.host_url)
+    dispatchEmailVerification(account.username, account.email, otpCode, account.id)
     
     return {
         "message": "SUCCESS: Identity created. Verify email via OTP code dispatched.",
@@ -226,7 +231,7 @@ def verifyOTP():
         if not isinstance(account, Identity):
             return "UERROR: Account not found.", 404
     except Exception as e:
-        Logger.log("IDENTITY OTP VERIFY ERROR: Failed to find identity. Error: {}".format(e))
+        Logger.log("IDENTITY VERIFYOTP ERROR: Failed to find identity. Error: {}".format(e))
         return "ERROR: Failed to process request. Please try again.", 500
     
     if account.emailVerification.verified and account.emailVerification.otpCode != None:
@@ -251,7 +256,7 @@ def verifyOTP():
     emailVerifiedLog = AuditLog(
         accountID=account.id,
         event="EmailVerified",
-        text="Email verified successfully."
+        text="Email '{}' verified successfully.".format(account.email)
     )
     emailVerifiedLog.save()
     
@@ -305,6 +310,6 @@ def resendEmailVerification(user: Identity | None=None):
     user.emailVerification.dispatchTimestamp = Universal.utcNowString()
     user.emailVerification.save()
     
-    dispatchEmailVerification(user.email, otpCode, user.id, request.host_url)
+    dispatchEmailVerification(user.username, user.email, otpCode, user.id)
     
     return "SUCCESS: Email verification OTP code dispatched.", 200
