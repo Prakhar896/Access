@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import server from '../../networking';
 import { FaCheck, FaEllipsisH, FaSave } from 'react-icons/fa';
 import AuditLogsList from '../../components/AuditLogsList';
+import DeleteAccountButton from '../../components/DeleteAccountButton';
 
 function MyAccount() {
     const { loaded } = useSelector(state => state.auth);
@@ -244,7 +245,7 @@ function MyAccount() {
                     <Button colorScheme='green' variant={'solid'} ml={"10px"} onClick={updateProfile} isDisabled={saveDisabled} isLoading={saving && !showingSaveSuccess}>{showingSaveSuccess ? <FaCheck /> : <FaSave />}</Button>
                 </Box>
 
-                <Box display={'flex'} justifyContent={'left'} flexDirection={'row'} alignItems={'center'}>
+                <Box display={'flex'} justifyContent={'left'} flexDirection={'row'} alignItems={'flex-start'}>
                     <Box display={'flex'} justifyContent={'left'} flexDirection={'column'} alignItems={'left'} w={!limitedScreen ? '50%' : '100%'} mt={"5%"}>
                         {retrievingProfile ? (
                             <Spinner />
@@ -277,6 +278,8 @@ function MyAccount() {
                                     </FormControl>
                                 </VStack>
                                 {limitedScreen && <AuditLogsList auditLogsData={auditLogsData} retrievingAuditLogs={retrievingAuditLogs} />}
+
+                                <DeleteAccountButton />
                             </>
                         )}
                     </Box>
