@@ -37,7 +37,8 @@ class BootCheck:
             "APP_SECRET_KEY",
             "AccessAnalyticsEnabled",
             "RuntimePort",
-            "LOGGING_ENABLED"
+            "LOGGING_ENABLED",
+            "SYSTEM_URL"
         ]
         
         for var in requiredEnvVariables:
