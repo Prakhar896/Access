@@ -60,12 +60,18 @@ def version():
 
 @app.errorhandler(404)
 def page_not_found(e):
-    if request.path.startswith("/assets") or request.path.startswith("/src/assets") or request.path.startswith("/favicon.ico"):
+    if request.path.startswith("/assets") or request.path.startswith("/src/assets") or request.path.startswith("/favicon.ico") or request.path.startswith("/logo"):
+        if request.path.startswith("/logo"):
+            return send_from_directory(os.path.join(os.getcwd(), "assets", "logo", "svg"), "logo-color.svg")
+        
         asset = request.path.split("/")[-1]
         if asset in availableAssets:
             return send_from_directory(os.path.join(os.getcwd(), "assets"), asset)
         return "ERROR: Asset not found.", 404
-    return redirect(url_for('version'))
+    try:
+        return redirect(url_for('frontend.homepage'))
+    except:
+        return "ERROR: Page not found.", 404
 
 def boot():
     Universal.initAsync()
