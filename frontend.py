@@ -5,3 +5,7 @@ frontendBP = Blueprint('frontend', __name__)
 @frontendBP.route('/')
 def homepage():
     return render_template("index.html")
+
+@frontendBP.route('/s')
+def sharedFile():
+    return render_template("index.html")
