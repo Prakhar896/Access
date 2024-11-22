@@ -101,7 +101,12 @@ def boot():
     if AccessAnalytics.permissionCheck():
         response = AccessAnalytics.prepEnvironmentForAnalytics()
         print(response)
-        
+    
+    # Set up AFManager
+    res = AFManager.setup()
+    if not res:
+        raise Exception("MAIN LOAD ERROR: AFManager failed to set up.")
+    
     # Set up Emailer
     Emailer.checkContext()
     
