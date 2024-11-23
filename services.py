@@ -1,13 +1,19 @@
 import os, json, base64, random, datetime, uuid, functools
 from apscheduler.schedulers.background import BackgroundScheduler
 from passlib.hash import sha256_crypt as sha
+from apscheduler.triggers.base import BaseTrigger
+from apscheduler.triggers.date import DateTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 
 class Trigger:
-    def __init__(self, seconds=None, minutes=None, hours=None) -> None:
-        self.immediate = seconds == None and minutes == None and hours == None
+    def __init__(self, type='interval', seconds=None, minutes=None, hours=None, triggerDate: datetime.datetime=None, customAPTrigger: BaseTrigger=None) -> None:
+        self.type = type
+        self.immediate = seconds == None and minutes == None and hours == None and triggerDate == None
         self.seconds = seconds if seconds != None else 0
         self.minutes = minutes if minutes != None else 0
         self.hours = hours if hours != None else 0
+        self.triggerDate = triggerDate
+        self.customAPTrigger = customAPTrigger
 
 class AsyncProcessor:
     """
@@ -38,16 +44,22 @@ class AsyncProcessor:
         self.scheduler.resume()
         self.log("Scheduler resumed.")
     
-    def addJob(self, function, trigger: Trigger=None, *args, **kwargs):
+    def addJob(self, function, *args, trigger: Trigger=None, **kwargs):
         """
         Adds a job to the scheduler.
         """
         if trigger == None: trigger = Trigger()
         
         job = None
-        if trigger.immediate:
+        if trigger.customAPTrigger != None:
+            job = self.scheduler.add_job(function, trigger.customAPTrigger, args=args, kwargs=kwargs)
+            self.log("Job for '{}' added with custom trigger.".format(function.__name__))
+        elif trigger.immediate:
             job = self.scheduler.add_job(function, args=args, kwargs=kwargs)
             self.log("Job for '{}' added with immediate trigger.".format(function.__name__))
+        elif trigger.type == "date":
+            job = self.scheduler.add_job(function, DateTrigger(run_date=trigger.triggerDate), args=args, kwargs=kwargs)
+            self.log("Job for '{}' added with trigger date: {}.".format(function.__name__, trigger.triggerDate.isoformat()))
         else:
             job = self.scheduler.add_job(function, 'interval', seconds=trigger.seconds, minutes=trigger.minutes, hours=trigger.hours, args=args, kwargs=kwargs)
             self.log("Job for '{}' added with trigger: {} seconds, {} minutes, {} hours.".format(function.__name__, trigger.seconds, trigger.minutes, trigger.hours))

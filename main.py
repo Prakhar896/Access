@@ -25,7 +25,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, origins="*", supports_credentials=True, allow_private_network=True)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = configManager.config["allowedFileSize"] * 1000 * 1000
+app.config['MAX_CONTENT_LENGTH'] = configManager.getAllowedRequestSize() * 1000 * 1000
 app.secret_key = os.environ['APP_SECRET_KEY']
 
 def allowed_file(filename):
@@ -42,6 +42,9 @@ if os.path.isdir(os.path.join(os.getcwd(), "assets")):
 ## Other pre-requisites
 @app.before_request
 def updateAnalytics():
+    if configManager.getSystemLock() == True and request.path != "/":
+        return "ERROR: Service Unavailable", 503
+    
     if AccessAnalytics.permissionCheck():
         response = AccessAnalytics.newRequest(request.path)
         if isinstance(response, str):
@@ -110,7 +113,7 @@ def boot():
     # Set up Emailer
     Emailer.checkContext()
     
-    # Blueprint regirstrations
+    # Blueprint registrations
     
     ## Frontend
     from frontend import frontendBP

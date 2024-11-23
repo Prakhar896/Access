@@ -77,7 +77,7 @@ General Settings: (0 to return to main menu)
             config.manageFileExtensions(configManager=startupConfigManager)
             startupConfigManager.reload()
         elif choice == 2:
-            config.manageFileSize(configManager=startupConfigManager)
+            config.manageDirectorySize(configManager=startupConfigManager)
             startupConfigManager.reload()
         elif choice == 3:
             ## Clear collected data

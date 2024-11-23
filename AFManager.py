@@ -92,7 +92,18 @@ class AFManager:
                 return AFMError("File does not exist.")
         else:
             return AFMError("Folder does not exist.")
-
+    
+    @staticmethod
+    def getDirectorySize(userID, exclude: list[str]=[]):
+        if not AFManager.checkIfFolderIsRegistered(userID):
+            return AFMError("Folder does not exist.")
+        
+        totalSize = 0
+        for filename in AFManager.getFilenames(userID):
+            if filename not in exclude:
+                totalSize += os.path.getsize(AFManager.userFilePath(userID, filename))
+        
+        return totalSize
 
 class AFMError:
     def __init__(self, message: str) -> None:

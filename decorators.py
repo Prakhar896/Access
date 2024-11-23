@@ -148,7 +148,7 @@ def checkSession(_func=None, *, strict=False, provideIdentity=False):
                     return CheckSessionOutput(reason, func(*args, **kwargs))
             
             ####
-            if os.environ.get("DEBUG_MODE", "False") == "True":
+            if os.environ.get("DEBUG_MODE", "False") == "True" and False:
                 user = Identity.load()[0]
                 if not user.authToken:
                     user.authToken = "abc"

@@ -4,8 +4,10 @@ class Config:
     file = "config.json"
     defaultConfig = {
         "fileExtensions": ['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'xlsx', 'heic', 'mov', 'mp4', 'docx', 'pptx', 'py', 'swift', 'js', 'zip'],
-        "allowedFileSize": 16,
-        "maxFileCount": 20
+        "allowedDirectorySize": 16,
+        "allowedRequestSize": 16,
+        "maxFileCount": 20,
+        "systemLock": False
     }
 
     def __init__(self):
@@ -17,13 +19,19 @@ class Config:
             self.dump()
         
     def getFileExtensions(self):
-        return self.config['fileExtensions'] if 'fileExtensions' in self.config else []
+        return self.config['fileExtensions'] if 'fileExtensions' in self.config and isinstance(self.config['fileExtensions'], list)  else []
     
-    def getAllowedFileSize(self):
-        return self.config['allowedFileSize'] if 'allowedFileSize' in self.config else 0
+    def getAllowedDirectorySize(self):
+        return self.config['allowedDirectorySize'] if 'allowedDirectorySize' in self.config and isinstance(self.config['allowedDirectorySize'], int) else 0
+    
+    def getAllowedRequestSize(self):
+        return self.config['allowedRequestSize'] if 'allowedRequestSize' in self.config and isinstance(self.config['allowedRequestSize'], int) else 0
     
     def getMaxFileCount(self):
-        return self.config['maxFileCount'] if 'maxFileCount' in self.config else 0
+        return self.config['maxFileCount'] if 'maxFileCount' in self.config and isinstance(self.config['maxFileCount'], int) else 0
+    
+    def getSystemLock(self):
+        return self.config['systemLock'] if 'systemLock' in self.config and isinstance(self.config['systemLock'], bool) else False
 
     def dump(self):
         with open(Config.file, "w") as f:
@@ -44,7 +52,20 @@ class Config:
             except Exception as e:
                 print("CONFIG LOAD ERROR: {}".format(e))
                 return False
-            
+        
+        for reqParam in ['fileExtensions', 'allowedDirectorySize', 'allowedRequestSize', 'maxFileCount', 'systemLock']:
+            if reqParam not in self.config:
+                if reqParam == "fileExtensions":
+                    self.config["fileExtensions"] = []
+                elif reqParam == "allowedDirectorySize":
+                    self.config["allowedDirectorySize"] = 16
+                elif reqParam == "allowedRequestSize":
+                    self.config["allowedRequestSize"] = 16
+                elif reqParam == "maxFileCount":
+                    self.config["maxFileCount"] = 20
+                elif reqParam == "systemLock":
+                    self.config["systemLock"] = False
+        
         return True
 
 ## General Settings function
@@ -108,22 +129,39 @@ def manageFileExtensions(configManager: Config):
 
     return
 
-def manageFileSize(configManager: Config):
-    print("Current allowed file size: {} MB".format(configManager.config["allowedFileSize"]))
-    newFileSize = input("Enter new file size (in MB) or '0' to return: ")
+def manageDirectorySize(configManager: Config):
+    print("Current allowed directory size: {} MB".format(configManager.config["allowedDirectorySize"]))
+    newDirectorySize = input("Enter new directory size (in MB) or '0' to return: ")
 
-    while not newFileSize.isdigit():
-        print("Invalid file size provided. Please try again.")
-        newFileSize = input("Enter new file size (in MB) or '0' to return: ")
+    while not newDirectorySize.isdigit():
+        print("Invalid directory size provided. Please try again.")
+        newDirectorySize = input("Enter new directory size (in MB) or '0' to return: ")
 
-    newFileSize = int(newFileSize)
-    if newFileSize == 0:
+    newDirectorySize = int(newDirectorySize)
+    if newDirectorySize == 0:
         return
     else:
-        configManager.config["allowedFileSize"] = newFileSize
+        configManager.config["allowedDirectorySize"] = newDirectorySize
         configManager.dump()
         print()
-        print("Successfully updated file size to {} MB.".format(newFileSize))
+        print("Successfully updated directory size to {} MB.".format(newDirectorySize))
+        
+def manageRequestSize(configManager: Config):
+    print("Current allowed request size: {} MB".format(configManager.config["allowedRequestSize"]))
+    newRequestSize = input("Enter new request size (in MB) or '0' to return: ")
+
+    while not newRequestSize.isdigit():
+        print("Invalid request size provided. Please try again.")
+        newRequestSize = input("Enter new request size (in MB) or '0' to return: ")
+
+    newRequestSize = int(newRequestSize)
+    if newRequestSize == 0:
+        return
+    else:
+        configManager.config["allowedRequestSize"] = newRequestSize
+        configManager.dump()
+        print()
+        print("Successfully updated request size to {} MB.".format(newRequestSize))
         
 def manageFileCount(configManager: Config):
     print("Current maximum file count: {}".format(configManager.config["maxFileCount"]))

@@ -1,12 +1,29 @@
-import os, copy, re
+import os, copy, re, time, datetime
+from io import BytesIO
 from flask import Blueprint, request, send_file, send_from_directory, redirect, url_for
 from main import allowed_file, secure_filename, configManager
 from AFManager import AFManager, AFMError
-from services import Logger, Universal
+from services import Logger, Universal, Trigger
 from models import Identity, File, AuditLog, EmailVerification
 from decorators import jsonOnly, checkAPIKey, checkSession, enforceSchema, emailVerified, debug
 
 directoryBP = Blueprint('directory', __name__)
+
+def get_file_size(file):
+    # Move the pointer to the end of the stream
+    file.stream.seek(0, os.SEEK_END)
+    size = file.stream.tell()  # Get the current position, which is the file size
+    file.stream.seek(0)  # Reset the pointer to the start of the stream
+    return size
+
+def process_file(file: BytesIO, path):
+    content = file.read()
+    
+    with open(path, 'wb') as f:
+        f.write(content)  # Save file to the user directory
+        print()
+        print("\tFile saved to", path)
+        print()
 
 @directoryBP.route('/register', methods=['POST'])
 @checkAPIKey
@@ -90,6 +107,7 @@ def uploadFile(user: Identity):
         return "UERROR: Please register your directory first.", 400
     
     currentFiles = AFManager.getFilenames(user.id)
+    directorySize = AFManager.getDirectorySize(user.id, exclude=[secure_filename(file.filename) for file in files])
     
     try:
         user.getFiles()
@@ -113,7 +131,15 @@ def uploadFile(user: Identity):
         
         # Save the file
         fileExists = os.path.isfile(AFManager.userFilePath(user.id, secureName))
-        file.save(AFManager.userFilePath(user.id, secureName))
+        content = BytesIO(file.stream.read())
+        Universal.asyncProcessor.addJob(
+            process_file,
+            content,
+            AFManager.userFilePath(user.id, secureName),
+            trigger=Trigger('date', triggerDate=datetime.datetime.now() + datetime.timedelta(seconds=4))
+        )
+        
+        # file.save(AFManager.userFilePath(user.id, secureName))
         
         # Log the file save
         fileSaveLog = AuditLog(user.id, "FileUpload" if not fileExists else "FileOverwrite", "File '{}' uploaded.".format(secureName))

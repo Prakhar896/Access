@@ -5,7 +5,7 @@ from services import Universal
 from utils import Ref
 
 class Identity(DIRepresentable):
-    def __init__(self, username: str, email: str, password: str, lastLogin: str, authToken: str, emailVerification: 'EmailVerification'=None, created: str=None, resetKey: str=None, resetDispatch: str=None, auditLogs: 'Dict[str, AuditLog]'={}, files: 'Dict[str, File]'={}, id: str=None) -> None:
+    def __init__(self, username: str, email: str, password: str, lastLogin: str, authToken: str, emailVerification: 'EmailVerification'=None, created: str=None, resetKey: str=None, resetDispatch: str=None, activeUploads: list[str]=[], auditLogs: 'Dict[str, AuditLog]'={}, files: 'Dict[str, File]'={}, id: str=None) -> None:
         if id == None:
             id = uuid4().hex
         if emailVerification == None:
@@ -23,6 +23,7 @@ class Identity(DIRepresentable):
         self.created = created
         self.resetKey = resetKey
         self.resetDispatch = resetDispatch
+        self.activeUploads = activeUploads
         self.auditLogs = auditLogs
         self.files = files
         self.originRef = Identity.ref(id)
@@ -32,11 +33,13 @@ class Identity(DIRepresentable):
         
     @staticmethod
     def rawLoad(data: dict, loadAuditLogs=False, loadFiles=False) -> 'Identity':
-        requiredParams = ['username', 'email', 'password', 'lastLogin', 'authToken', 'emailVerification', 'created', 'resetKey', 'resetDispatch', 'id']
+        requiredParams = ['username', 'email', 'password', 'lastLogin', 'authToken', 'emailVerification', 'created', 'resetKey', 'resetDispatch', "activeUploads", 'id']
         for reqParam in requiredParams:
             if reqParam not in data:
                 if reqParam in ['emailVerification']:
                     data[reqParam] = {}
+                elif reqParam in ['activeUploads']:
+                    data[reqParam] = []
                 else:
                     data[reqParam] = None
         
@@ -45,6 +48,10 @@ class Identity(DIRepresentable):
             emailVerification = EmailVerification.rawLoad(data['emailVerification'], data['id'])
         else:
             emailVerification = EmailVerification(data['id'])
+        
+        if not isinstance(data['activeUploads'], list):
+            Logger.log("IDENTITY RAWLOAD WARNING: Active uploads data is not a list, defaulting to empty list; data: {}".format(data['activeUploads']))
+            data['activeUploads'] = []
         
         account = Identity(
             username=data['username'],
@@ -56,6 +63,7 @@ class Identity(DIRepresentable):
             created=data['created'],
             resetKey=data['resetKey'],
             resetDispatch=data['resetDispatch'],
+            activeUploads=data['activeUploads'],
             id=data['id']
         )
         
@@ -117,7 +125,8 @@ class Identity(DIRepresentable):
             "emailVerification": self.emailVerification.represent(),
             "created": self.created,
             "resetKey": self.resetKey,
-            "resetDispatch": self.resetDispatch
+            "resetDispatch": self.resetDispatch,
+            "activeUploads": self.activeUploads
         }
         
     def save(self):
