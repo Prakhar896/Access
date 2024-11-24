@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import colouredLogo from '/logo/svg/logo-color.svg';
-import { AbsoluteCenter, Box, Button, Center, FormControl, FormLabel, Heading, Image, Input, ScaleFade, Spacer, Spinner, Text, useMediaQuery, useToast, VStack } from '@chakra-ui/react';
+import { AbsoluteCenter, Box, Button, Center, FormControl, FormHelperText, FormLabel, Heading, Image, Input, ScaleFade, Spacer, Spinner, Text, useMediaQuery, useToast, VStack } from '@chakra-ui/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import configureShowToast from '../components/showToast';
@@ -167,7 +167,8 @@ function SignUp() {
                                 </FormControl>
                                 <FormControl id='password' required>
                                     <FormLabel>Password</FormLabel>
-                                    <Input onKeyUp={handleEnter} placeholder='Uppercase and numeric letters required' type='password' value={password} onChange={handlePasswordChange} required />
+                                    <Input onKeyUp={handleEnter} placeholder='Create password' type='password' value={password} onChange={handlePasswordChange} required />
+                                    <FormHelperText>Minimum 8 characters. At least 1 uppercase, numeric and special character required.</FormHelperText>
                                 </FormControl>
                                 <FormControl id='confirmPassword' required>
                                     <FormLabel>Confirm Password</FormLabel>
