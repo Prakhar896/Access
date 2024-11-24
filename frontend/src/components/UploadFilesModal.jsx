@@ -125,7 +125,7 @@ function UploadFilesModal({ isOpen, onClose, onOpen, triggerReload, directoryUpd
                 <ModalFooter>
                     <HStack spacing={"10px"}>
                         <Button variant="outline" onClick={handleClose}>Close</Button>
-                        <Button variant={!uploading && !uploadButtonDisabled ? 'Default' : 'solid'} onClick={handleUpload} isLoading={uploading} loadingText="Uploading..." isDisabled={uploadButtonDisabled || directoryUpdating}>Upload</Button>
+                        <Button variant={!uploading && !uploadButtonDisabled && !directoryUpdating ? 'Default' : 'solid'} onClick={handleUpload} isLoading={uploading} loadingText="Uploading..." isDisabled={uploadButtonDisabled || directoryUpdating}>Upload</Button>
                     </HStack>
                 </ModalFooter>
             </ModalContent>
