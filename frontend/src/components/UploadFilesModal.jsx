@@ -1,10 +1,10 @@
-import { Box, Button, Card, FormControl, FormLabel, HStack, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Text, useDisclosure, useToast } from '@chakra-ui/react'
+import { Box, Button, Card, Divider, FormControl, FormLabel, HStack, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, useDisclosure, useToast } from '@chakra-ui/react'
 import React, { useEffect, useState } from 'react'
 import UploadFileCard from './UploadFileCard';
 import server from '../networking';
 import configureShowToast from './showToast';
 
-function UploadFilesModal({ isOpen, onClose, onOpen, triggerReload }) {
+function UploadFilesModal({ isOpen, onClose, onOpen, triggerReload, directoryUpdating }) {
     const toast = useToast();
     const showToast = configureShowToast(toast);
 
@@ -90,6 +90,16 @@ function UploadFilesModal({ isOpen, onClose, onOpen, triggerReload }) {
                 <ModalHeader>Upload Files</ModalHeader>
                 <ModalCloseButton />
                 <ModalBody>
+                    {directoryUpdating && (
+                        <>
+                            <HStack mt={"20px"} w={'fit-content'}>
+                                <Spinner />
+                                <Text fontWeight={'black'}>Directory is updating...</Text>
+                            </HStack>
+                            <Text mt={"10px"} fontSize={'lg'}>Your recent uploads are still processing, please wait before uploading more.</Text>
+                            <Divider mt={"20px"} mb={"20px"} />
+                        </>
+                    )}
                     <Text>Files where the name is the same as an existing file in your directory will overwrite the existing file. New files are uploaded as normal. Filenames may be slightly modified for security purposes.</Text>
                     <FormControl mt={5} mb={5} isRequired>
                         <FormLabel><Text>Select one or more files.</Text></FormLabel>
@@ -115,7 +125,7 @@ function UploadFilesModal({ isOpen, onClose, onOpen, triggerReload }) {
                 <ModalFooter>
                     <HStack spacing={"10px"}>
                         <Button variant="outline" onClick={handleClose}>Close</Button>
-                        <Button variant={!uploading && !uploadButtonDisabled ? 'Default' : 'solid'} onClick={handleUpload} isLoading={uploading} loadingText="Uploading..." isDisabled={uploadButtonDisabled}>Upload</Button>
+                        <Button variant={!uploading && !uploadButtonDisabled ? 'Default' : 'solid'} onClick={handleUpload} isLoading={uploading} loadingText="Uploading..." isDisabled={uploadButtonDisabled || directoryUpdating}>Upload</Button>
                     </HStack>
                 </ModalFooter>
             </ModalContent>

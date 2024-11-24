@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Box, Button, Heading, Menu, MenuButton, MenuDivider, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Spacer, Spinner, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr, useDisclosure, useMediaQuery, useToast } from '@chakra-ui/react';
+import { Box, Button, Heading, HStack, Menu, MenuButton, MenuDivider, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Spacer, Spinner, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tooltip, Tr, useDisclosure, useMediaQuery, useToast } from '@chakra-ui/react';
 import { Link as ChakraLink } from '@chakra-ui/react';
 import { useSelector } from 'react-redux';
 import server from '../../networking';
@@ -16,6 +16,8 @@ function Directory() {
     const { username, loaded } = useSelector(state => state.auth);
     const [showingVerifyEmailLink, setShowingVerifyEmailLink] = useState(false);
     const [filesData, setFilesData] = useState([]);
+    const [directoryUpdating, setDirectoryUpdating] = useState(false);
+    const [timeoutID, setTimeoutID] = useState(null);
     const [retrievingFiles, setRetrievingFiles] = useState(true);
     const [sortBy, setSortBy] = useState(localStorage.getItem("UserPrefSortAttribute") || "name");
     const [sortOrder, setSortOrder] = useState(localStorage.getItem("UserPrefSortOrder") || "asc");
@@ -61,10 +63,28 @@ function Directory() {
     }
 
     const fetchFiles = () => {
+        if (timeoutID) {
+            clearTimeout(timeoutID);
+        }
+
         server.get("/directory")
             .then(res => {
                 if (res.status == 200) {
                     if (typeof res.data == "object" && !Array.isArray(res.data)) {
+                        if (res.data["updating"] === true) {
+                            setDirectoryUpdating(true);
+
+                            setTimeoutID(setTimeout(() => {
+                                console.log("Directory is updating; fetching again...");
+                                fetchFiles();
+                            }, 3000))
+                        } else {
+                            setDirectoryUpdating(false);
+                        }
+                        if (res.data["updating"] !== undefined) {
+                            delete res.data["updating"];
+                        }
+
                         sortAndSetFiles(processFileData(Object.values(res.data)));
                         setRetrievingFiles(false);
                         return
@@ -140,13 +160,21 @@ function Directory() {
                     <Spacer />
                     <Button variant={'Default'} onClick={onUploadModalOpen}><FontAwesomeIcon icon={faArrowUpFromBracket} /></Button>
                 </Box>
+                {directoryUpdating && (
+                    <Tooltip label="Some of your recent uploads are still being processed and will show up soon." aria-label='Directory updating notice'>
+                        <HStack mt={"20px"} w={'fit-content'}>
+                            <Spinner />
+                            <Text fontWeight={'black'}>Directory is updating...</Text>
+                        </HStack>
+                    </Tooltip>
+                )}
                 {showingVerifyEmailLink ? (
                     <Button variant={'Default'} onClick={() => navigate("/portal/account")} mt={'20px'} maxW={'fit-content'}>Verify Email in My Account</Button>
                 ) : (
                     <FilesList filesData={filesData} retrieving={retrievingFiles} triggerReload={fetchFiles} />
                 )}
             </Box>
-            <UploadFilesModal isOpen={isUploadModalOpen} onOpen={onUploadModalOpen} onClose={onUploadModalClose} triggerReload={fetchFiles} />
+            <UploadFilesModal isOpen={isUploadModalOpen} onOpen={onUploadModalOpen} onClose={onUploadModalClose} triggerReload={fetchFiles} directoryUpdating={directoryUpdating} />
         </>
     )
 }

@@ -40,15 +40,52 @@ def processUserUpload(name: str, file: FileStorage, user: Identity, fileExists: 
     else:
         return "SUCCESS: File updated."
 
-def processUserBulkUpload(files: Dict[str,  BytesIO], user: Identity, currentFiles: List[str]):
-    pass
-    # content = file.read()
+def processUserBulkUpload(files: Dict[str,  BytesIO], user: Identity):
+    Logger.log("DIRECTORY PROCESSUSERBULKUPLOAD: Bulk upload started for user '{}'.".format(user.id))
+    dirFiles = AFManager.getFilenames(user.id)
+    if not isinstance(dirFiles, list):
+        dirFiles = []
+
+    # Save the file
+    for name, file in files.items():
+        try:
+            content = file.read()
+            
+            with open(AFManager.userFilePath(user.id, name), 'wb') as f:
+                f.write(content) 
+        except Exception as e:
+            Logger.log("DIRECTORY PROCESSUSERBULKUPLOAD ERROR: Failed to save file '{}' for user '{}'; error: {}".format(name, user.id, e))
+            
+            # Log the file save's error
+            log = AuditLog(user.id, "FileUpload", "File '{}' upload failed. Try again.".format(name))
+            log.save()
+            continue
+        
+        # Log the file save
+        log = AuditLog(user.id, "FileUpload" if name not in dirFiles else "FileOverwrite", "File '{}' uploaded.".format(name))
+        log.save()
+        
+        # Update the database with the file's list. If file exists, update last modified, else create and save new file object
+        fileFound = False
+        for userFile in user.files.values():
+            if userFile.name == name:
+                userFile.lastUpdate = Universal.utcNowString()
+                fileFound = True
+                userFile.save()
+                break
+        
+        if not fileFound:
+            fileObject = File(user.id, name)
+            fileObject.save()
+        
+        if isinstance(user.activeUploads, list) and name in user.activeUploads:
+            user.activeUploads.remove(name)
+            user.save()
+        
+        time.sleep(0.5)
     
-    # with open(path, 'wb') as f:
-    #     f.write(content)  # Save file to the user directory
-    #     print()
-    #     print("\tFile saved to", path)
-    #     print()
+    Logger.log("DIRECTORY PROCESSUSERBULKUPLOAD: Bulk upload completed for user '{}'.".format(user.id))
+    return True
 
 @directoryBP.route('/register', methods=['POST'])
 @checkAPIKey
@@ -93,6 +130,8 @@ def listFiles(user: Identity):
         Logger.log("DIRECTORY LIST ERROR: Failed to retrieve files for user '{}'; error: {}".format(user.id, e))
         return "ERROR: Failed to process request.", 500
     
+    activeUploads = user.activeUploads if isinstance(user.activeUploads, list) else []
+    
     # Check for new files in directory
     for directoryFile in directoryFiles:
         if directoryFile not in userFilenames:
@@ -103,15 +142,19 @@ def listFiles(user: Identity):
             userFiles[newFile.id] = newFile
     
     # Check for removed files in directory
-    for userFilename in userFilenames:
-        if userFilename not in directoryFiles:
-            Logger.log("DIRECTORY LIST: Removing unmatched user file '{}' from user '{}'.".format(userFilename, user.id))
-            targetFile = [file for file in userFiles.values() if file.name == userFilename][0]
-            targetFile.destroy()
-            
-            del userFiles[targetFile.id]
+    if len(activeUploads) == 0:
+        for userFilename in userFilenames:
+            if userFilename not in directoryFiles:
+                Logger.log("DIRECTORY LIST: Removing unmatched user file '{}' from user '{}'.".format(userFilename, user.id))
+                targetFile = [file for file in userFiles.values() if file.name == userFilename][0]
+                targetFile.destroy()
+                
+                del userFiles[targetFile.id]
     
     filesData = {id: file.represent() for id, file in userFiles.items()}
+    if len(activeUploads) > 0:
+        filesData["updating"] = True
+    
     return filesData, 200
 
 @directoryBP.route('', methods=['POST'])
@@ -130,6 +173,10 @@ def uploadFile(user: Identity):
     if len(files) > 10 and os.environ.get("DEBUG_MODE", "False") != "True":
         return "UERROR: Please upload a maximum of 10 files at a time.", 400
     
+    # Check if there are already active uploads
+    if len(user.activeUploads) > 0:
+        return "UERROR: Please wait for active uploads to finish before uploading more.", 400
+    
     # Check directory registration
     if not AFManager.checkIfFolderIsRegistered(user.id):
         return "UERROR: Please register your directory first.", 400
@@ -138,7 +185,6 @@ def uploadFile(user: Identity):
     currentFiles = AFManager.getFilenames(user.id)
     directorySize = AFManager.getDirectorySize(user.id, exclude=[secure_filename(file.filename) for file in files])
     if directorySize > configManager.getAllowedDirectorySize():
-        print("hello")
         return "UERROR: Maximum upload size limit exceeded.", 400
     smallUpload = request.content_length < 10485760
     
@@ -175,9 +221,22 @@ def uploadFile(user: Identity):
         if smallUpload:
             fileSaveUpdates[file.filename] = processUserUpload(secureName, file, user, fileExists)
         else:
-            print("Large upload detected.")
             approvedFiles[secureName] = BytesIO(file.stream.read())
-            fileSaveUpdates[file.filename] = "SUCCESS: Large upload ignored."
+            fileSaveUpdates[file.filename] = "SUCCESS: File will be saved."
+    
+    if not smallUpload and len(approvedFiles) > 0:
+        if user.activeUploads == None:
+            user.activeUploads = list(approvedFiles.keys())
+        else:
+            user.activeUploads += list(approvedFiles.keys())
+        user.save()
+        
+        Universal.asyncProcessor.addJob(
+            processUserBulkUpload,
+            approvedFiles,
+            user,
+            trigger=Trigger('date', triggerDate=datetime.datetime.now() + datetime.timedelta(seconds=5))
+        )
     
     return fileSaveUpdates, 200
 
