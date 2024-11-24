@@ -1,6 +1,8 @@
 import os, copy, re, time, datetime
+from typing import Dict, List
 from io import BytesIO
 from flask import Blueprint, request, send_file, send_from_directory, redirect, url_for
+from werkzeug.datastructures.file_storage import FileStorage
 from main import allowed_file, secure_filename, configManager
 from AFManager import AFManager, AFMError
 from services import Logger, Universal, Trigger
@@ -9,21 +11,44 @@ from decorators import jsonOnly, checkAPIKey, checkSession, enforceSchema, email
 
 directoryBP = Blueprint('directory', __name__)
 
-def get_file_size(file):
-    # Move the pointer to the end of the stream
-    file.stream.seek(0, os.SEEK_END)
-    size = file.stream.tell()  # Get the current position, which is the file size
-    file.stream.seek(0)  # Reset the pointer to the start of the stream
-    return size
-
-def process_file(file: BytesIO, path):
-    content = file.read()
+def processUserUpload(name: str, file: FileStorage, user: Identity, fileExists: bool) -> str:
+    try:
+        file.save(AFManager.userFilePath(user.id, name))
+    except Exception as e:
+        Logger.log("DIRECTORY PROCESSUSERUPLOAD ERROR: Failed to save file '{}' for user '{}'; error: {}".format(name, user.id, e))
+        return "ERROR: Failed to process request."
     
-    with open(path, 'wb') as f:
-        f.write(content)  # Save file to the user directory
-        print()
-        print("\tFile saved to", path)
-        print()
+    # Log the file save
+    fileSaveLog = AuditLog(user.id, "FileUpload" if not fileExists else "FileOverwrite", "File '{}' uploaded.".format(name))
+    fileSaveLog.save()
+    
+    # Update the database with the file's list. If file exists, update last modified, else create and save new file object
+    fileFound = False
+    for userFile in user.files.values():
+        if userFile.name == name:
+            userFile.lastUpdate = Universal.utcNowString()
+            fileFound = True
+            userFile.save()
+            break
+    
+    if not fileFound:
+        fileObject = File(user.id, name)
+        fileObject.save()
+    
+    if not fileExists:
+        return "SUCCESS: File saved."
+    else:
+        return "SUCCESS: File updated."
+
+def processUserBulkUpload(files: Dict[str,  BytesIO], user: Identity, currentFiles: List[str]):
+    pass
+    # content = file.read()
+    
+    # with open(path, 'wb') as f:
+    #     f.write(content)  # Save file to the user directory
+    #     print()
+    #     print("\tFile saved to", path)
+    #     print()
 
 @directoryBP.route('/register', methods=['POST'])
 @checkAPIKey
@@ -94,21 +119,30 @@ def listFiles(user: Identity):
 @checkSession(strict=True, provideIdentity=True)
 @emailVerified
 def uploadFile(user: Identity):
+    # Check presence of file in request
     if 'file' not in request.files:
         return "ERROR: No file part.", 400
     
+    # Check if file is selected
     files = request.files.getlist('file')
     if len(files) == 0:
-        return "ERROR: No file selected.", 400
+        return "UERROR: No file selected.", 400
     if len(files) > 10 and os.environ.get("DEBUG_MODE", "False") != "True":
         return "UERROR: Please upload a maximum of 10 files at a time.", 400
     
+    # Check directory registration
     if not AFManager.checkIfFolderIsRegistered(user.id):
         return "UERROR: Please register your directory first.", 400
     
+    # Get directory information
     currentFiles = AFManager.getFilenames(user.id)
     directorySize = AFManager.getDirectorySize(user.id, exclude=[secure_filename(file.filename) for file in files])
+    if directorySize > configManager.getAllowedDirectorySize():
+        print("hello")
+        return "UERROR: Maximum upload size limit exceeded.", 400
+    smallUpload = request.content_length < 10485760
     
+    # Get database file objects
     try:
         user.getFiles()
     except Exception as e:
@@ -116,52 +150,34 @@ def uploadFile(user: Identity):
         return "ERROR: Failed to process request.", 500
     
     fileSaveUpdates = {}
+    approvedFiles: Dict[str, BytesIO] = {}
     for file in files:
         secureName = secure_filename(file.filename)
-        if not allowed_file(secureName):
+        if not allowed_file(file.filename):
             fileSaveUpdates[file.filename] = "UERROR: File type not allowed."
             continue
         if secureName not in currentFiles and (len(currentFiles) + 1) > configManager.getMaxFileCount():
             fileSaveUpdates[file.filename] = "UERROR: Maximum file upload limit reached."
             continue
+          
+        fileSize = AFManager.getFileSize(file)
+        if (directorySize + fileSize) > configManager.getAllowedDirectorySize():
+            print(directorySize, fileSize, configManager.getAllowedDirectorySize())
+            fileSaveUpdates[file.filename] = "UERROR: Maximum upload size limit exceeded."
+            continue
         
-        # Append the file to current directory files list, if it doesn't exist
+        # Update current directory information
         if secureName not in currentFiles:
             currentFiles.append(secureName)
+        directorySize += fileSize
         
-        # Save the file
         fileExists = os.path.isfile(AFManager.userFilePath(user.id, secureName))
-        content = BytesIO(file.stream.read())
-        Universal.asyncProcessor.addJob(
-            process_file,
-            content,
-            AFManager.userFilePath(user.id, secureName),
-            trigger=Trigger('date', triggerDate=datetime.datetime.now() + datetime.timedelta(seconds=4))
-        )
-        
-        # file.save(AFManager.userFilePath(user.id, secureName))
-        
-        # Log the file save
-        fileSaveLog = AuditLog(user.id, "FileUpload" if not fileExists else "FileOverwrite", "File '{}' uploaded.".format(secureName))
-        fileSaveLog.save()
-        
-        # Update the database with the file's list. If file exists, update last modified, else create and save new file object
-        fileFound = False
-        for userFile in user.files.values():
-            if userFile.name == secureName:
-                userFile.lastUpdate = Universal.utcNowString()
-                fileFound = True
-                userFile.save()
-                break
-        
-        if not fileFound:
-            fileObject = File(user.id, secureName)
-            fileObject.save()
-        
-        if not fileExists:
-            fileSaveUpdates[file.filename] = "SUCCESS: File saved."
+        if smallUpload:
+            fileSaveUpdates[file.filename] = processUserUpload(secureName, file, user, fileExists)
         else:
-            fileSaveUpdates[file.filename] = "SUCCESS: File updated."
+            print("Large upload detected.")
+            approvedFiles[secureName] = BytesIO(file.stream.read())
+            fileSaveUpdates[file.filename] = "SUCCESS: Large upload ignored."
     
     return fileSaveUpdates, 200
 

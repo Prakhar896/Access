@@ -1,5 +1,6 @@
 import os, shutil
 from services import Logger
+from werkzeug.datastructures.file_storage import FileStorage
 
 class AFManager:
     rootDir = "Directories"
@@ -104,6 +105,18 @@ class AFManager:
                 totalSize += os.path.getsize(AFManager.userFilePath(userID, filename))
         
         return totalSize
+    
+    @staticmethod
+    def getFileSize(file: FileStorage):
+        '''For Werkzeug FileStorage objects.'''
+        try:
+            # Move the pointer to the end of the stream
+            file.stream.seek(0, os.SEEK_END)
+            size = file.stream.tell()  # Get the current position, which is the file size
+            file.stream.seek(0)  # Reset the pointer to the start of the stream
+            return size
+        except Exception as e:
+            return AFMError("Error occurred in getting file size: {}".format(e))
 
 class AFMError:
     def __init__(self, message: str) -> None:

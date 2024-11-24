@@ -56,17 +56,19 @@ Startup Choices - What would you like to do?
 General Settings: (0 to return to main menu)
         
         1) Configure allowed file extensions
-        2) Configure allowed file size
-        3) Access Analytics - Clear Collected Data
-        4) Access Analytics Recovery Mode
-        5) Manage Logs
-        6) Factory Reset - Delete System and User Information Data Files, Access Folders, Analytics Reports
+        2) Configure maximum directory size
+        3) Configure maximum file count
+        4) Configure maximum request length
+        5) Access Analytics - Clear Collected Data
+        6) Access Analytics Recovery Mode
+        7) Manage Logs
+        8) Factory Reset - Delete System and User Information Data Files, Access Folders, Analytics Reports
 """)
     
         while True:
             try:
                 choice = int(input("Enter your choice: "))
-                if choice not in range(0, 7): raise Exception()
+                if choice not in range(0, 9): raise Exception()
                 break
             except:
                 print("Invalid choice provided.")
@@ -80,6 +82,12 @@ General Settings: (0 to return to main menu)
             config.manageDirectorySize(configManager=startupConfigManager)
             startupConfigManager.reload()
         elif choice == 3:
+            config.manageFileCount(configManager=startupConfigManager)
+            startupConfigManager.reload()
+        elif choice == 4:
+            config.manageRequestSize(configManager=startupConfigManager)
+            startupConfigManager.reload()
+        elif choice == 5:
             ## Clear collected data
             print()
             print("STARTUP: Clearing Access Analytics collected data...")
@@ -97,7 +105,7 @@ General Settings: (0 to return to main menu)
                 sys.exit(1)
             print()
             print("STARTUP: Successfully cleared analytics data file.")
-        elif choice == 4:
+        elif choice == 6:
             ## Analytics Recovery mode
             print()
             print("STARTUP: Initialising Access Analytics Recovery Mode...")
@@ -109,13 +117,13 @@ General Settings: (0 to return to main menu)
                 print("STARTUP: An error occurred in recovery mode; Error: {}".format(e))
                 sys.exit(1)
             print()
-        elif choice == 5:
+        elif choice == 7:
             ## Manage Logs
             print("STARTUP: Activating log management...")
             print()
             Logger.manageLogs()
             print()
-        elif choice == 6:
+        elif choice == 8:
             ## Delete data files
             print()
             print("STARTUP: Please wait a while for Startup to delete all data files...")

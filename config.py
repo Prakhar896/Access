@@ -22,7 +22,7 @@ class Config:
         return self.config['fileExtensions'] if 'fileExtensions' in self.config and isinstance(self.config['fileExtensions'], list)  else []
     
     def getAllowedDirectorySize(self):
-        return self.config['allowedDirectorySize'] if 'allowedDirectorySize' in self.config and isinstance(self.config['allowedDirectorySize'], int) else 0
+        return (self.config['allowedDirectorySize'] if 'allowedDirectorySize' in self.config and isinstance(self.config['allowedDirectorySize'], int) else 0) * 1024 * 1024
     
     def getAllowedRequestSize(self):
         return self.config['allowedRequestSize'] if 'allowedRequestSize' in self.config and isinstance(self.config['allowedRequestSize'], int) else 0
