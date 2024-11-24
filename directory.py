@@ -209,6 +209,14 @@ def uploadFile(user: Identity):
     approvedFiles: Dict[str, BytesIO] = {}
     for file in files:
         secureName = secure_filename(file.filename)
+        if len(secureName) > 50:
+            fileSaveUpdates[file.filename] = "UERROR: File name too long."
+            
+            # Original getDirectorySize excluded this file if it was in the directory, but now it needs to be added back in for the next iteration
+            if secureName in currentFiles:
+                directorySize += AFManager.getUserFileSize(user.id, secureName)
+            
+            continue
         
         if not allowed_file(file.filename):
             fileSaveUpdates[file.filename] = "UERROR: File type not allowed."
@@ -413,6 +421,8 @@ def renameFile(user: Identity):
         return "ERROR: No new filename provided.", 400
     elif newFilename == filename:
         return "UERROR: New filename is the same as the existing filename.", 400
+    elif len(newFilename) > 50:
+        return "UERROR: New filename is too long.", 400
     
     if not AFManager.checkIfFolderIsRegistered(user.id):
         return "UERROR: Please register your directory first.", 400
