@@ -107,6 +107,16 @@ class AFManager:
         return totalSize
     
     @staticmethod
+    def getUserFileSize(userID, filename):
+        if not AFManager.checkIfFolderIsRegistered(userID):
+            return AFMError("Folder does not exist.")
+        
+        if os.path.isfile(AFManager.userFilePath(userID, filename)):
+            return os.path.getsize(AFManager.userFilePath(userID, filename))
+        else:
+            return AFMError("File does not exist.")
+    
+    @staticmethod
     def getFileSize(file: FileStorage):
         '''For Werkzeug FileStorage objects.'''
         try:

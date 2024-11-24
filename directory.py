@@ -82,7 +82,8 @@ def processUserBulkUpload(files: Dict[str,  BytesIO], user: Identity):
             user.activeUploads.remove(name)
             user.save()
         
-        time.sleep(0.5)
+        if os.environ.get("DEBUG_MODE", "False") == "True":
+            time.sleep(0.5)
     
     Logger.log("DIRECTORY PROCESSUSERBULKUPLOAD: Bulk upload completed for user '{}'.".format(user.id))
     return True
@@ -132,17 +133,17 @@ def listFiles(user: Identity):
     
     activeUploads = user.activeUploads if isinstance(user.activeUploads, list) else []
     
-    # Check for new files in directory
-    for directoryFile in directoryFiles:
-        if directoryFile not in userFilenames:
-            Logger.log("DIRECTORY LIST: Updating user '{}' with unmatched existing file '{}'.".format(user.id, directoryFile))
-            newFile = File(user.id, directoryFile)
-            newFile.save()
-            
-            userFiles[newFile.id] = newFile
-    
-    # Check for removed files in directory
     if len(activeUploads) == 0:
+        # Check for new files in directory
+        for directoryFile in directoryFiles:
+            if directoryFile not in userFilenames:
+                Logger.log("DIRECTORY LIST: Updating user '{}' with unmatched existing file '{}'.".format(user.id, directoryFile))
+                newFile = File(user.id, directoryFile)
+                newFile.save()
+                
+                userFiles[newFile.id] = newFile
+        
+        # Check for removed files in directory
         for userFilename in userFilenames:
             if userFilename not in directoryFiles:
                 Logger.log("DIRECTORY LIST: Removing unmatched user file '{}' from user '{}'.".format(userFilename, user.id))
@@ -199,23 +200,34 @@ def uploadFile(user: Identity):
     approvedFiles: Dict[str, BytesIO] = {}
     for file in files:
         secureName = secure_filename(file.filename)
+        
         if not allowed_file(file.filename):
             fileSaveUpdates[file.filename] = "UERROR: File type not allowed."
+            
+            # Original getDirectorySize excluded this file if it was in the directory, but now it needs to be added back in for the next iteration
+            if secureName in currentFiles:
+                directorySize += AFManager.getUserFileSize(user.id, secureName)
+            
             continue
+        
         if secureName not in currentFiles and (len(currentFiles) + 1) > configManager.getMaxFileCount():
-            fileSaveUpdates[file.filename] = "UERROR: Maximum file upload limit reached."
+            fileSaveUpdates[file.filename] = "UERROR: Maximum file upload limit reached."            
             continue
-          
+        
         fileSize = AFManager.getFileSize(file)
         if (directorySize + fileSize) > configManager.getAllowedDirectorySize():
-            print(directorySize, fileSize, configManager.getAllowedDirectorySize())
             fileSaveUpdates[file.filename] = "UERROR: Maximum upload size limit exceeded."
+            
+            # Original getDirectorySize excluded this file if it was in the directory, but now it needs to be added back in for the next iteration
+            if secureName in currentFiles:
+                directorySize += AFManager.getUserFileSize(user.id, secureName)
+            
             continue
         
         # Update current directory information
         if secureName not in currentFiles:
             currentFiles.append(secureName)
-        directorySize += fileSize
+        directorySize += fileSize # Even if the file exists already, since getDirectorySize excludes it, we can accurately add the new file size in
         
         fileExists = os.path.isfile(AFManager.userFilePath(user.id, secureName))
         if smallUpload:
@@ -234,8 +246,7 @@ def uploadFile(user: Identity):
         Universal.asyncProcessor.addJob(
             processUserBulkUpload,
             approvedFiles,
-            user,
-            trigger=Trigger('date', triggerDate=datetime.datetime.now() + datetime.timedelta(seconds=5))
+            user
         )
     
     return fileSaveUpdates, 200

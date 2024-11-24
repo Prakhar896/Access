@@ -90,16 +90,6 @@ function UploadFilesModal({ isOpen, onClose, onOpen, triggerReload, directoryUpd
                 <ModalHeader>Upload Files</ModalHeader>
                 <ModalCloseButton />
                 <ModalBody>
-                    {directoryUpdating && (
-                        <>
-                            <HStack mt={"20px"} w={'fit-content'}>
-                                <Spinner />
-                                <Text fontWeight={'black'}>Directory is updating...</Text>
-                            </HStack>
-                            <Text mt={"10px"} fontSize={'lg'}>Your recent uploads are still processing, please wait before uploading more.</Text>
-                            <Divider mt={"20px"} mb={"20px"} />
-                        </>
-                    )}
                     <Text>Files where the name is the same as an existing file in your directory will overwrite the existing file. New files are uploaded as normal. Filenames may be slightly modified for security purposes.</Text>
                     <FormControl mt={5} mb={5} isRequired>
                         <FormLabel><Text>Select one or more files.</Text></FormLabel>
@@ -121,6 +111,16 @@ function UploadFilesModal({ isOpen, onClose, onOpen, triggerReload, directoryUpd
                             )}
                         </Box>
                     </FormControl>
+                    {directoryUpdating && (
+                        <>
+                            <Divider mt={"20px"} mb={"20px"} />
+                            <HStack w={'fit-content'}>
+                                <Spinner />
+                                <Text fontWeight={'black'}>Directory is updating...</Text>
+                            </HStack>
+                            <Text mt={"10px"} fontSize={'lg'}>Your recent uploads are still processing, please wait before uploading more.</Text>
+                        </>
+                    )}
                 </ModalBody>
                 <ModalFooter>
                     <HStack spacing={"10px"}>
