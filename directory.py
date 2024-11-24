@@ -156,6 +156,15 @@ def listFiles(user: Identity):
     if len(activeUploads) > 0:
         filesData["updating"] = True
     
+    for fileID in filesData:
+        sharingActive = False
+        if "sharing" in filesData[fileID]:
+            if "active" in filesData[fileID]["sharing"]:
+                sharingActive = filesData[fileID]["sharing"]["active"] == 'True'
+        
+        del filesData[fileID]["sharing"]
+        filesData[fileID]["sharingActive"] = sharingActive
+    
     return filesData, 200
 
 @directoryBP.route('', methods=['POST'])

@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react'
 import FileActions from './FileActions';
 import server from '../networking';
+import { BsFillPeopleFill } from 'react-icons/bs';
 
 function FilesList({ filesData, retrieving, triggerReload }) {
     const backendURL = server.defaults.baseURL;
@@ -47,7 +48,10 @@ function FilesList({ filesData, retrieving, triggerReload }) {
                         <Tr key={index}>
                             <Td>
                                 {file.name ? (
-                                    <ChakraLink href={downloadLinkFor(file.name)} color={'blue.500'} fontSize={{ base: 'sm', md: 'md', lg: 'lg' }}><Text maxW={{ base: '200px', md: '300px', lg: 'fit-content' }} isTruncated>{file.name}</Text></ChakraLink>
+                                    <HStack w={'fit-content'}>
+                                        <ChakraLink href={downloadLinkFor(file.name)} color={'blue.500'} fontSize={{ base: 'sm', md: 'md', lg: 'lg' }}><Text maxW={{ base: '200px', md: '300px', lg: 'fit-content' }} isTruncated>{file.name}</Text></ChakraLink>
+                                        {file.sharingActive && <BsFillPeopleFill />}
+                                    </HStack>
                                 ) : (
                                     <Text color={'red'}>Unavailable</Text>
                                 )}
