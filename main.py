@@ -64,7 +64,7 @@ def version():
 @app.route('/ip')
 def ip():
     pprint.pprint(list(request.headers.items()))
-    return request.remote_addr
+    return request.headers.get('X-Real-Ip', request.remote_addr)
 
 @app.errorhandler(404)
 def page_not_found(e):
