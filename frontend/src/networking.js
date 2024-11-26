@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const devMode = false;
+const devMode = true;
 
 const instance = axios.create({
     baseURL: devMode ? `${location.protocol}//${location.hostname}:8000`: location.origin,

@@ -1,12 +1,12 @@
-import { Button, Divider, FormControl, FormLabel, Input, MenuItem, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, useDisclosure, useToast, VStack, Link as ChakraLink, useClipboard } from '@chakra-ui/react'
+import { Button, Divider, FormControl, FormLabel, Input, MenuItem, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, useDisclosure, useToast, VStack, Link as ChakraLink, useClipboard, useMediaQuery } from '@chakra-ui/react'
 import React, { useEffect, useState } from 'react'
 import { BsFillShareFill } from 'react-icons/bs'
 import server from '../../networking';
 import configureShowToast from '../showToast';
 import { Link } from 'react-router-dom';
 
-function ShareFile({ fileData }) {
-    const { isOpen: isShareModalOpen, onOpen: onShareModalOpen, onClose: onShareModalClose } = useDisclosure();
+function ShareFileModal({ fileData, isShareModalOpen, onShareModalOpen, onShareModalClose }) {
+    const [limitedScreen] = useMediaQuery("(max-width: 800px)");
     const [sharingInfo, setSharingInfo] = useState({});
     const { onCopy, value, setValue, hasCopied } = useClipboard('')
 
@@ -235,62 +235,57 @@ function ShareFile({ fileData }) {
     }, [sharingInfo])
 
     return (
-        <>
-            <MenuItem icon={<BsFillShareFill />} onClick={onShareModalOpen}>
-                Sharing...
-            </MenuItem>
-            <Modal size={'lg'} onClose={onShareModalClose} isOpen={isShareModalOpen} closeOnOverlayClick={false} isCentered>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Sharing</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        {gettingSharingInfo ? (
-                            <Spinner />
-                        ) : (
-                            <VStack alignItems={"flex-start"} w={"100%"} spacing={"10px"}>
-                                <Text>Sharing Active</Text>
-                                <Text fontWeight={'bold'} color={sharingInfo.linkCode && sharingInfo.active ? "green" : "red"}>{sharingInfo.linkCode && sharingInfo.active ? "Yes" : "No"}{sharingInfo.linkCode ? ` (${sharingInfo.linkCode})` : ""}</Text>
-                                {sharingInfo.linkCode ? (
-                                    <>
-                                        <Text>Share Link</Text>
-                                        <Button variant={'Default'} onClick={onCopy}>{hasCopied ? "Copied!" : "Copy Share Link"}</Button>
-                                        <Text>Password Required</Text>
-                                        <Text fontWeight={'bold'}>{sharingInfo.passwordRequired ? "Yes" : "No"}</Text>
-                                        <Text>File name</Text>
-                                        <Text fontWeight={'bold'}>{sharingInfo.name}</Text>
-                                        <Text>Downloads</Text>
-                                        <Text fontWeight={'bold'}>{sharingInfo.accessors}</Text>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Divider mt={"15px"} />
-                                        <Text fontWeight={'bold'} fontSize={'lg'} mt={"20px"}>Start Sharing</Text>
-                                        <Text>Create a public link that can be used by anyone to access this file. Optionally, password protect it.</Text>
-                                        <FormControl mt={"15px"}>
-                                            <FormLabel>Password (Optional)</FormLabel>
-                                            <Input type='password' placeholder='Set a password for your file share' value={sharePassword} onChange={handleSharePasswordChange} isDisabled={startingSharing} />
-                                        </FormControl>
-                                    </>
-                                )}
-                            </VStack>
-                        )}
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button variant={'outline'} onClick={onShareModalClose}>Close</Button>
-                        {sharingInfo.linkCode ? (
-                            <>
-                                <Button variant={'outline'} colorScheme={sharingInfo.active ? 'red' : 'green'} ml={"10px"} onClick={toggleSharing} isDisabled={gettingSharingInfo || togglingSharing || revokingSharing} isLoading={togglingSharing} loadingText={sharingInfo.active ? "Deactivating..." : "Activating..."}>{sharingInfo.active ? "Deactivate" : "Activate"}</Button>
-                                <Button variant={'solid'} colorScheme='red' ml={"10px"} onClick={revokeSharing} isDisabled={gettingSharingInfo || togglingSharing || revokingSharing} isLoading={revokingSharing} loadingText={"Stopping..."}>Stop Sharing</Button>
-                            </>
-                        ) : (
-                            <Button variant={!startingSharing ? 'Default' : 'solid'} ml={"10px"} onClick={startSharing} isDisabled={gettingSharingInfo || togglingSharing || revokingSharing} isLoading={startingSharing} loadingText={"Starting..."}>Start Sharing</Button>
-                        )}
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
-        </>
+        <Modal size={'lg'} onClose={onShareModalClose} isOpen={isShareModalOpen} closeOnOverlayClick={false} isCentered>
+            <ModalOverlay />
+            <ModalContent>
+                <ModalHeader>Sharing</ModalHeader>
+                <ModalCloseButton />
+                <ModalBody>
+                    {gettingSharingInfo ? (
+                        <Spinner />
+                    ) : (
+                        <VStack alignItems={"flex-start"} w={"100%"} spacing={"10px"}>
+                            <Text>Sharing Active</Text>
+                            <Text fontWeight={'bold'} color={sharingInfo.linkCode && sharingInfo.active ? "green" : "red"}>{sharingInfo.linkCode && sharingInfo.active ? "Yes" : "No"}{sharingInfo.linkCode ? ` (${sharingInfo.linkCode})` : ""}</Text>
+                            {sharingInfo.linkCode ? (
+                                <>
+                                    <Text>Share Link</Text>
+                                    <Button variant={'Default'} onClick={onCopy}>{hasCopied ? "Copied!" : "Copy Share Link"}</Button>
+                                    <Text>Password Required</Text>
+                                    <Text fontWeight={'bold'}>{sharingInfo.passwordRequired ? "Yes" : "No"}</Text>
+                                    <Text>File name</Text>
+                                    <Text fontWeight={'bold'}>{sharingInfo.name}</Text>
+                                    <Text>Downloads</Text>
+                                    <Text fontWeight={'bold'}>{sharingInfo.accessors}</Text>
+                                </>
+                            ) : (
+                                <>
+                                    <Divider mt={"15px"} />
+                                    <Text fontWeight={'bold'} fontSize={'lg'} mt={"20px"}>Start Sharing</Text>
+                                    <Text>Create a public link that can be used by anyone to access this file. Optionally, password protect it.</Text>
+                                    <FormControl mt={"15px"}>
+                                        <FormLabel>Password (Optional)</FormLabel>
+                                        <Input type='password' placeholder='Set a password for your file share' value={sharePassword} onChange={handleSharePasswordChange} isDisabled={startingSharing} />
+                                    </FormControl>
+                                </>
+                            )}
+                        </VStack>
+                    )}
+                </ModalBody>
+                <ModalFooter>
+                    <Button variant={'outline'} onClick={onShareModalClose}>Close</Button>
+                    {sharingInfo.linkCode ? (
+                        <>
+                            <Button variant={'outline'} colorScheme={sharingInfo.active ? 'red' : 'green'} ml={"10px"} onClick={toggleSharing} isDisabled={gettingSharingInfo || togglingSharing || revokingSharing} isLoading={togglingSharing} loadingText={sharingInfo.active ? "Deactivating..." : "Activating..."}>{sharingInfo.active ? "Deactivate" : "Activate"}</Button>
+                            <Button variant={'solid'} colorScheme='red' ml={"10px"} onClick={revokeSharing} isDisabled={gettingSharingInfo || togglingSharing || revokingSharing} isLoading={revokingSharing} loadingText={"Stopping..."}>Stop Sharing</Button>
+                        </>
+                    ) : (
+                        <Button variant={!startingSharing ? 'Default' : 'solid'} ml={"10px"} onClick={startSharing} isDisabled={gettingSharingInfo || togglingSharing || revokingSharing} isLoading={startingSharing} loadingText={"Starting..."}>Start Sharing</Button>
+                    )}
+                </ModalFooter>
+            </ModalContent>
+        </Modal>
     )
 }
 
-export default ShareFile
+export default ShareFileModal
