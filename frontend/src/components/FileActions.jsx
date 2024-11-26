@@ -16,12 +16,17 @@ function FileActions({ fileData, downloadLinkFor, triggerReload }) {
     const lastModifiedDate = fileData.originalLastUpdate ? new Date(fileData.originalLastUpdate) : null;
     const uploadedDate = fileData.originalUploadedTimestamp ? new Date(fileData.originalUploadedTimestamp) : null;
 
-    function FileInfoModal() {
-        const handleOpen = (open) => {
-            onInfoModalClose();
-            open();
-        }
+    const handleOpen = (open) => {
+        onInfoModalClose();
+        open();
+    }
 
+    const handleClose = (close) => {
+        onInfoModalOpen();
+        close();
+    }
+
+    function FileInfoModal() {
         return <Modal onClose={onInfoModalClose} isOpen={infoModalOpen} isCentered size={'sm'}>
             <ModalOverlay />
             <ModalContent>
@@ -43,7 +48,7 @@ function FileActions({ fileData, downloadLinkFor, triggerReload }) {
                     </VStack>
                 </ModalBody>
                 <ModalFooter>
-                    <Button variant={'Default'} onClick={onInfoModalClose}>Got it</Button>
+                    <Button variant={'Default'} onClick={onInfoModalClose}>Done</Button>
                 </ModalFooter>
             </ModalContent>
         </Modal>
@@ -53,9 +58,9 @@ function FileActions({ fileData, downloadLinkFor, triggerReload }) {
         return <>
             <IconButton icon={<FaEllipsisV />} variant={'ghost'} aria-label='Options' onClick={onInfoModalOpen} />
             <FileInfoModal />
-            <ShareFileModal fileData={fileData} isShareModalOpen={isShareModalOpen} onShareModalOpen={onShareModalOpen} onShareModalClose={onShareModalClose} />
-            <RenameFileModal fileData={fileData} renameModalOpen={renameModalOpen} onRenameModalOpen={onRenameModalOpen} onRenameModalClose={onRenameModalClose} triggerReload={triggerReload} />
-            <DeleteFileModal fileData={fileData} isDeleteAlertOpen={isDeleteAlertOpen} onDeleteAlertOpen={onDeleteAlertOpen} onDeleteAlertClose={onDeleteAlertClose} triggerReload={triggerReload} />
+            <ShareFileModal fileData={fileData} isShareModalOpen={isShareModalOpen} onShareModalOpen={onShareModalOpen} onShareModalClose={() => handleClose(onShareModalClose)} />
+            <RenameFileModal fileData={fileData} renameModalOpen={renameModalOpen} onRenameModalOpen={onRenameModalOpen} onRenameModalClose={() => handleClose(onRenameModalClose)} triggerReload={triggerReload} />
+            <DeleteFileModal fileData={fileData} isDeleteAlertOpen={isDeleteAlertOpen} onDeleteAlertOpen={onDeleteAlertOpen} onDeleteAlertClose={() => handleClose(onDeleteAlertClose)} triggerReload={triggerReload} />
         </>
     }
 

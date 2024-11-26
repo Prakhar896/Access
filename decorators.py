@@ -170,8 +170,6 @@ def checkSession(_func=None, *, strict=False, provideIdentity=False):
                         return handleReturn("ERROR: Invalid session.", 401, reason="User not found.")
                     if user.authToken != session["authToken"]:
                         # If the authToken does not match, reset the session and return an error.
-                        user.authToken = None
-                        user.save()
                         return handleReturn("ERROR: Invalid session.", 401, reason="AuthToken mismatch.")
                 except Exception as e:
                     Logger.log("CHECKSESSION ERROR: Failed to load user for strict auth token verification. Error: {}".format(e))
