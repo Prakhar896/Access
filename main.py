@@ -1,7 +1,7 @@
 from bootCheck import BootCheck
 BootCheck.check()
 
-import os, sys
+import os, sys, pprint
 from flask import Flask, request, render_template, send_from_directory, redirect, url_for
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
@@ -63,7 +63,8 @@ def version():
 
 @app.route('/ip')
 def ip():
-    return request.headers
+    pprint.pprint(list(request.headers.items()))
+    return request.remote_addr
 
 @app.errorhandler(404)
 def page_not_found(e):
