@@ -136,6 +136,9 @@ class DI:
                 try:
                     for subscriptIndex in range(len(ref.subscripts)):
                         targetDataPointer = targetDataPointer[ref.subscripts[subscriptIndex]]
+                        if targetDataPointer == None:
+                            referenceNotFound = True
+                            break
                 except KeyError:
                     referenceNotFound = True
                 
@@ -162,7 +165,7 @@ class DI:
                     for subscriptIndex in range(len(ref.subscripts)):
                         if subscriptIndex == (len(ref.subscripts) - 1):
                             targetDataPointer[ref.subscripts[subscriptIndex]] = payload
-                        elif ref.subscripts[subscriptIndex] not in targetDataPointer:
+                        elif ref.subscripts[subscriptIndex] not in targetDataPointer or targetDataPointer[ref.subscripts[subscriptIndex]] == None:
                             targetDataPointer[ref.subscripts[subscriptIndex]] = {}
                         
                         targetDataPointer = targetDataPointer[ref.subscripts[subscriptIndex]]

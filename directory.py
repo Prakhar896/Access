@@ -157,6 +157,9 @@ def listFiles(user: Identity):
         filesData["updating"] = True
     
     for fileID in filesData:
+        if fileID == "updating":
+            continue
+        
         sharingActive = False
         if "sharing" in filesData[fileID]:
             if "active" in filesData[fileID]["sharing"]:
