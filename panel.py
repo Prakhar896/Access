@@ -1,6 +1,7 @@
 import os
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for
 from services import Universal, Logger
+from models import DI
 from apscheduler.job import Job
 from decorators import admin
 
@@ -20,6 +21,8 @@ def options():
 def toggleLock():
     Universal.configManager.config["systemLock"] = not Universal.configManager.getSystemLock()
     Universal.configManager.dump()
+    
+    Logger.log("PANEL TOGGLELOCK: System lock toggled to '{}'.".format(Universal.configManager.getSystemLock()))
     
     return "SUCCESS: System lock toggled to '{}'.".format(Universal.configManager.getSystemLock())
 
@@ -59,7 +62,35 @@ def logs():
             print("PANEL LOGS ERROR: Failed to load logs; response: {}".format(logs))
             return "ERROR: Failed to load logs."
         
+        if len(logs) == 0:
+            return "No logs to display."
+        
         return "<br>".join(logs)
     except Exception as e:
         print("PANEL LOGS ERROR: Failed to load logs; error: {}".format(e))
         return "ERROR: Failed to load logs."
+
+@panelBP.route('/<accessKey>/clearLogs', methods=['GET'])
+@admin
+def clearLogs():
+    try:
+        Logger.destroyAll()
+        return "SUCCESS: Logs have been cleared."
+    except Exception as e:
+        print("PANEL CLEARLOGS ERROR: Failed to clear logs; error: {}".format(e))
+        return "ERROR: Failed to clear logs."
+
+@panelBP.route('/<accessKey>/reset', methods=['GET'])
+@admin
+def reset():
+    try:
+        res = DI.save(None)
+        if res != True:
+            Logger.log("PANEL RESET ERROR: Non-True response from DI; response: {}".format(res))
+            return "ERROR: Failed to reset DI."
+        
+        Logger.log("PANEL RESET: Database reset.")
+        return "SUCCESS: Database reset."
+    except Exception as e:
+        Logger.log("PANEL RESET ERROR: Failed to reset database; error: {}".format(e))
+        return "ERROR: Failed to reset database."
