@@ -63,7 +63,7 @@ def version():
 
 @app.route('/ip')
 def ip():
-    return request.remote_addr
+    return request.headers
 
 @app.errorhandler(404)
 def page_not_found(e):
