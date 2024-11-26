@@ -47,6 +47,37 @@ if os.path.isdir(os.path.join(os.getcwd(), "assets")):
         if os.path.isfile(os.path.join(os.getcwd(), "assets", file)):
             availableAssets.append(file)
 
+# Interval cleaning agent
+def cleaner():
+    try:
+        users = Identity.load()
+        if users == None:
+            return
+        if not isinstance(users, list):
+            Logger.log("MAIN CLEANER ERROR: Users not loaded as list.")
+            return
+        
+        for user in users:
+            if (Universal.utcNow() - Universal.fromUTC(user.created)).total_seconds() > 10800 and user.emailVerification.verified != True:
+                user.getAuditLogs()
+                if len(user.auditLogs.values()) > 0:
+                    for logID in list(user.auditLogs.keys()):
+                        user.deleteAuditLog(logID)
+                
+                user.getFiles()
+                if len(user.files.values()) > 0:
+                    for fileID in list(user.files.keys()):
+                        user.deleteFile(fileID)
+                
+                if AFManager.checkIfFolderIsRegistered(user.id):
+                    AFManager.deleteFolder(user.id)
+                
+                user.destroy()
+                
+                Logger.log("MAIN CLEANER: Unverified user '{}' (Created: {}) cleared.".format(user.email, user.created))
+    except Exception as e:
+        Logger.log("MAIN CLEANER ERROR: {}".format(e))
+
 ## Other pre-requisites
 @app.before_request
 def updateAnalytics():
@@ -104,6 +135,10 @@ def boot():
     if ver == "Version File Not Found":
         print("MAIN LOAD ERROR: No system version file detected. Boot aborted.")
         sys.exit(1)
+    
+    if os.environ.get("CLEANER_DISABLED", "False") != "True":
+        Universal.store["CleanerID"] = Universal.asyncProcessor.addJob(cleaner, trigger=Trigger('interval', seconds=10))
+        print("MAIN: Cleaning agent started.")
     
     # Set up FireConn
     if FireConn.checkPermissions():

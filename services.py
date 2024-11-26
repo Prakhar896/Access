@@ -114,6 +114,7 @@ class Universal:
     copyright = "© 2024 Prakhar Trivedi. All Rights Reserved."
     version = None
     asyncProcessor: AsyncProcessor = None
+    store = {}
     
     @staticmethod
     def initAsync():
