@@ -8,7 +8,6 @@ from werkzeug.utils import secure_filename
 from flask_cors import CORS
 from services import *
 from models import *
-from config import Config
 from activation import initActivation, makeKVR
 from AFManager import AFManager, AFMError
 from emailer import Emailer
@@ -20,7 +19,7 @@ def getIP():
     return request.headers.get('X-Real-Ip', request.remote_addr)
 
 ### APP CONFIG
-configManager = Config()
+configManager = Universal.configManager
 
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'Chute')
 readableFileExtensions = ', '.join(["."+x for x in configManager.config["fileExtensions"]])
@@ -83,7 +82,7 @@ def cleaner():
 ## Other pre-requisites
 @app.before_request
 def updateAnalytics():
-    if configManager.getSystemLock() == True and request.path != "/":
+    if configManager.getSystemLock() == True and request.path != "/" and not request.path.startswith("/panel"):
         return "ERROR: Service Unavailable", 503
     
     if AccessAnalytics.permissionCheck() and not (request.path.startswith("/assets") or request.path.startswith("/src/assets") or request.path.startswith("/favicon.ico") or request.path.startswith("/logo")):

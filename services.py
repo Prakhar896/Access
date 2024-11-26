@@ -1,4 +1,5 @@
 import os, json, base64, random, datetime, uuid, functools
+from config import Config
 from apscheduler.schedulers.background import BackgroundScheduler
 from passlib.hash import sha256_crypt as sha
 from apscheduler.triggers.base import BaseTrigger
@@ -113,6 +114,7 @@ class Universal:
     systemWideStringDatetimeFormat = "%Y-%m-%d %H:%M:%S"
     copyright = "© 2024 Prakhar Trivedi. All Rights Reserved."
     version = None
+    configManager: Config = Config()
     asyncProcessor: AsyncProcessor = None
     store = {}
     
