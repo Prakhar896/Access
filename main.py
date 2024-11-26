@@ -196,6 +196,10 @@ def boot():
     if len(sys.argv) > 1 and sys.argv[1] == "r":
         print(DI.save(None))
     
+    ## Panel API
+    from panel import panelBP
+    app.register_blueprint(panelBP, url_prefix="/panel")
+    
     print()
     print("MAIN: All services online. Booting Access 'v{}'...".format(Universal.version))
     port = os.environ.get('RuntimePort', 8000)

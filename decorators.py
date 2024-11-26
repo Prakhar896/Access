@@ -223,3 +223,16 @@ def emailVerified(_func=None, *, identity: Identity=None, provideIdentity=True):
         return decorator_emailVerified
     else:
         return decorator_emailVerified(_func)
+
+def admin(func):
+    """Requires the accessKey parameter to be the APP_SECRET_KEY."""
+    
+    @functools.wraps(func)
+    @debug
+    def wrapper_admin(accessKey: str, *args, **kwargs):
+        if accessKey == None or accessKey != os.environ.get("APP_SECRET_KEY", None):
+            return "ERROR: Access Unauthorised.", 401
+        else:
+            return func(*args, **kwargs)
+    
+    return wrapper_admin
