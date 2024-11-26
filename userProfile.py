@@ -208,4 +208,7 @@ def deleteIdentity(user: Identity):
         return "ERROR: Failed to process request.", 500
     
     session.clear()
+    
+    Logger.log("USERPROFILE DELETE: Identity '{}' ({}) deleted.".format(user.id, user.username))
+    
     return "SUCCESS: Identity deleted. Thank you for using Access.", 200

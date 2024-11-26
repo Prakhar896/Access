@@ -41,7 +41,7 @@ def newSharing(user: Identity):
     # Check if last sharing was within 1 minute
     if isinstance(targetFile.sharing.startTimestamp, str):
         if (Universal.utcNow() - Universal.fromUTC(targetFile.sharing.startTimestamp)).total_seconds() < 60:
-            return "UERROR: Please wait 1 minutes before sharing again.", 400
+            return "UERROR: Please wait 1 minute before sharing again.", 400
 
     # Create new sharing
     targetFile.sharing.linkCode = Universal.generateUniqueID()
