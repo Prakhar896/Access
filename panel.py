@@ -49,3 +49,17 @@ def toggleCleaner():
     else:
         Logger.log("PANEL TOGGLECLEANER ERROR: CleanerID not found in Universal store.")
         return "ERROR: Failed to toggle cleaner job active status."
+
+@panelBP.route('/<accessKey>/logs', methods=['GET'])
+@admin
+def logs():
+    try:
+        logs = Logger.readAll()
+        if isinstance(logs, str):
+            print("PANEL LOGS ERROR: Failed to load logs; response: {}".format(logs))
+            return "ERROR: Failed to load logs."
+        
+        return "<br>".join(logs)
+    except Exception as e:
+        print("PANEL LOGS ERROR: Failed to load logs; error: {}".format(e))
+        return "ERROR: Failed to load logs."
