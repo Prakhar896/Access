@@ -19,7 +19,8 @@ class BootCheck:
             "passlib",
             "firebase-admin",
             "getmac",
-            "APScheduler"
+            "APScheduler",
+            "Flask-Limiter"
         ]
         
         deps = BootCheck.getInstallations()
