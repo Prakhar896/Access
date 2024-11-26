@@ -3,7 +3,7 @@ from typing import Dict, List
 from io import BytesIO
 from flask import Blueprint, request, send_file, send_from_directory, redirect, url_for
 from werkzeug.datastructures.file_storage import FileStorage
-from main import allowed_file, secure_filename, configManager, limiter
+from main import allowed_file, secure_filename, limiter
 from AFManager import AFManager, AFMError
 from services import Logger, Universal, Trigger
 from accessAnalytics import AccessAnalytics
@@ -200,7 +200,7 @@ def uploadFile(user: Identity):
     # Get directory information
     currentFiles = AFManager.getFilenames(user.id)
     directorySize = AFManager.getDirectorySize(user.id, exclude=[secure_filename(file.filename) for file in files])
-    if directorySize > configManager.getAllowedDirectorySize():
+    if directorySize > Universal.configManager.getAllowedDirectorySize():
         return "UERROR: Maximum upload size limit exceeded.", 400
     smallUpload = request.content_length < 10485760
     
@@ -234,12 +234,12 @@ def uploadFile(user: Identity):
             
             continue
         
-        if secureName not in currentFiles and (len(currentFiles) + 1) > configManager.getMaxFileCount():
+        if secureName not in currentFiles and (len(currentFiles) + 1) > Universal.configManager.getMaxFileCount():
             fileSaveUpdates[file.filename] = "UERROR: Maximum file upload limit reached."            
             continue
         
         fileSize = AFManager.getFileSize(file)
-        if (directorySize + fileSize) > configManager.getAllowedDirectorySize():
+        if (directorySize + fileSize) > Universal.configManager.getAllowedDirectorySize():
             fileSaveUpdates[file.filename] = "UERROR: Maximum upload size limit exceeded."
             
             # Original getDirectorySize excluded this file if it was in the directory, but now it needs to be added back in for the next iteration

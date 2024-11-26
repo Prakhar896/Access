@@ -19,10 +19,8 @@ def getIP():
     return request.headers.get('X-Real-Ip', request.remote_addr)
 
 ### APP CONFIG
-configManager = Universal.configManager
-
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'Chute')
-readableFileExtensions = ', '.join(["."+x for x in configManager.config["fileExtensions"]])
+readableFileExtensions = ', '.join(["."+x for x in Universal.configManager.config["fileExtensions"]])
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, origins="*", supports_credentials=True, allow_private_network=True)
@@ -34,11 +32,11 @@ limiter = Limiter(
 )
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = configManager.getAllowedRequestSize() * 1000 * 1000
+app.config['MAX_CONTENT_LENGTH'] = Universal.configManager.getAllowedRequestSize() * 1000 * 1000
 app.secret_key = os.environ['APP_SECRET_KEY']
 
 def allowed_file(filename):
-    return ('.' in filename) and (filename.rsplit('.', 1)[1].lower() in configManager.config["fileExtensions"])
+    return ('.' in filename) and (filename.rsplit('.', 1)[1].lower() in Universal.configManager.config["fileExtensions"])
 
 availableAssets = []
 if os.path.isdir(os.path.join(os.getcwd(), "assets")):
@@ -82,7 +80,7 @@ def cleaner():
 ## Other pre-requisites
 @app.before_request
 def updateAnalytics():
-    if configManager.getSystemLock() == True and request.path != "/" and not request.path.startswith("/panel"):
+    if Universal.configManager.getSystemLock() == True and request.path != "/" and not request.path.startswith("/panel"):
         return "ERROR: Service Unavailable", 503
     
     if AccessAnalytics.permissionCheck() and not (request.path.startswith("/assets") or request.path.startswith("/src/assets") or request.path.startswith("/favicon.ico") or request.path.startswith("/logo")):
