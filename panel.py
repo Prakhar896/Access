@@ -1,5 +1,7 @@
+import os
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for
-from services import Universal
+from services import Universal, Logger
+from apscheduler.job import Job
 from decorators import admin
 
 panelBP = Blueprint('panel', __name__)
@@ -20,3 +22,30 @@ def toggleLock():
     Universal.configManager.dump()
     
     return "SUCCESS: System lock toggled to '{}'.".format(Universal.configManager.getSystemLock())
+
+@panelBP.route('/<accessKey>/toggleCleaner', methods=['GET'])
+@admin
+def toggleCleaner():
+    if os.environ.get("CLEANER_DISABLED", "False") == "True":
+        return "ERROR: Cleaning agent is disabled."
+    
+    if "CleanerID" in Universal.store:
+        try:
+            job: Job = Universal.asyncProcessor.scheduler.get_job(Universal.store["CleanerID"])
+            if job == None:
+                raise Exception("Job not found.")
+            
+            if job.next_run_time == None:
+                job.resume()
+                Logger.log("PANEL TOGGLECLEANER: Cleaning agent job has been resumed.")
+                return "SUCCESS: Cleaning agent job has been resumed."
+            else:
+                job.pause()
+                Logger.log("PANEL TOGGLECLEANER: Cleaning agent job has been paused.")
+                return "SUCCESS: Cleaning agent job has been paused."
+        except Exception as e:
+            Logger.log("PANEL TOGGLECLEANER ERROR: Failed to toggle cleaner job active status. Error: {}".format(e))
+            return "ERROR: Failed to toggle cleaner job active status."
+    else:
+        Logger.log("PANEL TOGGLECLEANER ERROR: CleanerID not found in Universal store.")
+        return "ERROR: Failed to toggle cleaner job active status."
