@@ -53,12 +53,7 @@ def updateAnalytics():
     if configManager.getSystemLock() == True and request.path != "/":
         return "ERROR: Service Unavailable", 503
     
-    if AccessAnalytics.permissionCheck():
-        response = AccessAnalytics.newRequest(request.path)
-        if isinstance(response, str):
-            if response.startswith("AAError:"):
-                print(response)
-        
+    if AccessAnalytics.permissionCheck():        
         if request.method == "POST":
             postResponse = AccessAnalytics.newPOSTRequest()
             if isinstance(postResponse, str):
@@ -130,7 +125,7 @@ def boot():
             
     # Set up Analytics
     if AccessAnalytics.permissionCheck():
-        response = AccessAnalytics.prepEnvironmentForAnalytics()
+        response = AccessAnalytics.setupEnvironment()
         print(response)
     
     # Set up AFManager
