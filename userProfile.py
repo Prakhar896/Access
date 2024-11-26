@@ -1,6 +1,7 @@
 import os, re
 from flask import Blueprint, request, redirect, url_for, session, render_template
 from models import Identity, File, AuditLog
+from main import limiter
 from decorators import jsonOnly, checkAPIKey, emailVerified, checkSession
 from services import Universal, Logger, Encryption
 from emailDispatch import dispatchEmailVerification, dispatchPasswordUpdatedEmail
@@ -30,6 +31,7 @@ def getProfile(user: Identity):
     return profileData, 200
 
 @userProfileBP.route('/auditLogs', methods=['POST'])
+@limiter.limit("15 per minute")
 @checkAPIKey
 @checkSession(strict=True, provideIdentity=True)
 def getAuditLogs(user: Identity):
@@ -50,6 +52,7 @@ def getAuditLogs(user: Identity):
     return auditLogs, 200
 
 @userProfileBP.route('/update', methods=["POST"])
+@limiter.limit("5 per minute")
 @checkAPIKey
 @jsonOnly
 @checkSession(strict=True, provideIdentity=True)

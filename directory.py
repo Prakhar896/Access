@@ -3,7 +3,7 @@ from typing import Dict, List
 from io import BytesIO
 from flask import Blueprint, request, send_file, send_from_directory, redirect, url_for
 from werkzeug.datastructures.file_storage import FileStorage
-from main import allowed_file, secure_filename, configManager
+from main import allowed_file, secure_filename, configManager, limiter
 from AFManager import AFManager, AFMError
 from services import Logger, Universal, Trigger
 from models import Identity, File, AuditLog, EmailVerification
@@ -89,6 +89,7 @@ def processUserBulkUpload(files: Dict[str,  BytesIO], user: Identity):
     return True
 
 @directoryBP.route('/register', methods=['POST'])
+@limiter.limit("1 per minute")
 @checkAPIKey
 @checkSession(strict=True, provideIdentity=True)
 @emailVerified
@@ -171,6 +172,7 @@ def listFiles(user: Identity):
     return filesData, 200
 
 @directoryBP.route('', methods=['POST'])
+@limiter.limit("5 per minute")
 @checkAPIKey
 @checkSession(strict=True, provideIdentity=True)
 @emailVerified
@@ -284,6 +286,7 @@ def getFile():
     return redirect(url_for('directory.downloadFile', filename=request.json['filename'].strip()))
 
 @directoryBP.route('/file/<filename>', methods=['GET'])
+@limiter.limit("1 per second")
 @checkSession(strict=True, provideIdentity=True)
 @emailVerified
 def downloadFile(user: Identity, filename: str):
@@ -336,6 +339,7 @@ def deleteFilesAPI():
         return "ERROR: Invalid request.", 400
 
 @directoryBP.route('/file/<filename>', methods=['DELETE'])
+@limiter.limit("1 per second")
 @checkAPIKey
 @checkSession(strict=True, provideIdentity=True)
 @emailVerified
@@ -364,6 +368,7 @@ def deleteFile(user: Identity, filename: str):
     return "SUCCESS: File deleted.", 200
 
 @directoryBP.route('/bulkDelete', methods=['DELETE'])
+@limiter.limit("1 per 5 seconds")
 @checkAPIKey
 @checkSession(strict=True, provideIdentity=True)
 @emailVerified
@@ -408,6 +413,7 @@ def bulkDelete(user: Identity):
     return fileDeletionUpdates, 200
 
 @directoryBP.route("/renameFile", methods=["POST"])
+@limiter.limit("1 per 2 seconds")
 @checkAPIKey
 @jsonOnly
 @enforceSchema(

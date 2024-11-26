@@ -1,5 +1,6 @@
 import os
 from flask import Flask, request, Blueprint, jsonify, redirect, url_for, send_file, send_from_directory
+from main import limiter
 from models import Identity, File, FileSharing
 from AFManager import AFManager, AFMError
 from services import Logger, Universal, Encryption
@@ -8,6 +9,7 @@ from decorators import checkAPIKey, jsonOnly, checkSession, emailVerified, enfor
 sharingBP = Blueprint("sharing", __name__)
 
 @sharingBP.route("/new", methods=["POST"])
+@limiter.limit("12 per minute")
 @checkAPIKey
 @jsonOnly
 @enforceSchema(
@@ -62,6 +64,7 @@ def newSharing(user: Identity):
     })
 
 @sharingBP.route("/revoke", methods=["POST"])
+@limiter.limit("12 per minute")
 @checkAPIKey
 @jsonOnly
 @enforceSchema(
@@ -101,6 +104,7 @@ def revokeSharing(user: Identity):
     return "SUCCESS: Sharing revoked."
 
 @sharingBP.route("/toggleActiveStatus", methods=["POST"])
+@limiter.limit("12 per minute")
 @checkAPIKey
 @jsonOnly
 @enforceSchema(
@@ -138,6 +142,7 @@ def toggleActive(user: Identity):
     return "SUCCESS: Sharing active status toggled."
 
 @sharingBP.route("/info", methods=["POST"])
+@limiter.limit("20 per minute")
 @checkAPIKey
 @jsonOnly
 @checkSession(provideIdentity=True)
@@ -204,6 +209,7 @@ def getSharingInfo(user: Identity | None=None):
     return jsonify(data)
 
 @sharingBP.route("/get/<string:linkCode>", methods=["GET"])
+@limiter.limit("12 per minute")
 @checkSession(provideIdentity=True)
 def getSharedFile(user: Identity | None=None, linkCode: str=None):
     if linkCode == None or len(linkCode) == 0:

@@ -3,12 +3,15 @@ from flask import Flask, request, render_template, Blueprint, url_for, redirect,
 from models import Identity, Logger, Universal, AuditLog, EmailVerification
 from services import Encryption, Universal
 from AFManager import AFManager, AFMError
+from main import limiter
 from emailDispatch import dispatchAccountWelcome, dispatchEmailVerification, dispatchPasswordResetKey, dispatchPasswordUpdatedEmail
 from decorators import *
 
 identityBP = Blueprint('api', __name__)
 
 @identityBP.route("/identity/new", methods=["POST"])
+@limiter.limit("1 per 2 seconds")
+@limiter.limit("5 per hour")
 @jsonOnly
 @checkAPIKey
 @enforceSchema(
@@ -92,6 +95,7 @@ def newIdentity():
     }, 200
 
 @identityBP.route("/identity/login", methods=["POST"])
+@limiter.limit("5 per minute")
 @jsonOnly
 @checkAPIKey
 @enforceSchema(
@@ -173,6 +177,7 @@ def getSession():
     }
 
 @identityBP.route("/identity/verifyOTP", methods=["POST"])
+@limiter.limit("5 per minute")
 @jsonOnly
 @checkAPIKey
 @enforceSchema(
@@ -242,6 +247,7 @@ def verifyOTP():
     return "SUCCESS: Email verified successfully.", 200
 
 @identityBP.route("/identity/resendEmailVerification", methods=["POST"])
+@limiter.limit("1 per 2 seconds")
 @checkAPIKey
 @checkSession(provideIdentity=True)
 def resendEmailVerification(user: Identity | None=None):
@@ -286,6 +292,7 @@ def resendEmailVerification(user: Identity | None=None):
     return "SUCCESS: Email verification OTP code dispatched.", 200
 
 @identityBP.route("/identity/forgotPassword", methods=["POST"])
+@limiter.limit("2 per minute")
 @checkAPIKey
 @jsonOnly
 @enforceSchema(

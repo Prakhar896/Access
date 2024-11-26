@@ -3,6 +3,7 @@ BootCheck.check()
 
 import os, sys, pprint
 from flask import Flask, request, render_template, send_from_directory, redirect, url_for
+from flask_limiter import Limiter
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
 from services import *
@@ -15,6 +16,9 @@ from accessAnalytics import AccessAnalytics
 from dotenv import load_dotenv
 load_dotenv()
 
+def getIP():
+    return request.headers.get('X-Real-Ip', request.remote_addr)
+
 ### APP CONFIG
 configManager = Config()
 
@@ -23,6 +27,12 @@ readableFileExtensions = ', '.join(["."+x for x in configManager.config["fileExt
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, origins="*", supports_credentials=True, allow_private_network=True)
+limiter = Limiter(
+    getIP,
+    app=app,
+    default_limits=["100 per minute"],
+    storage_uri="memory://",
+)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = configManager.getAllowedRequestSize() * 1000 * 1000
@@ -36,8 +46,6 @@ if os.path.isdir(os.path.join(os.getcwd(), "assets")):
     for file in os.listdir(os.path.join(os.getcwd(), "assets")):
         if os.path.isfile(os.path.join(os.getcwd(), "assets", file)):
             availableAssets.append(file)
-
-# print("MAIN BOOT: Assets available: " + ", ".join(availableAssets))
 
 ## Other pre-requisites
 @app.before_request
@@ -63,8 +71,7 @@ def version():
 
 @app.route('/ip')
 def ip():
-    pprint.pprint(list(request.headers.items()))
-    return request.headers.get('X-Real-Ip', request.remote_addr)
+    return getIP()
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -80,6 +87,22 @@ def page_not_found(e):
         return redirect(url_for('frontend.homepage'))
     except:
         return "ERROR: Page not found.", 404
+
+@app.errorhandler(413)
+def requestEntityTooLarge(e):
+    return "ERROR: Request entity too large.", 413
+
+# @app.errorhandler(429)
+# def tooManyRequests(e):
+#     return "ERROR: Too many requests.", 429
+
+@app.errorhandler(500)
+def internalServerError(e):
+    return "ERROR: Internal server error.", 500
+
+@app.errorhandler(503)
+def serviceUnavailable(e):
+    return "ERROR: Service unavailable.", 503
 
 def boot():
     Universal.initAsync()
