@@ -2,6 +2,7 @@ import os, re
 from flask import Flask, request, render_template, Blueprint, url_for, redirect, session
 from models import Identity, Logger, Universal, AuditLog, EmailVerification
 from services import Encryption, Universal
+from accessAnalytics import AccessAnalytics
 from AFManager import AFManager, AFMError
 from main import limiter
 from emailDispatch import dispatchAccountWelcome, dispatchEmailVerification, dispatchPasswordResetKey, dispatchPasswordUpdatedEmail
@@ -89,6 +90,14 @@ def newIdentity():
     # Dispatch OTP verification email
     dispatchEmailVerification(account.username, account.email, otpCode, account.id)
     
+    res = AccessAnalytics.newIdentityCreation()
+    if isinstance(res, str):
+        Logger.log(res)
+    
+    res = AccessAnalytics.newEmailSent(count=2)
+    if isinstance(res, str):
+        Logger.log(res)
+    
     return {
         "message": "SUCCESS: Identity created. Verify email via OTP code dispatched.",
         "aID": account.id
@@ -153,6 +162,10 @@ def loginIdentity(user: Identity | None=None):
     session["authToken"] = authToken
     session["sessionStart"] = account.lastLogin
     
+    res = AccessAnalytics.newSignin()
+    if isinstance(res, str):
+        Logger.log(res)
+    
     return "SUCCESS: Logged in successfully.", 200
 
 @identityBP.route("/identity/logout", methods=["GET"])
@@ -162,6 +175,11 @@ def logout(user: Identity):
     user.save()
     
     session.clear()
+    
+    res = AccessAnalytics.newSignout()
+    if isinstance(res, str):
+        Logger.log(res)
+    
     return "SUCCESS: Logged out successfully.", 200
 
 @identityBP.route("/identity/session", methods=["GET"])
@@ -289,6 +307,10 @@ def resendEmailVerification(user: Identity | None=None):
     
     dispatchEmailVerification(user.username, user.email, otpCode, user.id)
     
+    res = AccessAnalytics.newEmailSent()
+    if isinstance(res, str):
+        Logger.log(res)
+    
     return "SUCCESS: Email verification OTP code dispatched.", 200
 
 @identityBP.route("/identity/forgotPassword", methods=["POST"])
@@ -333,6 +355,10 @@ def forgotPassword():
         Logger.log("IDENTITY FORGOTPASSWORD: Password reset key dispatched for account '{}'.".format(account.id))
         
         dispatchPasswordResetKey(account.username, account.email, resetKey)
+        
+        res = AccessAnalytics.newEmailSent()
+        if isinstance(res, str):
+            Logger.log(res)
         
         return "SUCCESS: If an account exists with the provided username/email, a password reset email has been dispatched.", 200
     else:
@@ -391,5 +417,9 @@ def forgotPassword():
         account.save()
         
         dispatchPasswordUpdatedEmail(account.username, account.email)
+        
+        res = AccessAnalytics.newEmailSent()
+        if isinstance(res, str):
+            Logger.log(res)
         
         return "SUCCESS: Password updated successfully.", 200

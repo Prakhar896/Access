@@ -231,140 +231,133 @@ class AccessAnalytics:
             with open(AccessAnalytics.dataFile, 'r') as f:
                 AccessAnalytics.analyticsData = json.load(f)
         except Exception as e:
-            return "AAError: Failed to load data in analytics file in JSON form. File might be damaged.\nError: " + str(e)
+            return "AAError: Failed to load data in analytics file in JSON form. Error: " + str(e)
         return True
 
     @staticmethod
     def saveToFile():
         if not AccessAnalytics.permissionCheck():
-            # return "AAError: Access Analytics is not enabled and given permission to operate. Set AccessAnalyticsEnabled to True in the .env file to enable Analytics."
             return False
         
         try:
             with open(AccessAnalytics.dataFile, 'w') as f:
                 json.dump(AccessAnalytics.analyticsData, f)
         except Exception as e:
-            return "AAError: Failed to save data in analytics file in JSON form. File might be damaged.\nError: " + str(e)
+            return "AAError: Failed to save data in analytics file in JSON form. Error: " + str(e)
         return True
 
     @staticmethod
-    def newRequest():
+    def newRequest(type: str="GET"):
         if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
             return False
         
         if 'requests' not in AccessAnalytics.analyticsData:
             AccessAnalytics.analyticsData['requests'] = 0
         AccessAnalytics.analyticsData['requests'] += 1
+        
+        if type == "POST":
+            if 'postRequests' not in AccessAnalytics.analyticsData:
+                AccessAnalytics.analyticsData['postRequests'] = 0
+            AccessAnalytics.analyticsData['postRequests'] += 1
 
         return AccessAnalytics.saveToFile()
 
     @staticmethod
-    def newFileUpload():
+    def newFileUpload(count=1):
         if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
             return False
         
         if 'fileUploads' not in AccessAnalytics.analyticsData:
             AccessAnalytics.analyticsData['fileUploads'] = 0
-        AccessAnalytics.analyticsData['fileUploads'] += 1
+        AccessAnalytics.analyticsData['fileUploads'] += count
 
         return AccessAnalytics.saveToFile()
 
     @staticmethod
-    def newFileDeletion():
+    def newFileDeletion(count=1):
         if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
             return False
         
         if 'fileDeletions' not in AccessAnalytics.analyticsData:
             AccessAnalytics.analyticsData['fileDeletions'] = 0
-        AccessAnalytics.analyticsData['fileDeletions'] += 1
+        AccessAnalytics.analyticsData['fileDeletions'] += count
 
         return AccessAnalytics.saveToFile()
 
     @staticmethod
-    def newFileDownload():
+    def newFileDownload(count=1):
         if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
             return False
         
         if 'fileDownloads' not in AccessAnalytics.analyticsData:
             AccessAnalytics.analyticsData['fileDownloads'] = 0
-        AccessAnalytics.analyticsData['fileDownloads'] += 1
+        AccessAnalytics.analyticsData['fileDownloads'] += count
 
         return AccessAnalytics.saveToFile()
     
     @staticmethod
-    def newFileShare():
+    def newFileShare(count=1):
         if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
             return False
         
         if 'fileShares' not in AccessAnalytics.analyticsData:
             AccessAnalytics.analyticsData['fileShares'] = 0
-        AccessAnalytics.analyticsData['fileShares'] += 1
+        AccessAnalytics.analyticsData['fileShares'] += count
         
         return AccessAnalytics.saveToFile()
     
     @staticmethod
-    def newIdentityCreation():
+    def newIdentityCreation(count=1):
         if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
             return False
         
         if 'identityCreations' not in AccessAnalytics.analyticsData:
             AccessAnalytics.analyticsData['identityCreations'] = 0
-        AccessAnalytics.analyticsData['identityCreations'] += 1
+        AccessAnalytics.analyticsData['identityCreations'] += count
         
         return AccessAnalytics.saveToFile()
 
     @staticmethod
-    def newSignin():
+    def newSignin(count=1):
         if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
             return False
         
         if 'signIns' not in AccessAnalytics.analyticsData:
             AccessAnalytics.analyticsData['signIns'] = 0
-        AccessAnalytics.analyticsData['signIns'] += 1
+        AccessAnalytics.analyticsData['signIns'] += count
 
         return AccessAnalytics.saveToFile()
 
     @staticmethod
-    def newSignout():
+    def newSignout(count=1):
         if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
             return False
         
         if 'signOuts' not in AccessAnalytics.analyticsData:
             AccessAnalytics.analyticsData['signOuts'] = 0
-        AccessAnalytics.analyticsData['signOuts'] += 1
+        AccessAnalytics.analyticsData['signOuts'] += count
 
         return AccessAnalytics.saveToFile()
     
     @staticmethod
-    def newPOSTRequest():
-        if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
-            return False
-        
-        if 'postRequests' not in AccessAnalytics.analyticsData:
-            AccessAnalytics.analyticsData['postRequests'] = 0
-        AccessAnalytics.analyticsData['postRequests'] += 1
-
-        return AccessAnalytics.saveToFile()
-    
-    @staticmethod
-    def newIdentityDeletion():
+    def newIdentityDeletion(count=1):
         if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
             return False
         
         if 'identityDeletions' not in AccessAnalytics.analyticsData:
             AccessAnalytics.analyticsData['identityDeletions'] = 0
-        AccessAnalytics.analyticsData['identityDeletions'] += 1
+        AccessAnalytics.analyticsData['identityDeletions'] += count
         
         return AccessAnalytics.saveToFile()
     
     @staticmethod
-    def newEmailSent():
+    def newEmailSent(count=1):
         if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
             return False
         
         if 'emailsSent' not in AccessAnalytics.analyticsData:
             AccessAnalytics.analyticsData['emailsSent'] = 0
-        AccessAnalytics.analyticsData['emailsSent'] += 1
+        AccessAnalytics.analyticsData['emailsSent'] += count
         
         return AccessAnalytics.saveToFile()
     

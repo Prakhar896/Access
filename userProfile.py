@@ -4,6 +4,7 @@ from models import Identity, File, AuditLog
 from main import limiter
 from decorators import jsonOnly, checkAPIKey, emailVerified, checkSession
 from services import Universal, Logger, Encryption
+from accessAnalytics import AccessAnalytics
 from emailDispatch import dispatchEmailVerification, dispatchPasswordUpdatedEmail
 from AFManager import AFManager, AFMError
 
@@ -142,6 +143,7 @@ def updateProfile(user: Identity):
     if username != None:
         user.username = username
     
+    emailsDispatched = 0
     if email != None:
         if user.emailVerification.dispatchTimestamp != None and isinstance(user.emailVerification.dispatchTimestamp, str):
             if (Universal.utcNow() - Universal.fromUTC(user.emailVerification.dispatchTimestamp)).total_seconds() < 120:
@@ -153,6 +155,7 @@ def updateProfile(user: Identity):
         user.emailVerification.dispatchTimestamp = Universal.utcNowString()
         
         dispatchEmailVerification(user.username, user.email, user.emailVerification.otpCode, user.id)
+        emailsDispatched += 1
         
         Logger.log("USERPROFILE UPDATE: Identity '{}' changed their email to '{}'. Email verification dispatched.".format(user.id, user.email))
     
@@ -161,8 +164,14 @@ def updateProfile(user: Identity):
         Logger.log("USERPROFILE UPDATE: Identity '{}' changed their password.".format(user.id))
         
         dispatchPasswordUpdatedEmail(user.username, user.email)
+        emailsDispatched += 1
     
     user.save()
+    
+    if emailsDispatched > 0:
+        res = AccessAnalytics.newEmailSent(count=emailsDispatched)
+        if isinstance(res, str):
+            Logger.log(res)
     
     return "SUCCESS: Profile updated.", 200
 
@@ -213,5 +222,9 @@ def deleteIdentity(user: Identity):
     session.clear()
     
     Logger.log("USERPROFILE DELETE: Identity '{}' ({}) deleted.".format(user.id, user.username))
+    
+    res = AccessAnalytics.newIdentityDeletion()
+    if isinstance(res, str):
+        Logger.log(res)
     
     return "SUCCESS: Identity deleted. Thank you for using Access.", 200

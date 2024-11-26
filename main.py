@@ -53,12 +53,10 @@ def updateAnalytics():
     if configManager.getSystemLock() == True and request.path != "/":
         return "ERROR: Service Unavailable", 503
     
-    if AccessAnalytics.permissionCheck():        
-        if request.method == "POST":
-            postResponse = AccessAnalytics.newPOSTRequest()
-            if isinstance(postResponse, str):
-                if postResponse.startswith("AAError:"):
-                    print(postResponse)
+    if AccessAnalytics.permissionCheck() and not (request.path.startswith("/assets") or request.path.startswith("/src/assets") or request.path.startswith("/favicon.ico") or request.path.startswith("/logo")):
+        res = AccessAnalytics.newRequest(type=request.method.upper())
+        if isinstance(res, str) and res.startswith("AAError:"):
+            Logger.log(res)
 
 @app.route('/version')
 def version():
@@ -87,9 +85,9 @@ def page_not_found(e):
 def requestEntityTooLarge(e):
     return "ERROR: Request entity too large.", 413
 
-# @app.errorhandler(429)
-# def tooManyRequests(e):
-#     return "ERROR: Too many requests.", 429
+@app.errorhandler(429)
+def tooManyRequests(e):
+    return "ERROR: Too many requests.", 429
 
 @app.errorhandler(500)
 def internalServerError(e):

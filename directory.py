@@ -6,6 +6,7 @@ from werkzeug.datastructures.file_storage import FileStorage
 from main import allowed_file, secure_filename, configManager, limiter
 from AFManager import AFManager, AFMError
 from services import Logger, Universal, Trigger
+from accessAnalytics import AccessAnalytics
 from models import Identity, File, AuditLog, EmailVerification
 from decorators import jsonOnly, checkAPIKey, checkSession, enforceSchema, emailVerified, debug
 
@@ -212,6 +213,7 @@ def uploadFile(user: Identity):
     
     fileSaveUpdates = {}
     approvedFiles: Dict[str, BytesIO] = {}
+    successCount = 0
     for file in files:
         secureName = secure_filename(file.filename)
         if len(secureName) > 50:
@@ -254,9 +256,11 @@ def uploadFile(user: Identity):
         fileExists = os.path.isfile(AFManager.userFilePath(user.id, secureName))
         if smallUpload:
             fileSaveUpdates[file.filename] = processUserUpload(secureName, file, user, fileExists)
+            successCount += 1
         else:
             approvedFiles[secureName] = BytesIO(file.stream.read())
             fileSaveUpdates[file.filename] = "SUCCESS: File will be saved."
+            successCount += 1
     
     if not smallUpload and len(approvedFiles) > 0:
         if user.activeUploads == None:
@@ -270,6 +274,10 @@ def uploadFile(user: Identity):
             approvedFiles,
             user
         )
+    
+    res = AccessAnalytics.newFileUpload(count=successCount)
+    if isinstance(res, str):
+        Logger.log(res)
     
     return fileSaveUpdates, 200
 
@@ -313,6 +321,10 @@ def downloadFile(user: Identity, filename: str):
     lastModified = None
     if isinstance(userFile.lastUpdate, str):
         lastModified = Universal.fromUTC(userFile.lastUpdate)
+    
+    res = AccessAnalytics.newFileDownload()
+    if isinstance(res, str):
+        Logger.log(res)
     
     return send_file(AFManager.userFilePath(user.id, filename), as_attachment=True, last_modified=lastModified)
 
@@ -365,6 +377,10 @@ def deleteFile(user: Identity, filename: str):
     log = AuditLog(user.id, "FileDelete", "File '{}' deleted.".format(filename))
     log.save()
     
+    res = AccessAnalytics.newFileDeletion()
+    if isinstance(res, str):
+        Logger.log(res)
+    
     return "SUCCESS: File deleted.", 200
 
 @directoryBP.route('/bulkDelete', methods=['DELETE'])
@@ -382,6 +398,7 @@ def bulkDelete(user: Identity):
     
     directoryFiles = AFManager.getFilenames(user.id)
     fileDeletionUpdates = {}
+    successCount = 0
     for filename in filenames:
         if filename not in directoryFiles:
             fileDeletionUpdates[filename] = "UERROR: File not found."
@@ -409,6 +426,11 @@ def bulkDelete(user: Identity):
         log.save()
         
         fileDeletionUpdates[filename] = "SUCCESS: File deleted."
+        successCount += 1
+    
+    res = AccessAnalytics.newFileDeletion(count=successCount)
+    if isinstance(res, str):
+        Logger.log(res)
     
     return fileDeletionUpdates, 200
 

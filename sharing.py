@@ -4,6 +4,7 @@ from main import limiter
 from models import Identity, File, FileSharing
 from AFManager import AFManager, AFMError
 from services import Logger, Universal, Encryption
+from accessAnalytics import AccessAnalytics
 from decorators import checkAPIKey, jsonOnly, checkSession, emailVerified, enforceSchema
 
 sharingBP = Blueprint("sharing", __name__)
@@ -57,6 +58,10 @@ def newSharing(user: Identity):
     targetFile.sharing.save()
     
     Logger.log("SHARING NEW: User '{}' shared file '{}' with code '{}'.".format(user.id, targetFile.name, targetFile.sharing.linkCode))
+    
+    res = AccessAnalytics.newFileShare()
+    if isinstance(res, str):
+        Logger.log(res)
     
     return jsonify({
         "message": "SUCCESS: File sharing successful.",
