@@ -77,6 +77,8 @@ def cleaner():
                 Logger.log("MAIN CLEANER: Unverified user '{}' (Created: {}) cleared.".format(user.email, user.created))
     except Exception as e:
         Logger.log("MAIN CLEANER ERROR: {}".format(e))
+    
+    Logger.log("MAIN CLEANER: Job complete.")
 
 ## Other pre-requisites
 @app.before_request
@@ -137,7 +139,7 @@ def boot():
         sys.exit(1)
     
     if os.environ.get("CLEANER_DISABLED", "False") != "True":
-        Universal.store["CleanerID"] = Universal.asyncProcessor.addJob(cleaner, trigger=Trigger('interval', seconds=10))
+        Universal.store["CleanerID"] = Universal.asyncProcessor.addJob(cleaner, trigger=Trigger('interval', hours=3))
         print("MAIN: Cleaning agent started.")
     
     # Set up FireConn
