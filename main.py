@@ -61,6 +61,10 @@ def updateAnalytics():
 def version():
     return render_template('version.html', versionNum="Version information could not be obtained." if Universal.version == None else Universal.version)
 
+@app.route('/ip')
+def ip():
+    return request.remote_addr
+
 @app.errorhandler(404)
 def page_not_found(e):
     if request.path.startswith("/assets") or request.path.startswith("/src/assets") or request.path.startswith("/favicon.ico") or request.path.startswith("/logo"):
