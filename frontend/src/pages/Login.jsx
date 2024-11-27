@@ -85,7 +85,7 @@ function Login() {
                         showToast("Something went wrong", err.response.data.substring("UERROR: ".length), 'error');
                     } else if (err.response.data.startsWith("ERROR")) {
                         console.log("Error occurred in login; response:", err.response.data);
-                        showToast("Something went wrong", "Failed to create account. Please try again.", 'error');
+                        showToast("Something went wrong", "Failed to login. Please try again.", 'error');
                     } else {
                         console.log("Unknown response from server in login; response:", err.response.data);
                         showToast("Something went wrong", "An error occurred. Please try again.", 'error');
