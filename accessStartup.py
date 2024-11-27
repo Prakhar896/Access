@@ -1,5 +1,7 @@
 import time, os, shutil
 from getpass import getpass
+from AFManager import AFManager
+from services import Logger
 from accessAnalytics import *
 
 print("Welcome to Access Startup!")
@@ -10,10 +12,9 @@ while True:
 Startup Choices - What would you like to do?
 
     1) Access Boot
-    2) Access CheckUp
-    3) Access Analytics - Crunch Data and Report
-    4) General Settings
-    5) Update Access
+    2) Access Analytics - Crunch Data and Report
+    3) General Settings
+    4) Update Access
 """)
 
     while True:
@@ -37,18 +38,12 @@ Startup Choices - What would you like to do?
         print("STARTUP: Access Startup will now close.")
         sys.exit(0)
     elif choice == 2:
-        print("STARTUP: Running Access CheckUp service...")
-        print()
-        import accessCheckup
-        print()
-        print("STARTUP: Access CheckUp service has finished running.")
-    elif choice == 3:
         print("STARTUP: Running Access Analytics crunch data function...")
         print()
         AccessAnalytics.crunchData()
         print()
         print("STARTUP: Access Analytics crunch data function has finished running.")
-    elif choice == 4:
+    elif choice == 3:
         import config
         startupConfigManager = config.Config()
         
@@ -62,7 +57,7 @@ General Settings: (0 to return to main menu)
         5) Access Analytics - Clear Collected Data
         6) Access Analytics Recovery Mode
         7) Manage Logs
-        8) Factory Reset - Delete System and User Information Data Files, Access Folders, Analytics Reports
+        8) Factory Reset - Reset database, delete user directories, clear analytics reports
 """)
     
         while True:
@@ -126,35 +121,46 @@ General Settings: (0 to return to main menu)
         elif choice == 8:
             ## Delete data files
             print()
-            print("STARTUP: Please wait a while for Startup to delete all data files...")
+            print("STARTUP: Resetting...")
             print()
             time.sleep(2)
 
-            raise Exception("Factory Reset is disabled for now.")
-
-            ## Delete AccessFolders
-            if os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders')):
-                try:
-                    shutil.rmtree('AccessFolders')
-                except Exception as e:
-                    print("STARTUP: There was an error in deleting the AccessFolders directory; Error: {}".format(e))
-                    errorsPresent = True
-        
-            ## Delete Analytics Reports
-            if os.path.isdir(os.path.join(os.getcwd(), 'analyticsReports')):
-                try:
-                    shutil.rmtree('analyticsReports')
-                except Exception as e:
-                    print("STARTUP: There was an error in deleting the analyticsReports directory; Error: {}".format(e))
-                    errorsPresent = True
-        
-            print()
-            if errorsPresent:
-                print("STARTUP: There were some errors in deleting some of the files. See above. Startup will now close to force a context update.")
+            from database import DI
+            res = DI.setup()
+            if res != True:
+                print("STARTUP: Error in resetting database; response: {}".format(res))
                 sys.exit(1)
-            print("STARTUP: Successfully deleted all files, Access Folders and stored Access Analytics reports. Startup will now close to force a context update.")
-            sys.exit(0)
-    elif choice == 5:
+            
+            DI.save(None)
+            print("STARTUP DI: Database reset.")
+            
+            try:
+                shutil.rmtree(AFManager.rootDirPath(), ignore_errors=True)
+                print("STARTUP: Deleted user directories.")
+            except Exception as e:
+                print("STARTUP: Error in deleting user directories; Error: {}".format(e))
+                sys.exit(1)
+            
+            AccessAnalytics.clearDataFile()
+            if os.path.isdir(os.path.join(os.getcwd(), "analyticsReports")):
+                try:
+                    shutil.rmtree(os.path.join(os.getcwd(), "analyticsReports"), ignore_errors=True)
+                    print("STARTUP: Deleted analytics reports and data.")
+                except Exception as e:
+                    print("STARTUP: Error in deleting analytics reports directory; Error: {}".format(e))
+                    sys.exit(1)
+            
+            if os.path.isfile(os.path.join(os.getcwd(), "config.json")):
+                try:
+                    os.remove(os.path.join(os.getcwd(), "config.json"))
+                    print("STARTUP: Deleted config file.")
+                except Exception as e:
+                    print("STARTUP: Error in deleting config file; Error: {}".format(e))
+                    sys.exit(1)
+            
+            print()
+            print("STARTUP: Factory reset complete.")
+    elif choice == 4:
         import updater
         print("STARTUP: Startup will now close.")
         sys.exit(0)
