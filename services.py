@@ -7,6 +7,29 @@ from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
 class Trigger:
+    '''
+    A class to define triggers for `APScheduler` based jobs.
+    
+    Implementation variations:
+    ```python
+    from apscheduler.triggers.date import DateTrigger
+    import datetime
+    from services import Trigger
+    
+    ## Immediate trigger
+    immediateTrigger = Trigger()
+    
+    ## Interval trigger
+    intervalTrigger = Trigger(type='interval', seconds=5, minutes=3, hours=2) # Triggers every 2 hours 3 minutes and 5 seconds (cumulatively)
+    
+    ## Date trigger
+    dateTrigger = Trigger(type='date', triggerDate=(datetime.datetime.now() + datetime.timedelta(seconds=5))) # Triggers 5 seconds later
+    
+    ## Custom trigger
+    customTrigger = Trigger(customAPTrigger=DateTrigger(run_date=(datetime.datetime.now() + datetime.timedelta(seconds=5))) # Custom APScheduler trigger
+    ```
+    '''
+    
     def __init__(self, type='interval', seconds=None, minutes=None, hours=None, triggerDate: datetime.datetime=None, customAPTrigger: BaseTrigger=None) -> None:
         self.type = type
         self.immediate = seconds == None and minutes == None and hours == None and triggerDate == None
@@ -19,6 +42,35 @@ class Trigger:
 class AsyncProcessor:
     """
     Async processor uses the `apscheduler` library to run functions asynchronously. Specific intervals can be set if needed as well.
+    
+    Manipulate the underling scheduler with the `scheduler` attribute.
+    
+    Sample Usage:
+    ```python
+    asyncProcessor = AsyncProcessor()
+    
+    def greet():
+        print("Hi!")
+    
+    jobID = asyncProcessor.addJob(greet, trigger=Trigger(type='interval', seconds=5)) # This is all you need to add the job
+    
+    ## Pausing the scheduler
+    asyncProcessor.pause()
+    
+    ## Resuming the scheduler
+    asyncProcessor.resume()
+    
+    ## Shutting down the scheduler
+    asyncProcessor.shutdown()
+    
+    ## To stop a job, use the jobID
+    asyncProcessor.scheduler.remove_job(jobID) ## .pause_job() and .resume_job() can also be used to manipulate the job itself
+    
+    ## Disable logging with Logger
+    asyncProcessor.logging = False
+    ```
+    
+    For trigger options, see the `Trigger` class.
     """
     
     def __init__(self, paused=False, logging=True) -> None:

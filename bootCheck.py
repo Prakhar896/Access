@@ -58,7 +58,8 @@ class BootCheck:
         optionalEnvVariables = [
             "DEBUG_MODE",
             "DECORATOR_DEBUG_MODE",
-            "CLEANER_DISABLED"
+            "CLEANER_DISABLED",
+            "DI_FAILOVER_STRATEGY"
         ]
         notFound = []
         for var in optionalEnvVariables:
