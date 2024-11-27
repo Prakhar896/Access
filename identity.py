@@ -4,7 +4,7 @@ from models import Identity, Logger, Universal, AuditLog, EmailVerification
 from services import Encryption, Universal
 from accessAnalytics import AccessAnalytics
 from AFManager import AFManager, AFMError
-from main import limiter
+from main import limiter, getIP
 from emailDispatch import dispatchAccountWelcome, dispatchEmailVerification, dispatchPasswordResetKey, dispatchPasswordUpdatedEmail
 from decorators import *
 
@@ -152,7 +152,7 @@ def loginIdentity(user: Identity | None=None):
     loginEvent = AuditLog(
         accountID=account.id,
         event="Login",
-        text="Logged in from IP address '{}'.".format(request.remote_addr)
+        text="Logged in from IP address '{}'.".format(getIP())
     )
     loginEvent.save()
     
