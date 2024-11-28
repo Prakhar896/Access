@@ -9,5 +9,8 @@
         "logs": [
             "pm2 logs Access --lines 100"
         ]
+    },
+    "customNginx": {
+        "serverBlock": "client_max_body_size 100M;"
     }
 }
