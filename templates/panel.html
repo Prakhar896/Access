@@ -12,6 +12,13 @@
     <a href="./toggleCleaner"><p>Toggle Cleaning Agent</p></a>
     <a href="./logs"><p>View Logs</p></a>
     <a href="./clearLogs"><p>Clear Logs</p></a>
-    <a href="./reset"><p>Reset System</p></a>
+    <button onclick="resetRedirect()">Reset System</button>
+    <script>
+        function resetRedirect() {
+            if (prompt("Warning, destructive action! Type 'reset' to confirm reset action.") === "reset") {
+                window.location.href = "./reset";
+            }
+        }
+    </script>
 </body>
 </html>
