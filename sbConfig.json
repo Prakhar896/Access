@@ -1,0 +1,13 @@
+{
+    "scripts": {
+        "run": [
+            "pm2 start ./virt/bin/python --name Access -- main.py"
+        ],
+        "stop": [
+            "pm2 stop Access"
+        ],
+        "logs": [
+            "pm2 logs Access --lines 100"
+        ]
+    }
+}

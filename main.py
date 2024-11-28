@@ -1,349 +1,206 @@
-from bootCheck import runBootCheck
-if __name__ == "__main__":
-    if not runBootCheck():
-        print("MAIN: Boot check failed. Boot aborted.")
-        exit()
+from bootCheck import BootCheck
+BootCheck.check()
 
-import json, random, time, sys, subprocess, os, shutil, copy
-from flask import Flask, request, render_template, redirect, url_for, flash, Blueprint
+import os, sys, pprint
+from flask import Flask, request, render_template, send_from_directory, redirect, url_for
+from flask_limiter import Limiter
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
-import datetime
+from services import *
 from models import *
-from config import Config
-from activation import *
-from certAuthority import *
-from AFManager import *
-from emailer import *
-from accessAnalytics import *
-from getpass import getpass
+from activation import initActivation, makeKVR
+from AFManager import AFManager, AFMError
+from emailer import Emailer
+from accessAnalytics import AccessAnalytics
+from dotenv import load_dotenv
+load_dotenv()
+
+def getIP():
+    return request.headers.get('X-Real-Ip', request.remote_addr)
 
 ### APP CONFIG
-configManager = Config()
-
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'Chute')
-readableFileExtensions = ', '.join(["."+x for x in configManager.config["fileExtensions"]])
+readableFileExtensions = ', '.join(["."+x for x in Universal.configManager.config["fileExtensions"]])
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}}, origins="*", supports_credentials=True, allow_private_network=True)
+limiter = Limiter(
+    getIP,
+    app=app,
+    default_limits=["100 per minute"],
+    storage_uri="memory://",
+)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = configManager.config["allowedFileSize"] * 1000 * 1000
+app.config['MAX_CONTENT_LENGTH'] = Universal.configManager.getAllowedRequestSize() * 1000 * 1000
 app.secret_key = os.environ['APP_SECRET_KEY']
 
 def allowed_file(filename):
-    return ('.' in filename) and (filename.rsplit('.', 1)[1].lower() in configManager.config["fileExtensions"])
+    return ('.' in filename) and (filename.rsplit('.', 1)[1].lower() in Universal.configManager.config["fileExtensions"])
 
-### Variable Creation
+availableAssets = []
+if os.path.isdir(os.path.join(os.getcwd(), "assets")):
+    for file in os.listdir(os.path.join(os.getcwd(), "assets")):
+        if os.path.isfile(os.path.join(os.getcwd(), "assets", file)):
+            availableAssets.append(file)
 
-if not os.path.isfile(os.path.join(os.getcwd(), 'accessIdentities.txt')):
-    with open('accessIdentities.txt', 'w') as f:
-        f.write("{}")
-
-accessIdentities = json.load(open('accessIdentities.txt', 'r'))
-
-if not os.path.isfile(os.path.join(os.getcwd(), 'certificates.txt')):
-    with open('certificates.txt', 'w') as f:
-        f_content = """{ "registeredCertificates": {}, "revokedCertificates": {}}"""
-        f.write(f_content)
-
-if not os.path.isfile(os.path.join(os.getcwd(), 'validOTPCodes.txt')):
-    with open('validOTPCodes.txt', 'w') as f:
-        f.write("{}")
-
-validOTPCodes = json.load(open('validOTPCodes.txt', 'r'))
-
-if not os.path.isdir(os.path.join(os.getcwd(), 'AccessFolders')):
-    os.mkdir(os.path.join(os.getcwd(), 'AccessFolders'))
+# Interval cleaning agent
+def cleaner():
+    try:
+        users = Identity.load()
+        if users == None:
+            return
+        if not isinstance(users, list):
+            Logger.log("MAIN CLEANER ERROR: Users not loaded as list.")
+            return
+        
+        for user in users:
+            if (Universal.utcNow() - Universal.fromUTC(user.created)).total_seconds() > 10800 and user.emailVerification.verified != True:
+                user.getAuditLogs()
+                if len(user.auditLogs.values()) > 0:
+                    for logID in list(user.auditLogs.keys()):
+                        user.deleteAuditLog(logID)
+                
+                user.getFiles()
+                if len(user.files.values()) > 0:
+                    for fileID in list(user.files.keys()):
+                        user.deleteFile(fileID)
+                
+                if AFManager.checkIfFolderIsRegistered(user.id):
+                    AFManager.deleteFolder(user.id)
+                
+                user.destroy()
+                
+                Logger.log("MAIN CLEANER: Unverified user '{}' (Created: {}) cleared.".format(user.email, user.created))
+    except Exception as e:
+        Logger.log("MAIN CLEANER ERROR: {}".format(e))
+    
+    Logger.log("MAIN CLEANER: Job complete.")
 
 ## Other pre-requisites
 @app.before_request
 def updateAnalytics():
-    if AccessAnalytics.permissionCheck():
-        response = AccessAnalytics.newRequest(request.path)
-        if isinstance(response, str):
-            if response.startswith("AAError:"):
-                print(response)
-        
-        if request.method == "POST":
-            postResponse = AccessAnalytics.newPOSTRequest()
-            if isinstance(postResponse, str):
-                if postResponse.startswith("AAError:"):
-                    print(postResponse)
-  
-
-@app.route('/')
-def homepage():
-    return render_template('homepage.html')
-
-@app.route('/security/unauthorised')
-def unauthorizedPage():
-    return render_template('unauthorised.html', message=request.args['error'], originURL=request.host_url)
-
-@app.route('/security/error')
-def processError():
-    if 'error' not in request.args:
-        return render_template('error.html', error=None, originURL=request.host_url)
-    else:
-        return render_template('error.html', error=request.args['error'], originURL=request.host_url)
-
-@app.route('/certManagement/renewal')
-def renewCertificate():
-    if not os.path.isfile(os.path.join(os.getcwd(), 'authorisation.txt')):
-        flash('No boot authorisation code is set in the system. Certificate renewal cannot occur without a boot authorisation code being set.')
-        return redirect(url_for('processError'))
-
-    if 'certID' not in request.args or 'bootAuthCode' not in request.args:
-        flash('One or more required request arguments were not present.')
-        return redirect(url_for('processError'))
-
-    if request.args['bootAuthCode'] != Encryption.decodeFromB64(fileContent('authorisation.txt')):
-        return render_template('unauthorised.html', message='Provided boot authorisation code is incorrect.', originURL=request.host_url)
-
-    response = CertAuthority.renewCertificate(request.args['certID'])
-    if CAError.checkIfErrorMessage(response):
-        flash(response)
-        return redirect(url_for('processError'))
-
-    if response == "Successfully renewed certificate with ID: {}".format(request.args['certID']):
-        # Success case
-        CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
-        return render_template('renewSuccess.html', originURL=request.host_url, certID=request.args['certID'])
-    else:
-        flash("Unknown response received from CertAuthority when renewing. Response: {}".format(response))
-        return redirect(url_for('processError'))
+    if Universal.configManager.getSystemLock() == True and request.path != "/" and not request.path.startswith("/panel"):
+        return "ERROR: Service Unavailable", 503
+    
+    if AccessAnalytics.permissionCheck() and not (request.path.startswith("/assets") or request.path.startswith("/src/assets") or request.path.startswith("/favicon.ico") or request.path.startswith("/logo")):
+        res = AccessAnalytics.newRequest(type=request.method.upper())
+        if isinstance(res, str) and res.startswith("AAError:"):
+            Logger.log(res)
 
 @app.route('/version')
 def version():
-    if Universal.version == None:
-        num = Universal.getVersion()
-        if num == "Version File Not Found":
-            num = "Version information could not be obtained."
-    else:
-        num = Universal.version
+    return render_template('version.html', versionNum="Version information could not be obtained." if Universal.version == None else Universal.version)
 
-    return render_template('version.html', versionNum=num)
+@app.route('/ip')
+def ip():
+    return getIP()
 
-def bootFunction():
-    # BOOT PRE-PROCESSING
-    global accessIdentities
-    global validOTPCodes
-
-    # Setup Logger service
-    Logger.setup()
-
-    # Boot Authorisation
-    if os.path.isfile(os.path.join(os.getcwd(), 'authorisation.txt')):
-        try:
-            with open('authorisation.txt', 'r') as f:
-                decoded = Encryption.decodeFromB64(f.read())
-                code = getpass("MAIN: Enter your Boot Authorisation Code to begin Access Boot: ")
-                if code != decoded:
-                    print("MAIN: Boot Authorisation Code is incorrect. Aborting boot.")
-                    Logger.log("MAIN BOOT: Aborting due to incorrect boot auth code.")
-                    sys.exit(1)
-                else:
-                    print()
-        except Exception as e:
-            Logger.log("MAIN BOOT: Aborting due to loading of and prompting for boot auth code; error: {}".format(e))
-            print("MAIN: Failed to load and ask for boot authorisation code.")
-            print("MAIN: Aborting boot.")
-            sys.exit(1)
-
-    # Check if system is in beta mode
-    versionLookup = Universal.getVersion()
-    if versionLookup == "Version File Not Found":
-        print("MAIN: Version file was not found. Boot aborted. Please re-install Access.")
-        Logger.log("MAIN BOOT: Aborting due to missing version file.")
-        sys.exit(1)
-    elif versionLookup.endswith("beta"):
-        print("MAIN: Note! You are booting a version of Access that is in beta! Version Info: '" + versionLookup + "'")
-    else:
-        print("MAIN: Boot version detected: '" + versionLookup + "'")
-
-    # Check for copy activation (Activator DRM Process)
-    activationCheck = checkForActivation()
-    if activationCheck == True:
-        print("MAIN-ACTIVATOR: Access copy is activated!")
-    elif activationCheck == False:
-        print("MAIN: Access copy is not activated! Triggering copy activation process...")
-        print()
-        try:
-            initActivation("z44bzvw0", Universal.version)
-            Logger.log("MAIN BOOT: Activated copy and obtained license key.")
-        except Exception as e:
-            print("MAIN ERROR: An error occurred in activating this copy. Error: {}".format(e))
-            print("MAIN: Boot aborted.")
-            Logger.log("MAIN BOOT: Activation error occurred: {}".format(e))
-            sys.exit(1)
-    else:
-        # KVR
-        print("MAIN: This copy's license key needs to be verified (every 14 days). Triggering key verification request...")
-        print()
-        try:
-            makeKVR("z44bzvw0", Universal.version)
-            Logger.log("MAIN BOOT: Completed a KVR successfully.")
-        except Exception as e:
-            print("MAIN ERROR: Failed to make KVR request. Error: {}".format(e))
-            print("MAIN: Boot aborted.")
-            sys.exit(1)
-    print()
-
-    # Run code that supports older versions (Backwards compatibility)
-    report = []
-
-    ## SUPPORT FOR v1.0.3
-    if os.environ.get("ReplitEnvironment", "nil") != "nil":
-        print("MAIN NOTICE: Detection of Replit environment with ReplitEnvironment .env variable was deprecated in v1.0.4. Refer to documentation for more information.")
-        print()
-
-    for username in accessIdentities:
-        ## Check if password is in old base64 format
-        if Encryption.isBase64(accessIdentities[username]["password"]):
-            accessIdentities[username]["password"] = Encryption.convertBase64ToSHA(accessIdentities[username]["password"])
-            report.append("Password in old Base64 format for user '{}' has been updated to a more secure format.".format(username))
-
-        if ("identityVersion" not in accessIdentities[username]) or (accessIdentities[username]["identityVersion"] != Universal.version):
-            accessIdentities[username]["identityVersion"] = Universal.version
-            report.append("Updated identity version for user '{}' to '{}'".format(username, Universal.version))
-
-    ## SUPPORT FOR v1.0.2
-    for username in accessIdentities:
-        if 'settings' not in accessIdentities[username] or ('emailPref' not in accessIdentities[username]['settings']):
-            report.append('Settings data including email preferences were added to user \'{}\''.format(username))
-            accessIdentities[username]['settings'] = {
-                "emailPref": {
-                    "loginNotifs": True,
-                    "fileUploadNotifs": False,
-                    "fileDeletionNotifs": False
-                }
-            }
-
-        if 'folderRegistered' not in accessIdentities[username]:
-            report.append('Folder registration status data was added to user \'{}\''.format(username))
-            if AFManager.checkIfFolderIsRegistered(username):
-                accessIdentities[username]['folderRegistered'] = True
-            else:
-                accessIdentities[username]['folderRegistered'] = False
+@app.errorhandler(404)
+def page_not_found(e):
+    if request.path.startswith("/assets") or request.path.startswith("/src/assets") or request.path.startswith("/favicon.ico") or request.path.startswith("/logo"):
+        if request.path.startswith("/logo"):
+            return send_from_directory(os.path.join(os.getcwd(), "assets", "logo", "svg"), "logo-color.svg")
         
-        if 'AF_and_files' not in accessIdentities[username]:
-            accessIdentities[username]['AF_and_files'] = {}
-            report.append('AF Files data was added to user \'{}\''.format(username))
-            if AFManager.checkIfFolderIsRegistered(username):
-                currentDatetimeString = datetime.datetime.now().strftime(Universal.systemWideStringDateFormat)
-                
-                for filename in AFManager.getFilenames(username):
-                    accessIdentities[username]['AF_and_files'][filename] = currentDatetimeString
-            
-    json.dump(accessIdentities, open('accessIdentities.txt', 'w'))
+        asset = request.path.split("/")[-1]
+        if asset in availableAssets:
+            return send_from_directory(os.path.join(os.getcwd(), "assets"), asset)
+        return "ERROR: Asset not found.", 404
+    try:
+        return redirect(url_for('frontend.homepage'))
+    except:
+        return "ERROR: Page not found.", 404
 
-    if len(report) != 0:
-        print()
-        print("BACKWARDS COMPATIBILITY (BC) code made the following changes:")
-        for item in report:
-            print('\t' + item)
-            print()
+@app.errorhandler(413)
+def requestEntityTooLarge(e):
+    return "ERROR: Request entity too large.", 413
 
-    # Load certificates
-    CAresponse = CertAuthority.loadCertificatesFromFile(fileObject=open('certificates.txt', 'r'))
-    if CAError.checkIfErrorMessage(CAresponse):
-        Logger.log("MAIN BOOT: Failed to make CA load certificates; response: {}".format(CAresponse))
-        print("MAIN: Failed to load certificates from file. Please try again.")
-        sys.exit(1)
-    else:
-        print(CAresponse)
+@app.errorhandler(429)
+def tooManyRequests(e):
+    return "ERROR: Too many requests.", 429
+
+@app.errorhandler(500)
+def internalServerError(e):
+    return "ERROR: Internal server error.", 500
+
+@app.errorhandler(503)
+def serviceUnavailable(e):
+    return "ERROR: Service unavailable.", 503
+
+def boot():
+    Universal.initAsync()
     
-    # Expire old certificates and save new data
-    CertAuthority.expireOldCertificates()
-    CertAuthority.saveCertificatesToFile(open('certificates.txt', 'w'))
-
-    # Expire auth tokens
-    tempIdentities = accessIdentities
-    accessIdentities = expireAuthTokens(tempIdentities)
-    with open('accessIdentities.txt', 'w') as f:
-        json.dump(accessIdentities, f)
-
-    # Set up Access Analytics
-    if AccessAnalytics.permissionCheck():
-        AAresponse = AccessAnalytics.prepEnvironmentForAnalytics()
-        if AAresponse.startswith("AAError:"):
-            print("MAIN: Error in getting Analytics to prep environment. Response: {}".format(AAresponse))
-            print()
-            print("MAIN: Would you like to enable Analytics Recovery Mode?")
-            recoveryModeAction = input("Type 'yes' or 'no': ")
-            if recoveryModeAction == "yes":
-                Logger.log("MAIN BOOT: Access Analytics Recovery Mode was activated.")
-                AccessAnalytics.analyticsRecoveryMode()
-            elif recoveryModeAction == "no":
-                print("MAIN: Recovery mode was not enabled. Access Boot is aborted.")
-                Logger.log("MAIN BOOT: Aborting boot due to Access Analytics environment prep failure. AA Response: {}".format(AAresponse))
-                sys.exit(1)
-            else:
-                print("MAIN: Invalid action provided. Access Boot is aborted.")
-                sys.exit(1)
-        elif AAresponse != "AA: Environment prep successful.":
-            print("MAIN: Unknown response when attempting to get Analytics to prep environment. Response: {}".format(AAresponse))
-            print()
-            print("MAIN: Would you like to enable Analytics Recovery Mode?")
-            recoveryModeActionTwo = input("Type 'yes' or 'no': ")
-            if recoveryModeActionTwo == "yes":
-                Logger.log("MAIN BOOT: Access Analytics Recovery Mode was activated.")
-                AccessAnalytics.analyticsRecoveryMode()
-            elif recoveryModeActionTwo == "no":
-                print("MAIN: Recovery mode was not enabled. Access Boot is aborted.")
-                Logger.log("MAIN BOOT: Aborting boot due to Access Analytics environment prep failure. AA Response: {}".format(AAresponse))
-                sys.exit(1)
-            else:
-                print("MAIN: Invalid action provided. Access Boot is aborted.")
-                sys.exit(1)
+    ver = Universal.getVersion()
+    if ver == "Version File Not Found":
+        print("MAIN LOAD ERROR: No system version file detected. Boot aborted.")
+        sys.exit(1)
+    
+    if os.environ.get("CLEANER_DISABLED", "False") != "True":
+        Universal.store["CleanerID"] = Universal.asyncProcessor.addJob(cleaner, trigger=Trigger('interval', hours=3))
+        print("MAIN: Cleaning agent started.")
+    
+    # Set up FireConn
+    if FireConn.checkPermissions():
+        response = FireConn.connect()
+        if response != True:
+            print("MAIN LOAD WARNING: FireConn failed to connect. Error: {}".format(response))
+    
+    # Set up Database Interface
+    response = DI.setup()
+    if response != True:
+        if isinstance(response, DIError):
+            print("MAIN LOAD ERROR: DIError in DI setup: {}".format(response))
+            sys.exit(1)
         else:
-            print(AAresponse)
-    else:
-        print("MAIN: AccessAnalytics is not enabled and will not be setup and run.")
-
-    # Port check
-    portIsValid = True
-    if 'RuntimePort' not in os.environ:
-        print("MAIN: RuntimePort environment variable is not set in .env file. Access cannot be booted without a valid port set. Please re-boot Access after setting RuntimePort.")
-        portIsValid = False
-    elif not os.environ['RuntimePort'].isdigit():
-        print("MAIN: RuntimePort environment variable has an invalid value. Port value must be an integer.")
-        portIsValid = False
+            print("MAIN LOAD ERROR: Unknown error in setting up DI: {}".format(response))
+            sys.exit(1)
+            
+    # Set up Analytics
+    if AccessAnalytics.permissionCheck():
+        response = AccessAnalytics.setupEnvironment()
+        print(response)
     
-    if not portIsValid:
-        Logger.log("MAIN BOOT: Aborting due to invalid/missing RuntimePort .env variable.")
-        sys.exit(1)
+    # Set up AFManager
+    res = AFManager.setup()
+    if not res:
+        raise Exception("MAIN LOAD ERROR: AFManager failed to set up.")
     
-
-    # Register all external routes
-
-    ## Identity Meta Services
-    from identityMeta import identityMetaBP
-    app.register_blueprint(identityMetaBP)
-
-    ## API
-    from api import apiBP
-    app.register_blueprint(apiBP)
-
-    ## Email OTP Service
-    from emailOTP import emailOTPBP
-    app.register_blueprint(emailOTPBP)
-
-    ## Portal Service
-    from portal import portalBP
-    app.register_blueprint(portalBP)
-
-    ## Assets
-    from assets import assetsBP
-    app.register_blueprint(assetsBP)
-        
-    print("All services are online; boot pre-processing and setup completed.")
+    # Set up Emailer
+    Emailer.checkContext()
+    
+    # Blueprint registrations
+    
+    ## Frontend
+    from frontend import frontendBP
+    app.register_blueprint(frontendBP)
+    
+    ## Identity API
+    from identity import identityBP
+    app.register_blueprint(identityBP)
+    
+    ## Directory API
+    from directory import directoryBP
+    app.register_blueprint(directoryBP, url_prefix='/directory')
+    
+    ## UserProfile API
+    from userProfile import userProfileBP
+    app.register_blueprint(userProfileBP, url_prefix="/profile")
+    
+    ## Sharing API
+    from sharing import sharingBP
+    app.register_blueprint(sharingBP, url_prefix="/sharing")
+    
+    if len(sys.argv) > 1 and sys.argv[1] == "r":
+        print(DI.save(None))
+    
+    ## Panel API
+    from panel import panelBP
+    app.register_blueprint(panelBP, url_prefix="/panel")
+    
     print()
-    print("Booting Access...")
-    print()
-
-    Logger.log("MAIN BOOT: System successfully booted.")
-    app.run(host='0.0.0.0', debug=False, port=int(os.environ['RuntimePort']))
+    print("MAIN: All services online. Booting Access 'v{}'...".format(Universal.version))
+    port = os.environ.get('RuntimePort', 8000)
+    app.run(host='0.0.0.0', port=port)
 
 if __name__ == "__main__":
-  bootFunction()
+    boot()

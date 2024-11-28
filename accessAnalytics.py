@@ -1,30 +1,26 @@
 import os, sys, json, random, subprocess, shutil, uuid, time
 import datetime
 from dotenv import load_dotenv
-from models import Logger
+from services import Logger
 load_dotenv()
 
 class AccessAnalytics:
     analyticsData = {}
-    # Metrics to calculate
-            ## 1) Emails - Object
-            ## 2) Requests - List
-            ## 3) FileUploads - Integer
-            ## 4) FileDeletions - Integer
-            ## 5) FileDownloads - Integer
-            ## 6) SignIns - Integer
-            ## 7) SignOuts - Integer
-            ## 8) POST Requests - Integer
+    dataFile = "analyticsData.json"
+    setup = False
 
     blankAnalyticsObject = {
-        "emails": {},
-        "requests": [],
+        "requests": 0,
+        "postRequests": 0,
         "fileUploads": 0,
         "fileDeletions": 0,
         "fileDownloads": 0,
+        "fileShares": 0,
+        "identityCreations": 0,
         "signIns": 0,
         "signOuts": 0,
-        "postRequests": 0
+        "identityDeletions": 0,
+        "emailsSent": 0
     }
 
     @staticmethod
@@ -51,27 +47,28 @@ class AccessAnalytics:
             return randomID
 
     @staticmethod
-    def prepEnvironmentForAnalytics():
+    def setupEnvironment():
         if not AccessAnalytics.permissionCheck():
             return "AAError: Access Analytics is not enabled and given permission to operate. Set AccessAnalyticsEnabled to True in the .env file to enable Analytics."
 
-        if not os.path.isfile(os.path.join(os.getcwd(), 'analyticsData.txt')):
-            with open('analyticsData.txt', 'w') as f:
+        if not os.path.isfile(os.path.join(os.getcwd(), AccessAnalytics.dataFile)):
+            with open(AccessAnalytics.dataFile, 'w') as f:
                 blankObject = AccessAnalytics.blankAnalyticsObject
                 json.dump(blankObject, f)
                 AccessAnalytics.analyticsData = blankObject
-            return "AA: Environment prep successful."
         else:
             ## Check if file data is damaged
             try:
-                fileData = json.load(open('analyticsData.txt', 'r'))
+                fileData = json.load(open(AccessAnalytics.dataFile, 'r'))
             except Exception as e:
                 return "AAError: Failed to load data in analytics file in JSON form. File might be damaged.\nError: " + str(e)
             for metric in [x for x in AccessAnalytics.blankAnalyticsObject]:
                 if not metric in fileData:
-                    return "AAError: analyticsData.txt file is damaged ('{}' metric is not present). Please delete the file and run environment prep again.".format(metric)
+                    return "AAError: analyticsData.json file is damaged ('{}' metric is not present). Please delete the file and run environment prep again.".format(metric)
             AccessAnalytics.analyticsData = fileData
-            return "AA: Environment prep successful."
+        
+        AccessAnalytics.setup = True
+        return "AA: Environment prep successful."
     
     @staticmethod
     def analyticsRecoveryMode():
@@ -89,18 +86,18 @@ class AccessAnalytics:
 
         ## File loading error check
         try:
-            fileData = json.load(open('analyticsData.txt', 'r'))
+            fileData = json.load(open(AccessAnalytics.dataFile, 'r'))
         except Exception as e:
             fileLoadingError = True
             fileLoadingCheck = e
         
 
         if fileLoadingError:
-            print("Issue identified: The system was unable to properly load the 'analyticsData.txt' file in JSON form. System Error Note: {}".format(fileLoadingCheck))
+            print("Issue identified: The system was unable to properly load the AccessAnalytics.dataFile file in JSON form. System Error Note: {}".format(fileLoadingCheck))
             print()
             print("""
             This can occur due to two things:
-            1) The file data in 'analyticsData.txt' was manually edited in a manner that caused the system's JSON engine to be unable to read the file data in JSON form.
+            1) The file data in AccessAnalytics.dataFile was manually edited in a manner that caused the system's JSON engine to be unable to read the file data in JSON form.
             2) The file has somehow corrupted, possibly due to multiple simultaneous read and write operations.
             """)
             print()
@@ -120,10 +117,10 @@ class AccessAnalytics:
                 time.sleep(3)
 
                 try:
-                    os.remove(os.path.join(os.getcwd(), 'analyticsData.txt'))
+                    os.remove(os.path.join(os.getcwd(), AccessAnalytics.dataFile))
 
                     # Re-write blank data
-                    with open('analyticsData.txt', 'w') as f:
+                    with open(AccessAnalytics.dataFile, 'w') as f:
                         blankObject = AccessAnalytics.blankAnalyticsObject
                         json.dump(blankObject, f)
                         AccessAnalytics.analyticsData = blankObject
@@ -153,15 +150,8 @@ class AccessAnalytics:
             if metric not in fileData:
                 invalidOrNotPresentMetrics.append(metric)
                 continue
-            if metric == "emails":
-                if not isinstance(fileData[metric], dict):
-                    invalidOrNotPresentMetrics.append(metric)
-            elif metric == "requests":
-                if not isinstance(fileData[metric], list):
-                    invalidOrNotPresentMetrics.append(metric)
-            else:
-                if not isinstance(fileData[metric], int):
-                    invalidOrNotPresentMetrics.append(metric)
+            if not isinstance(fileData[metric], int):
+                invalidOrNotPresentMetrics.append(metric)
 
         if invalidOrNotPresentMetrics == []:
             print()
@@ -207,16 +197,11 @@ class AccessAnalytics:
 
             ## Make updates to fileData
             for metric in invalidOrNotPresentMetrics:
-                if metric == "emails":
-                    fileData[metric] = {}
-                elif metric == "requests":
-                    fileData[metric] = []
-                else:
-                    fileData[metric] = 0
+                fileData[metric] = 0
             
             ## Save updates
             try:
-                with open('analyticsData.txt', 'w') as f:
+                with open(AccessAnalytics.dataFile, 'w') as f:
                     json.dump(fileData, f)
                 
                 AccessAnalytics.analyticsData = fileData
@@ -237,251 +222,168 @@ class AccessAnalytics:
             
         sys.exit(1)
 
-
-
-
     @staticmethod
-    def loadDataFromFile(fileObject):
+    def loadFromFile():
         if not AccessAnalytics.permissionCheck():
             return "AAError: Access Analytics is not enabled and given permission to operate. Set AccessAnalyticsEnabled to True in the .env file to enable Analytics."
 
         try:
-            AccessAnalytics.analyticsData = json.load(fileObject)
+            with open(AccessAnalytics.dataFile, 'r') as f:
+                AccessAnalytics.analyticsData = json.load(f)
         except Exception as e:
-            return "AAError: Failed to load data in analytics file in JSON form. File might be damaged.\nError: " + str(e)
+            return "AAError: Failed to load data in analytics file in JSON form. Error: " + str(e)
         return True
 
     @staticmethod
-    def saveDataToFile(fileObject):
+    def saveToFile():
         if not AccessAnalytics.permissionCheck():
-            # return "AAError: Access Analytics is not enabled and given permission to operate. Set AccessAnalyticsEnabled to True in the .env file to enable Analytics."
             return False
         
         try:
-            json.dump(AccessAnalytics.analyticsData, fileObject)
+            with open(AccessAnalytics.dataFile, 'w') as f:
+                json.dump(AccessAnalytics.analyticsData, f)
         except Exception as e:
-            return "AAError: Failed to save data in analytics file in JSON form. File might be damaged.\nError: " + str(e)
+            return "AAError: Failed to save data in analytics file in JSON form. Error: " + str(e)
         return True
 
     @staticmethod
-    def newEmail(destEmail, text, subject, usernameAttachedToEmail="Not provided."):
-        if subject not in [
-            'Access Identity Login Alert', 
-            'Access Folder Registered!', 
-            'Access Portal OTP', 
-            'File Deletion | Access Portal', 
-            'File Uploaded | Access Portal',
-            'Confirm Email Update | Access Portal',
-            'Password Updated | Access Portal',
-            'Password Reset Key | Access Portal'
-            ]:
-            return "AAError: Subject is not valid."
+    def newRequest(type: str="GET"):
+        if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
+            return False
         
-        type = ''
-        if subject == "Access Identity Login Alert":
-            type = 'loginAlert'
-        elif subject == 'Access Folder Registered!':
-            type = 'folderRegistered'
-        elif subject == 'Access Portal OTP':
-            type = 'otp'
-        elif subject == 'File Deletion | Access Portal':
-            type = 'fileDeletionNotif'
-        elif subject == 'File Uploaded | Access Portal':
-            type = 'fileUploadNotif'
-        elif subject == 'Confirm Email Update | Access Portal':
-            type = 'emailUpdateConfirmation'
-        elif subject == 'Password Updated | Access Portal':
-            type = 'passwordUpdated'
-        elif subject == 'Password Reset Key | Access Portal':
-            type = 'passwordResetKey'
+        if 'requests' not in AccessAnalytics.analyticsData:
+            AccessAnalytics.analyticsData['requests'] = 0
+        AccessAnalytics.analyticsData['requests'] += 1
         
-        emailID = AccessAnalytics.generateRandomID()
-
-        try:
-            if 'emails' not in AccessAnalytics.analyticsData:
-                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
-            AccessAnalytics.analyticsData['emails'][emailID] = {
-                'destEmail': destEmail,
-                'text': text,
-                'subject': subject,
-                'type': type,
-                'username': usernameAttachedToEmail
-            }
-            response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
-            if isinstance(response, str):
-                if response.startswith("AAError:"):
-                    return response
-        except Exception as e:
-            return "AAError: Failed to save email data to analytics data file. Error: {}".format(e)
-        
-        return True
-    
-    @staticmethod
-    def newRequest(path):
-        if not path.startswith('/'):
-            return "AAError: Given path does not start with a forward-slash."
-        try:
-            if 'emails' not in AccessAnalytics.analyticsData:
-                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
-            AccessAnalytics.analyticsData['requests'].append(path)
-        except Exception as e:
-            return "AAError: Failed to append path to memory-saved analytics data. Error: {}".format(e)
-
-        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
-        if isinstance(response, str):
-            if response.startswith("AAError:"):
-                return response
-
-        return True
-
-    @staticmethod
-    def newFileUpload():
-        try:
-            if 'emails' not in AccessAnalytics.analyticsData:
-                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
-            AccessAnalytics.analyticsData['fileUploads'] += 1
-        except Exception as e:
-            return "AAError: Failed to increment file uploads metric. Error: {}".format(e)
-
-        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
-        if isinstance(response, str):
-            if response.startswith("AAError:"):
-                return response
-        
-        return True
-
-    @staticmethod
-    def newFileDeletion():
-        try:
-            if 'emails' not in AccessAnalytics.analyticsData:
-                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
-            AccessAnalytics.analyticsData['fileDeletions'] += 1
-        except Exception as e:
-            return "AAError: Failed to increment file deletions metric. Error: {}".format(e)
-
-        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
-        if isinstance(response, str):
-            if response.startswith("AAError:"):
-                return response
-        
-        return True
-
-    @staticmethod
-    def newFileDownload():
-        try:
-            if 'emails' not in AccessAnalytics.analyticsData:
-                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
-            AccessAnalytics.analyticsData['fileDownloads'] += 1
-        except Exception as e:
-            return "AAError: Failed to increment file downloads metric. Error: {}".format(e)
-
-        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
-        if isinstance(response, str):
-            if response.startswith("AAError:"):
-                return response
-        
-        return True
-
-    @staticmethod
-    def newSignin():
-        try:
-            if 'emails' not in AccessAnalytics.analyticsData:
-                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
-            AccessAnalytics.analyticsData['signIns'] += 1
-        except Exception as e:
-            return "AAError: Failed to increment sign ins metric. Error: {}".format(e)
-
-        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
-        if isinstance(response, str):
-            if response.startswith("AAError:"):
-                return response
-        
-        return True
-
-    @staticmethod
-    def newSignout():
-        try:
-            if 'emails' not in AccessAnalytics.analyticsData:
-                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
-            AccessAnalytics.analyticsData['signOuts'] += 1
-        except Exception as e:
-            return "AAError: Failed to increment sign outs metric. Error: {}".format(e)
-
-        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
-        if isinstance(response, str):
-            if response.startswith("AAError:"):
-                return response
-        
-        return True
-    
-    @staticmethod
-    def newPOSTRequest():
-        try:
-            if 'emails' not in AccessAnalytics.analyticsData:
-                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
+        if type == "POST":
+            if 'postRequests' not in AccessAnalytics.analyticsData:
+                AccessAnalytics.analyticsData['postRequests'] = 0
             AccessAnalytics.analyticsData['postRequests'] += 1
-        except Exception as e:
-            return "AAError: Failed to increment post requests metric. Error: {}".format(e)
 
-        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
-        if isinstance(response, str):
-            if response.startswith("AAError:"):
-                return response
+        return AccessAnalytics.saveToFile()
+
+    @staticmethod
+    def newFileUpload(count=1):
+        if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
+            return False
         
-        return True
+        if 'fileUploads' not in AccessAnalytics.analyticsData:
+            AccessAnalytics.analyticsData['fileUploads'] = 0
+        AccessAnalytics.analyticsData['fileUploads'] += count
+
+        return AccessAnalytics.saveToFile()
+
+    @staticmethod
+    def newFileDeletion(count=1):
+        if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
+            return False
+        
+        if 'fileDeletions' not in AccessAnalytics.analyticsData:
+            AccessAnalytics.analyticsData['fileDeletions'] = 0
+        AccessAnalytics.analyticsData['fileDeletions'] += count
+
+        return AccessAnalytics.saveToFile()
+
+    @staticmethod
+    def newFileDownload(count=1):
+        if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
+            return False
+        
+        if 'fileDownloads' not in AccessAnalytics.analyticsData:
+            AccessAnalytics.analyticsData['fileDownloads'] = 0
+        AccessAnalytics.analyticsData['fileDownloads'] += count
+
+        return AccessAnalytics.saveToFile()
     
     @staticmethod
-    def newIdentityDeletion():
-        try:
-            if 'emails' not in AccessAnalytics.analyticsData:
-                return "AAError: Likely due to insufficient permissions, a copy of the analytics data was not loaded onto memory. Try enabling AccessAnalytics in the .env file. (emails parameter not found in memory location data)"
-            ## Backwards compatibility code
-            if 'identityDeletions' not in AccessAnalytics.analyticsData:
-                AccessAnalytics.analyticsData['identityDeletions'] = 0
-            
-            AccessAnalytics.analyticsData['identityDeletions'] += 1
-        except Exception as e:
-            return "AAError: Failed to increment identity deletions metric. Error: {}".format(e)
+    def newFileShare(count=1):
+        if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
+            return False
         
-        response = AccessAnalytics.saveDataToFile(open('analyticsData.txt', 'w'))
-        if isinstance(response, str):
-            if response.startswith("AAError:"):
-                return response
-        elif response == False:
-            return "AAError: Access Analytics is not given permission to collect data."
+        if 'fileShares' not in AccessAnalytics.analyticsData:
+            AccessAnalytics.analyticsData['fileShares'] = 0
+        AccessAnalytics.analyticsData['fileShares'] += count
+        
+        return AccessAnalytics.saveToFile()
+    
+    @staticmethod
+    def newIdentityCreation(count=1):
+        if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
+            return False
+        
+        if 'identityCreations' not in AccessAnalytics.analyticsData:
+            AccessAnalytics.analyticsData['identityCreations'] = 0
+        AccessAnalytics.analyticsData['identityCreations'] += count
+        
+        return AccessAnalytics.saveToFile()
 
-        return True
+    @staticmethod
+    def newSignin(count=1):
+        if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
+            return False
+        
+        if 'signIns' not in AccessAnalytics.analyticsData:
+            AccessAnalytics.analyticsData['signIns'] = 0
+        AccessAnalytics.analyticsData['signIns'] += count
+
+        return AccessAnalytics.saveToFile()
+
+    @staticmethod
+    def newSignout(count=1):
+        if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
+            return False
+        
+        if 'signOuts' not in AccessAnalytics.analyticsData:
+            AccessAnalytics.analyticsData['signOuts'] = 0
+        AccessAnalytics.analyticsData['signOuts'] += count
+
+        return AccessAnalytics.saveToFile()
+    
+    @staticmethod
+    def newIdentityDeletion(count=1):
+        if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
+            return False
+        
+        if 'identityDeletions' not in AccessAnalytics.analyticsData:
+            AccessAnalytics.analyticsData['identityDeletions'] = 0
+        AccessAnalytics.analyticsData['identityDeletions'] += count
+        
+        return AccessAnalytics.saveToFile()
+    
+    @staticmethod
+    def newEmailSent(count=1):
+        if not AccessAnalytics.permissionCheck() or not AccessAnalytics.setup:
+            return False
+        
+        if 'emailsSent' not in AccessAnalytics.analyticsData:
+            AccessAnalytics.analyticsData['emailsSent'] = 0
+        AccessAnalytics.analyticsData['emailsSent'] += count
+        
+        return AccessAnalytics.saveToFile()
     
     @staticmethod
     def crunchData():
         ### Statistics to calculate:
         #### 1) Number of Requests
-        #### 2) Number of Portal Requests
-        #### 3) Number of File Uploads
-        #### 4) Number of File Deletions
-        #### 5) Number of File Downloads
-        #### 6) Number of Sign Ins
-        #### 7) Number of Sign Outs
-        #### 8) Number of POST Requests
-        #### 9) Number of GET Requests
-        #### 10) Number of API Requests
-        #### 11) Number of Assets Requests
-        #### 12) Number of unique auth tokens
-        #### 13) Number of unique Certification Identification Numbers
-        #### EMAILS BREAKDOWN:
-        ##### 14) Number of emails sent
-        ##### 15) Number of emails of each type of email
-        ##### 16) Most frequent email recipient
-        #### 17) Number of identities deleted
+        #### 2) Number of GET Requests
+        #### 3) Number of POST Requests
+        #### 4) Number of File Uploads
+        #### 5) Number of File Deletions
+        #### 6) Number of File Downloads
+        #### 7) Number of File Shares
+        #### 8) Number of Identity Creations
+        #### 9) Number of Sign Ins
+        #### 10) Number of Sign Outs
+        #### 11) Number of Identity Deletions
+        #### 12) Number of Emails Sent
 
         if not AccessAnalytics.permissionCheck():
             print("AAError: Insufficient permissions to access analytics data. Try enabling AccessAnalytics in the .env file.")
             return "AAError: Insufficient permissions to access analytics data."
 
         print("Starting Analysis of data...")
-        time.sleep(2)
 
-        response = AccessAnalytics.prepEnvironmentForAnalytics()
+        response = AccessAnalytics.setupEnvironment()
         if isinstance(response, str):
             if response.startswith("AAError:"):
                 print(response)
@@ -493,126 +395,49 @@ class AccessAnalytics:
         loadedData = AccessAnalytics.analyticsData
 
         print()
-        print("Analysing requests data...")
+        print("Analysing...")
 
         # Metric 1
-        numRequests = len(loadedData["requests"])
-
-        # Metric 2
-        numPortalRequests = 0
-        for request in loadedData["requests"]:
-            if request.startswith("/portal"):
-                numPortalRequests += 1
+        numRequests = loadedData["requests"]
         
-        print("Analysing portal operations...")
-
-        # Metric 3
-        numFileUploads = loadedData["fileUploads"]
+        # Metrics 2 and 3
+        numPOSTRequests = loadedData["postRequests"]
+        numGETRequests = loadedData["requests"] - numPOSTRequests
 
         # Metric 4
-        numFileDeletions = loadedData["fileDeletions"]
+        numFileUploads = loadedData["fileUploads"]
 
         # Metric 5
-        numFileDownloads = loadedData["fileDownloads"]
+        numFileDeletions = loadedData["fileDeletions"]
 
         # Metric 6
-        numSignIns = loadedData["signIns"]
-
+        numFileDownloads = loadedData["fileDownloads"]
+        
         # Metric 7
-        numSignOuts = loadedData["signOuts"]
-
+        numFileShares = 0
+        if "fileShares" in loadedData:
+            numFileShares = loadedData["fileShares"]
+        
         # Metric 8
-        numPOSTRequests = loadedData["postRequests"]
+        numIdentityCreations = 0
+        if "identityCreations" in loadedData:
+            numIdentityCreations = loadedData["identityCreations"]
 
         # Metric 9
-        numGETRequests = len(loadedData["requests"]) - numPOSTRequests
-        
-        print("Analysing complex requests...")
+        numSignIns = loadedData["signIns"]
 
         # Metric 10
-        numAPIRequests = 0
-        for request in loadedData["requests"]:
-            if request.startswith("/api"):
-                numAPIRequests += 1
-        
+        numSignOuts = loadedData["signOuts"]
+
         # Metric 11
-        numAssetsRequests = 0
-        for request in loadedData["requests"]:
-            if request.startswith("/assets"):
-                numAssetsRequests += 1
-        
-        # Metric 12
-        numUniqueAuthTokens = 0
-        authTokens = []
-        for request in loadedData["requests"]:
-            if request.startswith("/portal/session"):
-                path = request.split('/')
-                path.pop(0)
-                authToken = path[3]
-                if authToken not in authTokens:
-                    authTokens.append(authToken)
-        numUniqueAuthTokens = len(authTokens)
-        
-        print("Analysing credentials production and utilisation...")
-
-        # Metric 13
-        numUniqueCertificationIdentificationNumbers = 0
-        uniqueCertIDs = []
-        for request in loadedData["requests"]:
-            if request.startswith("/portal/session"):
-                path = request.split('/')
-                path.pop(0)
-                certID = path[2]
-                if len(certID) != 20:
-                    continue
-                if certID not in uniqueCertIDs:
-                    uniqueCertIDs.append(certID)
-        numUniqueCertificationIdentificationNumbers = len(uniqueCertIDs)
-
-        print("Analysing electronic mails...")
-
-        # Metric 14
-        numEmailsSent = len(loadedData["emails"])
-
-        # Metric 15
-        numEmailsForEachType = {
-            "loginAlert": 0,
-            "folderRegistered": 0,
-            "otp": 0,
-            "fileDeletionNotif": 0,
-            "fileUploadNotif": 0,
-            "emailUpdateConfirmation": 0,
-            "passwordUpdated": 0,
-            "passwordResetKey": 0
-        }
-
-        for emailID in loadedData["emails"]:
-            numEmailsForEachType[loadedData["emails"][emailID]["type"]] += 1
-
-        # Metric 16
-        recipientAndNumberOfRespectiveEmailsSentToThem = {}
-
-        for emailID in loadedData["emails"]:
-            if loadedData["emails"][emailID]["destEmail"] not in recipientAndNumberOfRespectiveEmailsSentToThem:
-                recipientAndNumberOfRespectiveEmailsSentToThem[loadedData["emails"][emailID]["destEmail"]] = 0
-            
-            recipientAndNumberOfRespectiveEmailsSentToThem[loadedData["emails"][emailID]["destEmail"]] += 1
-
-        mostFreqRecipient = ""
-        numEmailsSentToFreqRecipient = 0
-
-        for recipient in recipientAndNumberOfRespectiveEmailsSentToThem:
-            if recipientAndNumberOfRespectiveEmailsSentToThem[recipient] > numEmailsSentToFreqRecipient:
-                mostFreqRecipient = recipient
-                numEmailsSentToFreqRecipient = recipientAndNumberOfRespectiveEmailsSentToThem[recipient]
-
-        # Metric 17
-        print("Calculating other metrics...")
-
         numIdentityDeletions = 0
-
         if "identityDeletions" in loadedData:
             numIdentityDeletions = loadedData["identityDeletions"]
+        
+        # Metric 12
+        numEmailsSent = 0
+        if "emailsSent" in loadedData:
+            numEmailsSent = loadedData["emailsSent"]
         
         print()
         print("Collating report...")
@@ -623,89 +448,49 @@ class AccessAnalytics:
 
 This report was automatically generated based on the data collected by the Access Analytics Service which was given permissions to collect said data in the .env file.
 
-There are 5 sections to this report, namely:
-
-    1) Requests Analysis - A breakdown of all the requests sent to the Access System
-    2) Portal Requests Analysis - A breakdown of all requests that relate to Access Portal operations such as file uploads, sign ins and more.
-    3) Credentials Analysis - A breakdown of the certificate identification numbers and auth tokens in the requests.
-    4) Emails Analysis - A breakdown of all the emails sent out to recipients by the Access System.
-    5) Other Metrics - Metrics that do not fall under any specific category and are typically identity related operations.
-
 REQUESTS ANALYSIS
 -----
 
 Total Requests: {}
-Portal Requests: {}
-POST Requests: {}
 GET Requests: {}
-API Requests: {}
-Assets Requests: {}
+POST Requests: {}
 
-PORTAL REQUESTS ANALYSIS
+FILE ACCESS ANALYSIS
 -----
 
 File Uploads: {}
 File Deletions: {}
 File Downloads: {}
+File Shares: {}
+
+ACCOUNT ANALYSIS
+-----
+
+Identity Creations: {}
 Sign Ins: {}
 Sign Outs: {}
+Identity Deletions: {}
+Emails Sent: {}
 
-CREDENTIALS ANALYSIS
------
+----
 
-Unique Auth Tokens: {}
-Unique Certificate Identification Numbers: {}
-
-EMAILS ANALYSIS
------
-
-Total Emails Sent: {}
-Total Login Alert Emails: {}
-Total Folder Registered Emails: {}
-Total OTP Code Emails: {}
-Total File Deletion Emails: {}
-Total File Upload Emails: {}
-Total Email Update Confirmation Emails: {}
-Total Password Updated Notification Emails: {}
-Total Password Reset Key Emails: {}
-Most Frequent Email Recipient: {}, Number of Emails Most Frequent Recipient Recived: {}
-
-OTHER METRICS
------
-
-Total Access Identity Deletions: {}
-
---------
-That is the end of this automatically generated Access Analytics Report. This report was generated on {}
+Report generated: {}
 
 END OF REPORT
 """.format(
     numRequests,
-    numPortalRequests,
-    numPOSTRequests,
     numGETRequests,
-    numAPIRequests,
-    numAssetsRequests,
+    numPOSTRequests,
     numFileUploads,
     numFileDeletions,
     numFileDownloads,
+    numFileShares,
+    numIdentityCreations,
     numSignIns,
     numSignOuts,
-    numUniqueAuthTokens,
-    numUniqueCertificationIdentificationNumbers,
-    numEmailsSent,
-    numEmailsForEachType["loginAlert"],
-    numEmailsForEachType["folderRegistered"],
-    numEmailsForEachType["otp"],
-    numEmailsForEachType["fileDeletionNotif"],
-    numEmailsForEachType["fileUploadNotif"],
-    numEmailsForEachType["emailUpdateConfirmation"],
-    numEmailsForEachType["passwordUpdated"],
-    numEmailsForEachType["passwordResetKey"],
-    mostFreqRecipient,
-    numEmailsSentToFreqRecipient,
     numIdentityDeletions,
-    datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' UTC' + time.strftime('%z')
+    numEmailsSent,
+    datetime.datetime.now(datetime.timezone.utc).isoformat()
 )
 
         print(reportText)
@@ -729,7 +514,7 @@ END OF REPORT
                 print("AA: Report could not be saved. Aborting save...")
                 return
             
-            rel_path = "analyticsReports/aa-report-{}-{}.txt".format(datetime.datetime.now().strftime("%Y%m%dI%H%M%S"), AccessAnalytics.generateRandomID(customLength=7))
+            rel_path = "analyticsReports/report-{}-{}.txt".format(datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dI%H%M%S"), AccessAnalytics.generateRandomID(customLength=7))
 
             try:
                 with open(rel_path, 'w') as f:
@@ -753,16 +538,13 @@ END OF REPORT
 
     @staticmethod
     def clearDataFile():
-        if not os.path.isfile(os.path.join(os.getcwd(), 'analyticsData.txt')):
-            return "AAError: Analytics Data file does not exist."
+        if not os.path.isfile(os.path.join(os.getcwd(), AccessAnalytics.dataFile)):
+            return "AAError: Analytics data file does not exist."
         
         try:
-            with open('analyticsData.txt', 'w') as f:
+            with open(AccessAnalytics.dataFile, 'w') as f:
                 json.dump(AccessAnalytics.blankAnalyticsObject, f)
         except Exception as e:
             return "AAError: Error in clearing the data file; Error: {}".format(e)
         
         return True
-
-    
-

@@ -1,5 +1,5 @@
 import os, shutil, sys, json, time, requests, subprocess
-from models import Universal
+from services import Universal
 
 # Check for updates
 print("Checking for updates...")
@@ -62,7 +62,7 @@ print("Deleting all irrelevant files...")
 
 # Delete all files and folders in the current directory
 dataFilesList = [
-    'analyticsData.txt', 
+    'analyticsData.json', 
     'certificates.txt', 
     'accessIdentities.txt', 
     'validOTPCodes.txt', 

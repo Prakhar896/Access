@@ -1,206 +1,547 @@
-import json, os, shutil, subprocess, random, datetime, copy, base64
-from passlib.hash import sha256_crypt as sha
-from dotenv import load_dotenv
-load_dotenv()
+from uuid import uuid4
+from typing import List, Dict, Any
+from database import *
+from services import Universal
+from utils import Ref
 
-fileUploadLimit = 3
-if 'FileUploadsLimit' in os.environ:
-    if os.environ['FileUploadsLimit'].isdigit():
-        fileUploadLimit = int(os.environ['FileUploadsLimit'])
-    else:
-        print("MODELS: Could not set FileUploadsLimit. System will fall back on default limit of 3 file uploads.")
-        print()
-else:
-    print("MODELS WARNING: FileUploadsLimit environment variable is not set in .env file. System will fall back on default limit of 3 file uploads.")
-    print()
-
-def fileContent(fileName):
-    with open(fileName, 'r') as f:
-        f_content = f.read()
-        return f_content
-
-def generateAuthToken():
-    letters_lst = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-    authTokenString = ''
-    while len(authTokenString) < 10:
-        authTokenString += random.choice(letters_lst)
-    return authTokenString
-
-def obtainTargetIdentity(email, accessIdentities):
-    targetIdentity = {}
-    for username in accessIdentities:
-        if accessIdentities[username]['email'] == email:
-            targetIdentity = copy.deepcopy(accessIdentities[username])
-            targetIdentity["username"] = username
-    return targetIdentity
-
-def expireAuthTokens(accessIdentities):
-    for username in accessIdentities:
-        if (datetime.datetime.now() - datetime.datetime.strptime(accessIdentities[username]['last-login-date'], Universal.systemWideStringDateFormat)).total_seconds() >= 10800:
-            try:
-                if 'loggedInAuthToken' in accessIdentities[username]:
-                    del accessIdentities[username]['loggedInAuthToken']
-                    print("Models: Expired auth token for username {}".format(username))
-            except Exception as e:
-                print("Models: Failed to expire auth token. {}".format(e))
-    return accessIdentities
-
-class Encryption:
-    @staticmethod
-    def encodeToB64(inputString):
-        hash_bytes = inputString.encode("ascii")
-        b64_bytes = base64.b64encode(hash_bytes)
-        b64_string = b64_bytes.decode("ascii")
-        return b64_string
+class Identity(DIRepresentable):
+    def __init__(self, username: str, email: str, password: str, lastLogin: str, authToken: str, emailVerification: 'EmailVerification'=None, created: str=None, resetKey: str=None, resetDispatch: str=None, activeUploads: list[str]=[], auditLogs: 'Dict[str, AuditLog]'={}, files: 'Dict[str, File]'={}, id: str=None) -> None:
+        if id == None:
+            id = uuid4().hex
+        if emailVerification == None:
+            emailVerification = EmailVerification(id)
+        if created == None:
+            created = Universal.utcNowString()
+        
+        self.id = id
+        self.username = username
+        self.email = email
+        self.password = password
+        self.lastLogin = lastLogin
+        self.authToken = authToken
+        self.emailVerification = emailVerification
+        self.created = created
+        self.resetKey = resetKey
+        self.resetDispatch = resetDispatch
+        self.activeUploads = activeUploads
+        self.auditLogs = auditLogs
+        self.files = files
+        self.originRef = Identity.ref(id)
+        
+        self.auditLogsLoaded = False
+        self.filesLoaded = False
         
     @staticmethod
-    def decodeFromB64(encodedHash):
-        b64_bytes = encodedHash.encode("ascii")
-        hash_bytes = base64.b64decode(b64_bytes)
-        hash_string = hash_bytes.decode("ascii")
-        return hash_string
-    
-    @staticmethod
-    def isBase64(encodedHash):
-        try:
-            hashBytes = encodedHash.encode("ascii")
-            return base64.b64encode(base64.b64decode(hashBytes)) == hashBytes
-        except Exception:
-            return False
-
-    @staticmethod
-    def encodeToSHA256(string):
-        return sha.hash(string)
-    
-    @staticmethod
-    def verifySHA256(inputString, hash):
-        return sha.verify(inputString, hash)
-    
-    @staticmethod
-    def convertBase64ToSHA(base64Hash):
-        return Encryption.encodeToSHA256(Encryption.decodeFromB64(base64Hash))
-
-class Universal:
-  systemWideStringDateFormat = '%Y-%m-%d %H:%M:%S'
-  version = None
-
-  @staticmethod
-  def getVersion():
-    if not os.path.isfile(os.path.join(os.getcwd(), 'version.txt')):
-        return "Version File Not Found"
-    else:
-        with open('version.txt', 'r') as f:
-            fileData = f.read()
-            Universal.version = fileData
-            return fileData
-
-class Logger:
-    @staticmethod
-    def checkPermission():
-        if "LoggingEnabled" in os.environ and os.environ["LoggingEnabled"] == 'True':
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def setup():
-        if Logger.checkPermission():
-            try:
-                if not os.path.exists(os.path.join(os.getcwd(), "logs.txt")):
-                    with open("logs.txt", "w") as f:
-                        f.write("{}UTC {}\n".format(datetime.datetime.now().utcnow().strftime(Universal.systemWideStringDateFormat), "LOGGER: Logger database file setup complete."))
-            except Exception as e:
-                print("LOGGER SETUP ERROR: Failed to setup logs.txt database file. Setup permissions have been granted. Error: {}".format(e))
-
-        return
-
-    @staticmethod
-    def log(message):
-        if Logger.checkPermission():
-            try:
-                with open("logs.txt", "a") as f:
-                    f.write("{}UTC {}\n".format(datetime.datetime.now().utcnow().strftime(Universal.systemWideStringDateFormat), message))
-            except Exception as e:
-                print("LOGGER LOG ERROR: Failed to log message. Error: {}".format(e))
-            
-        return
-        
-    @staticmethod
-    def destroyAll():
-        try:
-            if os.path.exists(os.path.join(os.getcwd(), "logs.txt")):
-                os.remove("logs.txt")
-        except Exception as e:
-            print("LOGGER DESTROYALL ERROR: Failed to destroy logs.txt database file. Error: {}".format(e))
-
-    @staticmethod
-    def readAll():
-        if not Logger.checkPermission():
-            return "ERROR: Logging-related services do not have permission to operate."
-        try:
-            if os.path.exists(os.path.join(os.getcwd(), "logs.txt")):
-                with open("logs.txt", "r") as f:
-                    logs = f.readlines()
-                    for logIndex in range(len(logs)):
-                        logs[logIndex] = logs[logIndex].replace("\n", "")
-                    return logs
-            else:
-                return []
-        except Exception as e:
-            print("LOGGER READALL ERROR: Failed to check and read logs.txt database file. Error: {}".format(e))
-            return "ERROR: Failed to check and read logs.txt database file. Error: {}".format(e)
-        
-    @staticmethod
-    def manageLogs():
-        permission = Logger.checkPermission()
-        if not permission:
-            print("LOGGER: Logging-related services do not have permission to operate. Set LoggingEnabled to True in .env file to enable logging.")
-            return
-        
-        print("LOGGER: Welcome to the Logging Management Console.")
-        while True:
-            print("""
-Commands:
-    read <number of lines, e.g 50 (optional)>: Reads the last <number of lines> of logs. If no number is specified, all logs will be displayed.
-    destroy: Destroys all logs.
-    exit: Exit the Logging Management Console.
-""")
-            
-            userChoice = input("Enter command: ")
-            userChoice = userChoice.lower()
-            while not userChoice.startswith("read") and (userChoice != "destroy") and (userChoice != "exit"):
-                userChoice = input("Invalid command. Enter command: ")
-                userChoice = userChoice.lower()
-            
-            if userChoice.startswith("read"):
-                allLogs = Logger.readAll()
-
-                userChoice = userChoice.split(" ")
-                logCount = 0
-                if len(userChoice) != 1:
-                    try:
-                        logCount = int(userChoice[1])
-                        if logCount > len(allLogs):
-                            logCount = len(allLogs)
-                        elif logCount <= 0:
-                            raise Exception("Invalid log count. Must be a positive integer above 0 lower than or equal to the total number of logs.")
-                    except Exception as e:
-                        print("LOGGER: Failed to read logs. Error: {}".format(e))
-                        continue
+    def rawLoad(data: dict, loadAuditLogs=False, loadFiles=False) -> 'Identity':
+        requiredParams = ['username', 'email', 'password', 'lastLogin', 'authToken', 'emailVerification', 'created', 'resetKey', 'resetDispatch', "activeUploads", 'id']
+        for reqParam in requiredParams:
+            if reqParam not in data:
+                if reqParam in ['emailVerification']:
+                    data[reqParam] = {}
+                elif reqParam in ['activeUploads']:
+                    data[reqParam] = []
                 else:
-                    logCount = len(allLogs)
+                    data[reqParam] = None
+        
+        emailVerification = data['emailVerification']
+        if isinstance(emailVerification, dict):
+            emailVerification = EmailVerification.rawLoad(data['emailVerification'], data['id'])
+        else:
+            emailVerification = EmailVerification(data['id'])
+        
+        if not isinstance(data['activeUploads'], list):
+            Logger.log("IDENTITY RAWLOAD WARNING: Active uploads data is not a list, defaulting to empty list; data: {}".format(data['activeUploads']))
+            data['activeUploads'] = []
+        
+        account = Identity(
+            username=data['username'],
+            email=data['email'],
+            password=data['password'],
+            lastLogin=data['lastLogin'],
+            authToken=data['authToken'],
+            emailVerification=emailVerification,
+            created=data['created'],
+            resetKey=data['resetKey'],
+            resetDispatch=data['resetDispatch'],
+            activeUploads=data['activeUploads'],
+            id=data['id']
+        )
+        
+        if loadAuditLogs:
+            account.getAuditLogs()
+        if loadFiles:
+            account.getFiles()
+        
+        return account
+    
+    @staticmethod
+    def load(id=None, username=None, email=None, authToken=None, withAuditLogs=False, withFiles=False) -> 'Identity | List[Identity] | None':
+        if id == None:
+            data = DI.load(Ref("accounts"))
+            if data == None:
+                return None
+            if isinstance(data, DIError):
+                raise Exception("IDENTITY LOAD ERROR: DIError occurred: {}".format(data))
+            if not isinstance(data, dict):
+                raise Exception("IDENTITY LOAD ERROR: Failed to load dictionary accounts data; response: {}".format(data))
 
-                    targetLogs = allLogs[-logCount:]
-                    print()
-                    print("Displaying {} log entries:".format(logCount))
-                    print()
-                    for log in targetLogs:
-                        print("\t{}".format(log))
-            elif userChoice == "destroy":
-                Logger.destroyAll()
-                print("LOGGER: All logs destroyed.")
-            elif userChoice == "exit":
-                print("LOGGER: Exiting Logging Management Console...")
-                break
+            identities: Dict[str, Identity] = {}
+            for id in data:
+                if isinstance(data[id], dict):
+                    identities[id] = Identity.rawLoad(data[id], loadAuditLogs=withAuditLogs, loadFiles=withFiles)
+            
+            if username == None and email == None and authToken == None:
+                return list(identities.values())
+            
+            for identityID in identities:
+                targetIdentity = identities[identityID]
+                if username != None and targetIdentity.username == username:
+                    return targetIdentity
+                elif email != None and targetIdentity.email == email:
+                    return targetIdentity
+                elif authToken != None and targetIdentity.authToken == authToken:
+                    return targetIdentity
+            
+            return None
+        else:
+            data = DI.load(Identity.ref(id))
+            if isinstance(data, DIError):
+                raise Exception("IDENTITY LOAD ERROR: DIError occurred: {}".format(data))
+            if data == None:
+                return None
+            if not isinstance(data, dict):
+                raise Exception("IDENTITY LOAD ERROR: Unexpected DI load response format; response: {}".format(data))
+            
+            return Identity.rawLoad(data, loadAuditLogs=withAuditLogs, loadFiles=withFiles)
+        
+    def represent(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "username": self.username,
+            "email": self.email,
+            "password": self.password,
+            "lastLogin": self.lastLogin,
+            "authToken": self.authToken,
+            "emailVerification": self.emailVerification.represent(),
+            "created": self.created,
+            "resetKey": self.resetKey,
+            "resetDispatch": self.resetDispatch,
+            "activeUploads": self.activeUploads
+        }
+        
+    def save(self):
+        convertedData = self.represent()
+        
+        return DI.save(convertedData, self.originRef)
+    
+    def getAuditLogs(self):
+        accountLogs = AuditLog.load(accountID=self.id)
+        if accountLogs == None:
+            self.auditLogs = {}
+            self.auditLogsLoaded = True
+            return True
+        if not isinstance(accountLogs, list):
+            raise Exception("IDENTITY GETAUDITLOGS ERROR: Unexpected response format; response: {}".format(accountLogs))
 
-        return
+        self.auditLogs = {log.id: log for log in accountLogs}
+        self.auditLogsLoaded = True
+        return True
+    
+    def getFiles(self):
+        accountFiles = File.load(accountID=self.id)
+        if accountFiles == None:
+            self.files = {}
+            self.filesLoaded = True
+            return True
+        if not isinstance(accountFiles, list):
+            raise Exception("IDENTITY GETFILES ERROR: Unexpected response format; response: {}".format(accountFiles))
+        
+        self.files = {file.id: file for file in accountFiles}
+        self.filesLoaded = True
+        return True
+    
+    def deleteAuditLog(self, logID):
+        '''Deletes an audit log from the account's audit logs.'''
+        if logID not in self.auditLogs:
+            raise Exception("IDENTITY DELETEAUDITLOG ERROR: Log ID '{}' not found in account's audit logs.".format(logID))
+        
+        deletion = self.auditLogs[logID].destroy()
+        if deletion != True:
+            raise Exception("IDENTITY DELETEAUDITLOG ERROR: Failed to delete audit log; response: {}".format(deletion))
+        del self.auditLogs[logID]
+        
+        return True
+    
+    def deleteFile(self, fileID):
+        '''Deletes a file from the account's files.'''
+        if fileID not in self.files:
+            raise Exception("IDENTITY DELETEFILE ERROR: File ID '{}' not found in account's files.".format(fileID))
+        
+        deletion = self.files[fileID].destroy()
+        if deletion != True:
+            raise Exception("IDENTITY DELETEFILE ERROR: Failed to delete file; response: {}".format(deletion))
+        del self.files[fileID]
+        
+        return True
+    
+    @staticmethod
+    def ref(id):
+        return Ref("accounts", id)
+    
+class EmailVerification(DIRepresentable):
+    def __init__(self, accountID: str, verified: bool=False, otpCode: str=None, dispatchTimestamp: str=None) -> None:
+        self.accountID = accountID
+        self.verified = verified
+        self.otpCode = otpCode
+        self.dispatchTimestamp = dispatchTimestamp
+        self.originRef = EmailVerification.ref(accountID)
+        
+    @staticmethod
+    def rawLoad(data: Dict[str, Any], accountID: str) -> 'EmailVerification':
+        requiredParams = ['verified', 'otpCode', 'dispatchTimestamp']
+        for reqParam in requiredParams:
+            if reqParam not in data:
+                if reqParam == 'verified':
+                    data[reqParam] = False
+                else:
+                    data[reqParam] = None
+        
+        return EmailVerification(
+            accountID=accountID,
+            verified=data['verified'] == "True",
+            otpCode=data['otpCode'],
+            dispatchTimestamp=data['dispatchTimestamp']
+        )
+    
+    @staticmethod
+    def load(accountID: str) -> 'EmailVerification | None':
+        data = DI.load(EmailVerification.ref(accountID))
+        if data == None:
+            return None
+        if isinstance(data, DIError):
+            raise Exception("EMAILVERIFICATION LOAD ERROR: DIError occurred: {}".format(data))
+        if not isinstance(data, dict):
+            raise Exception("EMAILVERIFICATION LOAD ERROR: Unexpected DI load response format; response: {}".format(data))
+        
+        return EmailVerification.rawLoad(data, accountID)
+    
+    def represent(self) -> Dict[str, Any]:
+        return {
+            "verified": str(self.verified),
+            "otpCode": self.otpCode,
+            "dispatchTimestamp": self.dispatchTimestamp
+        }
+    
+    def save(self) -> bool:
+        convertedData = self.represent()
+        
+        return DI.save(convertedData, self.originRef)
+    
+    def destroy(self):
+        return DI.save({}, self.originRef)
+    
+    @staticmethod
+    def ref(accountID: str) -> Ref:
+        return Ref("accounts", accountID, "emailVerification")
+    
+class AuditLog(DIRepresentable):
+    def __init__(self, accountID: str, event: str, text: str, id: str=None, timestamp: str=None) -> None:
+        if id == None:
+            id = uuid4().hex
+        if timestamp == None:
+            timestamp = Universal.utcNowString()
+        
+        self.id = id
+        self.accountID = accountID
+        self.timestamp = timestamp
+        self.event = event
+        self.text = text
+        self.originRef = AuditLog.ref(id)
+        
+    @staticmethod
+    def rawLoad(data: dict) -> 'AuditLog':
+        requiredParams = ['event', 'text', 'id', 'accountID', 'timestamp']
+        for reqParam in requiredParams:
+            if reqParam not in data:
+                data[reqParam] = None
+        
+        return AuditLog(
+            accountID=data['accountID'],
+            event=data['event'],
+            text=data['text'],
+            id=data['id'],
+            timestamp=data['timestamp']
+        )
+    
+    @staticmethod
+    def load(id=None, accountID=None) -> 'AuditLog | List[AuditLog] | None':
+        if id != None:
+            # Load a specific audit log
+            log = DI.load(AuditLog.ref(id))
+            if isinstance(log, DIError):
+                raise Exception("AUDITLOG LOAD ERROR: DIError: {}".format(log))
+            if log == None:
+                return None
+            if not isinstance(log, dict):
+                raise Exception("AUDITLOG LOAD ERROR: Unexpected DI log load response format; response: {}".format(log))
+            
+            return AuditLog.rawLoad(log)
+        elif accountID != None:
+            # Load all audit logs for the targeted account
+            logs = DI.load(Ref("auditLogs"))
+            if isinstance(logs, DIError):
+                raise Exception("AUDITLOG LOAD ERROR: DIError: {}".format(logs))
+            if logs == None:
+                return None
+            if not isinstance(logs, dict):
+                return Exception("AUDITLOG LOAD ERROR: Unexpected DI logs load response format; response: {}".format(logs))
+            
+            accountLogs = []
+            for logData in logs.values():
+                if isinstance(logData, dict):
+                    if logData['accountID'] == accountID:
+                        accountLogs.append(AuditLog.rawLoad(logData))
+            
+            return accountLogs
+        else:
+            # Load all audit logs
+            logs = DI.load(Ref("auditLogs"))
+            if isinstance(logs, DIError):
+                raise Exception("AUDITLOG LOAD ERROR: DIError: {}".format(logs))
+            if logs == None:
+                return None
+            if not isinstance(logs, dict):
+                return Exception("AUDITLOG LOAD ERROR: Unexpected DI logs load response format; response: {}".format(logs))
+            
+            return [AuditLog.rawLoad(logData) for logData in logs.values() if isinstance(logData, dict)]
+
+    def save(self, checkIntegrity=True) -> bool:
+        convertedData = self.represent()
+        
+        if checkIntegrity:
+            targetAccount = DI.load(Identity.ref(self.accountID))
+            if isinstance(targetAccount, DIError):
+                raise Exception("AUDITLOG SAVE ERROR: DIError: {}".format(targetAccount))
+            if targetAccount == None:
+                raise Exception("AUDITLOG SAVE ERROR: Account not found.")
+            if not isinstance(targetAccount, dict):
+                raise Exception("AUDITLOG SAVE ERROR: Unexpected DI account load response format; response: {}".format(targetAccount))
+        
+        return DI.save(convertedData, self.originRef)
+    
+    def linkTo(self, user: Identity):
+        user.auditLogs[self.id] = self
+        return True
+    
+    @staticmethod
+    def ref(logID) -> Ref:
+        return Ref("auditLogs", logID)
+    
+class File(DIRepresentable):
+    def __init__(self, accountID: str, name: str, blocked: bool=False, sharing: 'FileSharing'=None, id: str=None, uploadedTimestamp: str=None, lastUpdate: str=None) -> None:
+        if id == None:
+            id = uuid4().hex
+        if uploadedTimestamp == None:
+            uploadedTimestamp = Universal.utcNowString()
+        if sharing == None:
+            sharing = FileSharing(id)
+        
+        self.id = id
+        self.accountID = accountID
+        self.name = name
+        self.blocked = blocked
+        self.sharing = sharing
+        self.uploadedTimestamp = uploadedTimestamp
+        self.lastUpdate = lastUpdate
+        self.originRef = File.ref(id)
+        
+    @staticmethod
+    def getExtFrom(fileName: str):
+        return fileName.split(".")[-1]
+        
+    @staticmethod
+    def rawLoad(data: Dict[str, Any]) -> 'File':
+        requiredParams = ['accountID', 'name', 'blocked', 'sharing', 'id', 'uploadedTimestamp', 'lastUpdate']
+        for reqParam in requiredParams:
+            if reqParam not in data:
+                if reqParam in ['sharing']:
+                    data[reqParam] = {}
+                else:
+                    data[reqParam] = None
+        
+        sharing = data['sharing']
+        if isinstance(sharing, dict):
+            sharing = FileSharing.rawLoad(data['sharing'], data['id'])
+        else:
+            sharing = FileSharing(data['id'])
+        
+        return File(
+            accountID=data['accountID'],
+            name=data['name'],
+            blocked=data['blocked'] == "True",
+            sharing=sharing,
+            id=data['id'],
+            uploadedTimestamp=data['uploadedTimestamp'],
+            lastUpdate=data['lastUpdate']
+        )
+    
+    @staticmethod
+    def load(id: str=None, accountID: str=None, filename: str=None, shareCode: str=None) -> 'File | List[File] | None':
+        if id != None:
+            fileData = DI.load(File.ref(id))
+            if isinstance(fileData, DIError):
+                raise Exception("FILE LOAD ERROR: DIError: {}".format(fileData))
+            if fileData == None:
+                return None
+            if not isinstance(fileData, dict):
+                raise Exception("FILE LOAD ERROR: Unexpected DI file load response format; response: {}".format(fileData))
+            
+            return File.rawLoad(fileData)
+        else:
+            if accountID == None and filename != None:
+                raise Exception("FILE LOAD ERROR: Unexpected load condition.") ## This is because multiple users can have the same file name. Thus, providing just the filename is not enough.
+            
+            data = DI.load(Ref("files"))
+            if isinstance(data, DIError):
+                raise Exception("FILE LOAD ERROR: DIError: {}".format(data))
+            if data == None:
+                return None
+            if not isinstance(data, dict):
+                raise Exception("FILE LOAD ERROR: Unexpected DI files load response format; response: {}".format(data))
+
+            files: Dict[str, File] = {}
+            for fileID in data:
+                if isinstance(data[fileID], dict):
+                    files[fileID] = File.rawLoad(data[fileID])
+            
+            # If no identifier is provided, return all files
+            if accountID == None and filename == None and shareCode == None:
+                return list(files.values())
+            
+            if accountID != None:
+                # Look for files that belong to the specified account
+                # Loop through all files and return the files that belong to the specified account
+                accountFiles = []
+                for fileID in files:
+                    if files[fileID].accountID == accountID:
+                        if filename != None and files[fileID].name == filename:
+                            return files[fileID]
+                        elif filename == None:
+                            accountFiles.append(files[fileID])
+                
+                # If the filename is provided, but no file is found, return None
+                if filename != None:
+                    return None
+                
+                # If no filename is provided, return the list of account files
+                return accountFiles
+            elif shareCode != None:
+                # Look for files that have the specified share code
+                for fileID in files:
+                    if files[fileID].sharing.linkCode == shareCode:
+                        return files[fileID]
+                
+                return None
+    
+    def save(self, checkIntegrity=True) -> bool:
+        convertedData = self.represent()
+        
+        if checkIntegrity:
+            targetAccount = DI.load(Identity.ref(self.accountID))
+            if isinstance(targetAccount, DIError):
+                raise Exception("FILE SAVE ERROR: DIError: {}".format(targetAccount))
+            if targetAccount == None:
+                raise Exception("FILE SAVE ERROR: Account not found.")
+            if not isinstance(targetAccount, dict):
+                raise Exception("FILE SAVE ERROR: Unexpected DI account load response format; response: {}".format(targetAccount))
+        
+        return DI.save(convertedData, self.originRef)
+    
+    def linkTo(self, user: Identity):
+        user.files[self.id] = self
+        return True
+    
+    def represent(self) -> Dict[str, Any]:
+        return {
+            "accountID": self.accountID,
+            "name": self.name,
+            "blocked": str(self.blocked),
+            "sharing": self.sharing.represent(),
+            "id": self.id,
+            "uploadedTimestamp": self.uploadedTimestamp,
+            "lastUpdate": self.lastUpdate
+        }
+    
+    def extension(self):
+        return File.getExtFrom(self.name)
+    
+    @staticmethod
+    def ref(fileID) -> Ref:
+        return Ref("files", fileID)
+
+class FileSharing(DIRepresentable):
+    def __init__(self, fileID: str, linkCode: str=None, password: str=None, accessors: int=None, startTimestamp: str=None, active: bool=False) -> None:
+        self.linkCode = linkCode
+        self.password = password
+        self.accessors = accessors
+        self.startTimestamp = startTimestamp
+        self.active = active
+        self.originRef = FileSharing.ref(fileID)
+        
+    @staticmethod
+    def rawLoad(data: Dict[str, Any], fileID: str) -> 'FileSharing':
+        requiredParams = ['linkCode', 'password', 'accessors', 'startTimestamp', 'active']
+        for reqParam in requiredParams:
+            if reqParam not in data:
+                if reqParam in ['active']:
+                    data[reqParam] = False
+                else:
+                    data[reqParam] = None
+        
+        try:
+            intValue = int(data['accessors'])
+            data['accessors'] = intValue
+        except:
+            data['accessors'] = None
+        
+        return FileSharing(
+            fileID=fileID,
+            linkCode=data['linkCode'],
+            password=data['password'],
+            accessors=data['accessors'],
+            startTimestamp=data['startTimestamp'],
+            active=data['active'] == "True"
+        )
+    
+    @staticmethod
+    def load(fileID: str) -> 'FileSharing | None':
+        data = DI.load(FileSharing.ref(fileID))
+        if data == None:
+            return None
+        if isinstance(data, DIError):
+            raise Exception("FILESHARING LOAD ERROR: DIError occurred: {}".format(data))
+        if not isinstance(data, dict):
+            raise Exception("FILESHARING LOAD ERROR: Unexpected DI load response format; response: {}".format(data))
+        
+        return FileSharing.rawLoad(data, fileID)
+    
+    def represent(self) -> Dict[str, Any]:
+        return {
+            "linkCode": self.linkCode,
+            "password": self.password,
+            "accessors": str(self.accessors),
+            "startTimestamp": self.startTimestamp,
+            "active": str(self.active)
+        }
+    
+    def save(self) -> bool:
+        convertedData = self.represent()
+        
+        return DI.save(convertedData, self.originRef)
+    
+    def destroy(self):
+        return DI.save({}, self.originRef)
+    
+    @staticmethod
+    def ref(fileID: str) -> Ref:
+        return Ref("files", fileID, "sharing")
