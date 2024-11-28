@@ -10,7 +10,7 @@
 
 # Access
 
-![Image](hello)
+![Image](docs/img/accessHome.png)
 
 **Access is a simple, easy-to-use cloud file storage system with neat features like file sharing and sorting.** It is the perfect tool for quick, efficient and hassle free online file storage.
 
