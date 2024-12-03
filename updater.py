@@ -173,4 +173,14 @@ os.system("git checkout updater.py")
 print("------ END OF GIT OUTPUT")
 
 print()
+reinstall = input("Would you like to re-install dependencies? (y/n) ").strip().lower()
+if reinstall == 'y':
+    print()
+    print("Re-installing dependencies...")
+    print()
+    os.system("pip install -r requirements.txt")
+    print()
+    print("Dependencies re-installed successfully!")
+
+print()
 print("Finished updating operations!")
