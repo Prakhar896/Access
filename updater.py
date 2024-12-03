@@ -173,8 +173,12 @@ os.system("git checkout updater.py")
 print("------ END OF GIT OUTPUT")
 
 print()
-reinstall = input("Would you like to re-install dependencies? (y/n) ").strip().lower()
-if reinstall == 'y':
+reinstall = input("Would you like to re-install dependencies? '.force' to uninstall and reinstall. (y/.force/n) ").strip().lower()
+if reinstall in ['.force', 'y']:
+    if reinstall == '.force':
+        print()
+        print("Uninstalling...")
+        os.system("pip freeze | xargs pip uninstall -y")
     print()
     print("Re-installing dependencies...")
     print()
