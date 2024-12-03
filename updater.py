@@ -63,21 +63,49 @@ print("Deleting all irrelevant files...")
 # Delete all files and folders in the current directory
 dataFilesList = [
     'analyticsData.json', 
-    'certificates.txt', 
-    'accessIdentities.txt', 
-    'validOTPCodes.txt', 
-    '.env', 
-    'authorisation.txt', 
+    'certificates.txt',
+    'accessIdentities.txt',
+    'validOTPCodes.txt',
+    '.env',
+    'authorisation.txt',
     'licensekey.txt',
-    'config.txt'
+    'config.txt',
+    'config.json',
+    'database.json',
+    'sbConfig.json',
+    'serviceAccountKey.json',
+    'logs.txt'
 ]
+
+def fileCheck(root: str, name: str):
+    if name == "updater.py":
+        return False
+    if name in dataFilesList:
+        return False
+    if name.startswith('aa-report') or name.startswith("report"):
+        return False
+    if "AccessFolders" in root or "Directories" in root:
+        return False
+    if "venv" in root or "virt" in root:
+        return False
+    return True
+
+def dirCheck(root: str, name: str):
+    if name in ["analyticsReports", "AccessFolders", "Directories", "venv", "virt"]:
+        return False
+    if "AccessFolders" in root or "Directories" in root:
+        return False
+    if "venv" in root or "virt" in root:
+        return False
+    return True
+
 # Delete all files and folders in the current directory
 for root, dirs, files in os.walk(os.getcwd(), topdown=False):
     for name in files:
-        if name != "updater.py" and (name not in dataFilesList) and (not name.startswith('aa-report')) and ("AccessFolders" not in root) and ('venv' not in root) and ('virt' not in root):
+        if fileCheck(root, name):
             os.remove(os.path.join(root, name))
     for name in dirs:
-        if (name not in ["analyticsReports", "AccessFolders"]) and ("AccessFolders" not in root) and (name not in ['venv', 'virt']) and ('virt' not in root) and ('venv' not in root):
+        if dirCheck(root, name):
             shutil.rmtree(os.path.join(root, name))
 
 time.sleep(2)
