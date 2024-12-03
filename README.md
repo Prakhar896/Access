@@ -10,7 +10,7 @@
 
 # Access
 
-<img src="docs/img/accessHome.png" alt="Access Home" height="300px">
+<img src="docs/img/accessHome.png" alt="Screenshot of the Access dashboard. A website with a white background is displayed, with a black and white 'Access' logo at the top-left in monospace font. Below the logo is the heading, 'My Files'. Far right of the heading is an upload icon, indicating the button to trigger the upload popover. In the centre, a table lists all of the user's uploaded files, with last modified and uploaded date information. The table lists just one file, 'MyFile.pdf', and there's a menu button in the 'Actions' column" height="300px">
 
 **Access is a simple, easy-to-use cloud file storage system with neat features like file sharing and sorting. 🙌🤩** It is the perfect tool for quick, efficient and hassle free online file storage. ✨
 
@@ -20,7 +20,7 @@ Hopefully, the system is live at: https://access.prakhar.app ! 🎉
 
 ## Show Don't Tell
 
-<img src="docs/img/accessHome.png" alt="Access Home" height="300px">
+<img src="docs/img/accessHome.png" alt="Screenshot of the Access dashboard. A website with a white background is displayed, with a black and white 'Access' logo at the top-left in monospace font. Below the logo is the heading, 'My Files'. Far right of the heading is an upload icon, indicating the button to trigger the upload popover. In the centre, a table lists all of the user's uploaded files, with last modified and uploaded date information. The table lists just one file, 'MyFile.pdf', and there's a menu button in the 'Actions' column." height="300px">
 
 **Dashboard**
 
@@ -32,7 +32,7 @@ The entire user experience was also designed to be responsive, adapting well to 
 
 ---
 
-<img src="docs/img/sorting.png" alt="Access Home" height="300px">
+<img src="docs/img/sorting.png" alt="A zoomed in screenshot on the popover that appears after clicking the 'Sort by' button next to the 'My Files' heading on the Access Dashboard. The popover consists of two sections, 'Attribute', which lists the available sorting attributes 'Name', 'Last Modified', and 'Uploaded'. The second section, titled 'Order', lists 'Ascending' and 'Descending' as available orders. Currently, 'Last Modified' and 'Descending' are checked, indicating that the sorting order is descending of a file's last modified date." height="300px">
 
 **Sorting**
 
@@ -40,7 +40,7 @@ Keeping track of files can get messy; so Access allows users to quickly sort the
 
 ---
 
-<img src="docs/img/rename.png" alt="Access Home" height="300px">
+<img src="docs/img/rename.png" alt="Screenshot of a popover titled 'Rename File'. The popover prompts the user to enter the new file name for 'MyFile.pdf' with a text field. A black and white 'Rename' button in black and white is placed bottom-right." height="300px">
 
 **Menu Actions**
 
@@ -48,15 +48,33 @@ Expected file actions like seeing last modified and uploaded date information, r
 
 ---
 
-<img src="docs/img/noSharing.png" alt="Access Home" height="300px">
-
 **Sharing**
 
----
-Sharing Public View
+<img src="docs/img/noSharing.png" alt="Screenshot of a popover titled 'Sharing'. Under a text 'Sharing Active', 'No' is written in bold red. Below this, a section titled 'Start Sharing' is shown, with the description 'Create a public link that can be used by anyone to access this file. Optionally, password protect it.' A text field labelled 'Password (Optional)' is below this description. A black and white 'Start Sharing' button is placed bottom-right." height="300px">
+
+Users often want to share important files with others. Access allows this through public links that can be tightly controlled by the user. Users can even password protect links, so that only those with the password can access the file. 🔒🔗
+
+<img src="docs/img/sharingActive.png" alt="Screenshot of a popover titled 'Sharing'. Under a text 'Sharing Active', 'Yes' is written in bold green, followed by a public link ID for the file. Under the text 'Share Link', a black and white button 'Copy Share Link' is present. Under 'Password Required', 'Yes' is written in bold black. Under 'File name', 'MyFile.pdf' is in bold black. Under 'Downloads', '0' is in bold black. A few buttons that can be used to manage the file sharing are placed bottom-right. A button with outline and font color in red with a white background labelled 'Deactivate' is placed second to bottom right. On the right of this, a button with a solid red background and white font color labelled 'Stop Sharing' sits bottom right." height="300px">
+
+After starting sharing for a file, users can quickly copy the public link and start distributing. Access will also collect download metrics to help users understand how their files are being accessed. 📊📈
+
+Sharing links can be deactivated and deleted ("Stop Sharing") anytime. 🛑
+
+<img src="docs/img/sharedFile.png" alt="Screenshot of the Access Shared File page. Under the Access logo, which, in white monospace font against a black background, says 'Access', a heading 'Shared File' is written. Below, 'prakhar is sharing MyFile.pdf with you' is written to indicate the file share's details. Below, in bold, a text reads 'This file is password protected.' Below, a textfield labelled 'Enter password' is seeking user input. Below, a button with solid black background and white font color labelled 'Access' is placed." height="300px">
+
+Public accessors can see this when trying to use a public file share link. Password protected files will require accessors to enter the password before downloading the file. 🔑
+
+If all is right, hitting "Access" will start the download. 📥
 
 ---
-My Account (Audit Logs)
+
+<img src="docs/img/myAccount.png" alt="Screenshot of the 'My Account' dashboard for Access users. Top-left, below the Access logo, a title reads 'My Account'. On the right of the heading, a black background with white font color button reads 'Manage Password'. Next to this, a button in solid green with a save-indicating icon is placed. Below, on the left, textfields for 'Username' and 'Email' are provided to update user information. Below this, still on the left, user information is provided under 'Last login' and 'Created on' texts. The last element, still on the left half, is a button in red outline and font color with a white background which reads 'Delete Identity'. On the right half, a grey-background container is positioned with the title 'Audit Logs'. Several audit logs, each of which include the event (e.g 'FILEUPLOAD'), date and description of the log, are listed under this title. Most logs are behind a scroll, while the top four can be seen." height="300px">
+
+**My Account**
+
+Managing user information is super easy and intuitive in Access. In the My Account dashboard, which can be accessed through the sidebar on the left, users can update their username, email, and password. They can also see their last login and account creation date information. 📝🔒
+
+All actions, like file uploads, email verification, renames, overwrites and more, are all attached to accounts as audit logs. These logs can be seen in the Audit Logs section for the user to trace changes. 📜
 
 ## Background
 
