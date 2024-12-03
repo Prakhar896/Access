@@ -15,3 +15,7 @@ database.json
 serviceAccountKey.json
 Directories/
 test.py
+accessIdentities.txt
+certificates.txt
+validOTPCodes.txt
+authorisation.txt

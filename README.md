@@ -101,6 +101,8 @@ The new Access is designed to be more robust, efficient and user-friendly. It in
 
 Access 1.x users, I highly recommend upgrading to the new Access system, but unfortunately, due to the entirely new architecture, I could not implement automatic backwards compatibility. Please taking note that existing Access 1.x data files and databases are not compatible with Access 2.0 before updating!
 
+It is recommended to use the [new updater script](https://github.com/Prakhar896/Access/blob/6350875ff26442a5c268be4479a3347c8b31a499/updater.py) to update to Access 2.x, as it supports the new architecture.
+
 ---
 
 Thanks for checking out Access, have a great day! 🎉🚀
