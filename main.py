@@ -8,7 +8,6 @@ from werkzeug.utils import secure_filename
 from flask_cors import CORS
 from services import *
 from models import *
-from activation import initActivation, makeKVR
 from AFManager import AFManager, AFMError
 from emailer import Emailer
 from accessAnalytics import AccessAnalytics
@@ -17,6 +16,17 @@ load_dotenv()
 
 def getIP():
     return request.headers.get('X-Real-Ip', request.remote_addr)
+
+def checkForActivation():
+    if not os.path.exists(os.path.join(os.getcwd(), "licensekey.txt")):
+        return False
+    else:
+        with open("licensekey.txt", 'r') as f:
+            # If last license check is more than 14 days prior, return False
+            if (datetime.datetime.now() - datetime.datetime.strptime(f.readlines()[3].split("\n")[0][len("Last License Check: ")::], "%Y-%m-%d %H:%M:%S")).days > 14:
+                return "Verify"
+            else:
+                return True
 
 ### APP CONFIG
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'Chute')
@@ -134,6 +144,15 @@ def boot():
     if ver == "Version File Not Found":
         print("MAIN LOAD ERROR: No system version file detected. Boot aborted.")
         sys.exit(1)
+    
+    # Check Activation
+    status = checkForActivation()
+    if status != True:
+        import activation    
+        if status == False:
+            activation.initActivation("z44bzvw0", "2.0")
+        elif status == "Verify":
+            activation.makeKVR("z44bzvw0", "2.0")
     
     if os.environ.get("CLEANER_DISABLED", "False") != "True":
         Universal.store["CleanerID"] = Universal.asyncProcessor.addJob(cleaner, trigger=Trigger('interval', hours=3))
