@@ -18,6 +18,8 @@ Access is a Python Flask web server that renders a Vite-built React frontend des
 
 Hopefully, the system is live at: https://access.prakhar.app ! 🎉
 
+Looking for setup help? See the [Setup Guide](docs/setup.md) for more information.
+
 ## Show Don't Tell
 
 <img src="docs/img/accessHome.png" alt="Screenshot of the Access dashboard. A website with a white background is displayed, with a black and white 'Access' logo at the top-left in monospace font. Below the logo is the heading, 'My Files'. Far right of the heading is an upload icon, indicating the button to trigger the upload popover. In the centre, a table lists all of the user's uploaded files, with last modified and uploaded date information. The table lists just one file, 'MyFile.pdf', and there's a menu button in the 'Actions' column." height="300px">
@@ -78,4 +80,29 @@ All actions, like file uploads, email verification, renames, overwrites and more
 
 ## Background
 
+<img src="docs/img/oldAccess.png" alt="Screenshot of an older version of Access. In the centre of a page with a white background, at the top, a logo in old-school boxy font reads 'ACCESS'. Below, in the same image and in cursive font, a text reads 'We keep your world secure'. Below, a heading in Times New Roman reads 'Welcome to Access!'. Below, a description reads 'This is a service to access sensitive information in a safe and secure manner.' Below, a text reads 'Please select an option below to gain access to your Access Folder:'. Two buttons in dark green solid background with white font color are placed vertically, labelled 'Create an Access Identity' and 'Sign in to an Access Identity' respectively. Finally, a small text reads '© 2022 Prakhar Trivedi'." height="300px">
+
+In early 2022, I was facing issues with cloud storage solutions like OneDrive and Google Drive. Around the same time, I was learning about Python and Flask, and I decided that, I could just build my own cloud storage system instead! Excited to apply the skills I was learning, I dived right in.
+
+Of course, being still a novice to Python, Flask and web server programming, the code I wrote was not very good and had many issued throughout. I released updates that slowly fixed some of these pitfalls, but the UX was sitll very slow and unappealing. 2 years and the equipping of many new skills later, I decided to completely destroy and revamp Access from the ground up in a `2.0` update.
+
 ## Access 2.0
+
+Access 2.0 is a complete revamp of the original Access System. A quick comparison:
+
+| Old Architecture | New Architecture |
+|------------------|------------------|
+| Entire JSON database stored in-memory in one variable. No scalability, no failover. | Use Firebase Realtime Database as cloud database which is good way to backup data. |
+| Difficult to update database. Saving just one attribute update would mean dumping the whole database entirely to data file. | Custom database management system which incorporates failover-to-local-database. De-sync state handling. Referential data management for efficiency. Abstract base data model defining expectations for real data models for structured data definition. |
+| No concurrency. | Incorporate concurrency for tasks that require more time like dispatching emails or saving files so that main worker is not held up. |
+| Slow and unappealing UI. | Use React to design frontend and incorporate framer-motion library to create animations. |
+
+The new Access is designed to be more robust, efficient and user-friendly. It incorporates a variety of new features and improvements that make it a much better system than the original. 🚀🤯
+
+Access 1.x users, I highly recommend upgrading to the new Access system, but unfortunately, due to the entirely new architecture, I could not implement automatic backwards compatibility. Please taking note that existing Access 1.x data files and databases are not compatible with Access 2.0 before updating!
+
+---
+
+Thanks for checking out Access, have a great day! 🎉🚀
+
+© 2022-2024 Prakhar Trivedi. All rights reserved.
