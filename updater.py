@@ -1,5 +1,10 @@
 import os, shutil, sys, json, time, requests, subprocess
-from services import Universal
+
+def getVersion():
+    if os.path.isfile("version.txt"):
+        with open("version.txt", "r") as file:
+            return file.read().strip()
+    return False
 
 # Check for updates
 print("Checking for updates...")
@@ -17,8 +22,8 @@ if not is_git_installed():
     sys.exit(1)
 
 # Get current version number
-currentVersion = Universal.getVersion()
-if currentVersion == "Version File Not Found":
+currentVersion = getVersion()
+if not currentVersion:
     print("No version.txt file was found at the root of the system folder. Failed to check for updates.")
     sys.exit(1)
 
