@@ -124,10 +124,17 @@ for root, dirs, files in os.walk(os.path.join(os.getcwd(), ghRepo)):
     try:
         for name in files:
             if name != 'updater.py':
-                shutil.move(os.path.join(os.getcwd(), ghRepo, name), os.getcwd())
+                src_path = os.path.join(root, name)
+                rel_path = os.path.relpath(src_path, os.path.join(os.getcwd(), ghRepo))
+                dest_path = os.path.join(os.getcwd(), rel_path)
+                os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+                shutil.move(src_path, dest_path)
         for name in dirs:
-            if os.path.isdir(os.path.join(os.getcwd(), ghRepo, name)):
-                shutil.move(os.path.join(os.getcwd(), ghRepo, name), os.getcwd())
+            src_path = os.path.join(root, name)
+            rel_path = os.path.relpath(src_path, os.path.join(os.getcwd(), ghRepo))
+            dest_path = os.path.join(os.getcwd(), rel_path)
+            os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+            shutil.move(src_path, dest_path)
     except Exception as e:
         print("Error moving files and folders:", e)
 
