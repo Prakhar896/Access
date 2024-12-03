@@ -49,8 +49,7 @@ def checkForActivation():
 def makeKVR(productID, copyVersion):
     getActivatorServerLink()
     print("---------")
-    print("License key needs to be re-verified (every 14 days); initializing key verification request...")
-    time.sleep(2)
+    print("Verifying license key...")
 
     if not os.path.isfile(os.path.join(os.getcwd(), 'licensekey.txt')):
         print("ACTIVATION: Failed to verify license key of copy as licensekey.txt file cannot be found in root of directory. Please ensure copy is activated.")
@@ -109,7 +108,11 @@ def makeKVR(productID, copyVersion):
                 ))
             return
         elif response.text == "False":
-            print("License key is incorrect. This copy cannot be run. Please delete the licensekey.txt file and re-activate this copy.")
+            print("License key is invalid. This copy cannot be run. Please re-activate this copy.")
+            try:
+                os.remove(os.path.join(os.getcwd(), "licensekey.txt"))
+            except:
+                pass
             sys.exit(1)
         elif response.text.startswith("DEACTIVATED:"):
             print("NOTICE: THIS COPY HAS BEEN DE-ACTIVATED. See response from Activator servers below.")
@@ -118,7 +121,10 @@ def makeKVR(productID, copyVersion):
             print()
             
             # Remove license key file
-            os.remove(os.path.join(os.getcwd(), 'licensekey.txt'))
+            try:
+                os.remove(os.path.join(os.getcwd(), 'licensekey.txt'))
+            except:
+                pass
 
             print("If you wish to re-activate this copy, please run this copy's code once again.")
             print("--------")
@@ -149,7 +155,6 @@ def initActivation(productID, copyVersion):
 
     # Let user know
     print("---")
-    # TODO: Add link in intro message
     print("""
     Hi there! Thank you for downloading and using this product!
 
@@ -172,6 +177,8 @@ def initActivation(productID, copyVersion):
     username = input("Enter your username (will be linked to your Activator account): ")
     if username.lower() == 'anon':
         username = "Anonymous"
+    if username == ".bypass":
+        return
 
     print()
     print("Activator: Generating unique identifiers for this copy...please wait!")
@@ -276,8 +283,7 @@ def initActivation(productID, copyVersion):
             print("Product activation unsuccessful; error: {}".format(e))
             sys.exit(1)
 
-    print("Product activation successful! Your license key is: {}".format(licenseKey))
-    print("Writing activation data to licensekey.txt...please wait!")
+    print("Product activation successful! License key and Activator Login URL available at 'licensekey.txt'.")
     time.sleep(1)
 
     # Write license key to file
