@@ -148,11 +148,16 @@ def boot():
     # Check Activation
     status = checkForActivation()
     if status != True:
-        import activation    
-        if status == False:
-            activation.initActivation("z44bzvw0", "2.0")
-        elif status == "Verify":
-            activation.makeKVR("z44bzvw0", "2.0")
+        try:
+            import activation
+            if status == False:
+                activation.initActivation("z44bzvw0", "2.0")
+            elif status == "Verify":
+                activation.makeKVR("z44bzvw0", "2.0")
+        except Exception as e:
+            print("MAIN LOAD ERROR: Activation failed to initialize. Error: {}".format(e))
+            sys.exit(1)
+        
     
     if os.environ.get("CLEANER_DISABLED", "False") != "True":
         Universal.store["CleanerID"] = Universal.asyncProcessor.addJob(cleaner, trigger=Trigger('interval', hours=3))
