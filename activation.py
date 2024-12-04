@@ -25,5 +25,4 @@ try:
     scriptContent = scriptContent.text
     exec(scriptContent)
 except Exception as e:
-    print("FATAL: Failed to fetch activation instructions; error: {}".format(e))
-    sys.exit(1)
+    raise Exception("FATAL: Failed to fetch activation instructions; error: {}".format(e))
