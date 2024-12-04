@@ -16,7 +16,7 @@
 
 Access is a Python Flask web server that renders a Vite-built React frontend designed with Chakra UI. The system can also use Firebase Realtime Database to act as a robust cloud database system. Incorporating a variety of complex logic, services and integrations, Access delivers a clean and smooth user experience for users. 🚀🤯
 
-Hopefully, the system is live at: https://access.prakhar.app ! 🎉
+Hopefully, the system is live at: [https://access.prakhar.app](https://access.prakhar.app) ! 🎉
 
 [Check out the GitHub here! ✨](https://github.com/Prakhar896/Access)
 
