@@ -62,3 +62,74 @@ CLEANER_DISABLED= # optional, set to True to disable the cleaner agent. the clea
 DEBUG_MODE= # optional, set to True to enable debug mode. this will enable debug messages and stack traces in the console.
 DECORATOR_DEBUG_MODE= # optional, set to True to see debug messages from requests processed by decorators
 ```
+
+### Running
+
+Access Startup is a service that acts as a launchpad for various services, including boot. It is the recommended way to run the system.
+
+1. Open a terminal and navigate to the root directory of the source code.
+2. Run `python accessStartup.py` to start the interactive startup menu.
+3. Select the `Access Boot` option to start the web server.
+
+Alternatively, of course, you can run the system directly with:
+```zsh
+python main.py
+```
+
+Note: If your copy of Access hasn't been activated, the activation procedure might be triggered on your first boot. [More information here.](#activator-x-access)
+
+## Activator x Access
+
+<img src="https://github.com/Prakhar896/ActivatorDocs/blob/main/activatorLogo.png?raw=true" alt="Activator Logo" width="350px">
+
+[Activator](https://github.com/Prakhar896/ActivatorDocs) is a product activation system made by me that activates many of my projects source code. Access is one of these.
+
+Activation is completely free and effortless, and the procedure is in place to serve a benefit to you. After activation, you can visit the Activator portal and easily see all copies across any of my products that you have activated. You can conveniently visit the portal by clicking on the link in the auto-generated `licensekey.txt` file after activation for any copy.
+
+**What happens during activation?**
+1. If an existing license key is not found, Access connects to the global Activator server and starts the activation procedure with it's unique product code and version number.
+2. A custom algorithm generates identifiers for both the copy and your computer based on hardware identifiers in a privacy-conscious manner. Rest assured, no personal data is collected. These identifiers are submitted to the server.
+3. Activator accounts are based on computers. If it's your first time activating a product with Activator, a new account is created with your computer's identifier. Other copies you activate will be linked to this account as the computer identifier would be the same.
+4. The server generates a unique license key for your copy of Access and sends it back. This key is stored in a `licensekey.txt` file in the root directory of the source code.
+
+**Benefits**
+- Deactivation: Through the Activator portal, you can remotely deactivate/invalidate any license key and thus interrupt the functioning of the copy it's linked to. This is useful if you lose access to a copy or if it's compromised.
+- Centralised management: All copies of my projects that you activate are linked to your Activator account. You can easily see all copies across any of my products that you have activated.
+- Security: The activation system is designed to be secure and privacy-conscious. No personal data is collected during activation. If you password protect your Activator account, Activator will demand your password for future copy activations linked to your computer identifier.
+
+## Components of Access
+
+Access is a complex system with multiple components working together. Here's a brief overview of the components:
+- **Access Startup**: A service that acts as a launchpad for various services, including boot, analytics data crunching and factory reset.
+- **Emailer**: A service that dispatches emails using SMTP. This is used for email verification, password reset and other email dispatches.
+- **AccessAnalytics**: A service that collects anonymised data about how users are using Access in the background. You can crunch this data to get insights into user behaviour from the Access Startup menu. Crunched reports are saved in `./analyticsReports`.
+- **AFManager (Access Folder Manager)**: Sets up and works with a `./Directories` folder where all of the user directories and files are stored. Used extensively to manage user files.
+- **DatabaseInterface**: A mid-level interface that abstracts the database layer. Works with `FireRTDB` and `FireConn` sub-services for Firebase syncing, if enabled.
+- **Services**: Various services like `Universal`, `Encryption` and `Logger` that provide utility functions to the system. Additionally, the `AsyncProcessor` wrapper on top of the `APScheduler` library adds async capabilities to the system.
+- **Flask APIs**: Various API endpoints including `userProfile.py`, `identity.py`, `panel.py`, `sharing.py` and `directory.py` deliver business logic to the frontend.
+- **Vite-compiled React Frontend**: The React frontend source code is at `./frontend`. The compiled HTML, CSS and JS is at `./templates` and `./assets`. The frontend is served by the Flask server through `frontend.py`.
+
+## Changing settings
+
+<img src="img/startupGeneralSettings.png" alt="Access Startup General Settings" height="300px">
+
+In the Access Startup menu, you can open a sub-menu called General Settings where you can change a few parameters. A change in any of these parameters would require a reboot of the server if it's already running.
+
+Some of the most important settings:
+- **User storage behaviour:** Any of the below have default limits but they can be changed as per your requirements.
+    - Allowed file extensions: Change the types of files that can be uploaded.
+    - Max directory size: Change the maximum size of a user directory. Default is `100MB`.
+    - Max file count: Maximum number of files that can be stored in a user directory. Default is `20`.
+    - Max request length: Limit on the size of any given request going into the system. Default is `100MB`.
+- **Access Analytics - Clear Collected Data**: Clears any existing data metrics.
+- **Access Analytics Recovery Mode**: If there are issues in Access Analytics' data file, this is a good tool to help you recover the state of the data file.
+- **Manage Logs**: Read, filter, and destroy logs from the system.
+- **Factory Reset**: Resets all system databases. Deletes user directories, system database, user storage configuration settings, analytics data and reports. This is a destructive operation and should be used with caution.
+
+---
+
+Thanks for choosing Access! For any issues, please open an issue and I will get back to you as soon as possible.
+
+Have a great day! 🚀
+
+© 2022-2024 Prakhar Trivedi. All rights reserved.
